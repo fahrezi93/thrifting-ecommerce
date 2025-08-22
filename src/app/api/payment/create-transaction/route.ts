@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -13,11 +12,7 @@ const snap = new midtransClient.Snap({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await requireAuth(request)
 
     const { items, shippingAddressId, totalAmount, shippingCost } = await request.json()
 
@@ -25,7 +20,7 @@ export async function POST(request: NextRequest) {
     const shippingAddress = await prisma.address.findFirst({
       where: {
         id: shippingAddressId,
-        userId: session.user.id
+        userId: user.id
       }
     })
 
@@ -42,7 +37,7 @@ export async function POST(request: NextRequest) {
         totalAmount,
         shippingCost,
         status: 'PENDING',
-        userId: session.user.id,
+        userId: user.id,
         shippingAddressId,
         orderItems: {
           create: items.map((item: any) => ({
@@ -85,14 +80,14 @@ export async function POST(request: NextRequest) {
     ]
 
     const customerDetails = {
-      first_name: order.user.name?.split(' ')[0] || 'Customer',
-      last_name: order.user.name?.split(' ').slice(1).join(' ') || '',
-      email: order.user.email,
+      first_name: user.name?.split(' ')[0] || 'Customer',
+      last_name: user.name?.split(' ').slice(1).join(' ') || '',
+      email: user.email,
       phone: shippingAddress.phone || '',
       billing_address: {
-        first_name: order.user.name?.split(' ')[0] || 'Customer',
-        last_name: order.user.name?.split(' ').slice(1).join(' ') || '',
-        email: order.user.email,
+        first_name: user.name?.split(' ')[0] || 'Customer',
+        last_name: user.name?.split(' ').slice(1).join(' ') || '',
+        email: user.email,
         phone: shippingAddress.phone || '',
         address: shippingAddress.street,
         city: shippingAddress.city,
@@ -100,9 +95,9 @@ export async function POST(request: NextRequest) {
         country_code: 'IDN'
       },
       shipping_address: {
-        first_name: order.user.name?.split(' ')[0] || 'Customer',
-        last_name: order.user.name?.split(' ').slice(1).join(' ') || '',
-        email: order.user.email,
+        first_name: user.name?.split(' ')[0] || 'Customer',
+        last_name: user.name?.split(' ').slice(1).join(' ') || '',
+        email: user.email,
         phone: shippingAddress.phone || '',
         address: shippingAddress.street,
         city: shippingAddress.city,

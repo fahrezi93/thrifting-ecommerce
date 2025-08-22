@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation'
 import { ClientOnly } from '@/components/client-only'
 
 // Component to check and display admin menu
-function AdminMenuCheck({ user }: { user: any }) {
+function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobile?: boolean, onClose?: () => void }) {
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
@@ -48,6 +48,19 @@ function AdminMenuCheck({ user }: { user: any }) {
   }, [user])
 
   if (!isAdmin) return null
+
+  if (isMobile) {
+    return (
+      <Link
+        href="/admin"
+        className="block py-2 text-sm font-medium hover:text-primary transition-colors"
+        onClick={onClose}
+      >
+        <Shield className="inline mr-2 h-4 w-4" />
+        Admin Panel
+      </Link>
+    )
+  }
 
   return (
     <DropdownMenuItem asChild>
@@ -301,6 +314,7 @@ export function Navbar() {
                     >
                       Dashboard
                     </Link>
+                    <AdminMenuCheck user={user} isMobile={true} onClose={() => setIsMenuOpen(false)} />
                     <button
                       onClick={() => {
                         logout()

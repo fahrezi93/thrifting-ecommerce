@@ -48,10 +48,10 @@ export function Footer() {
           <div className="space-y-4">
             <h4 className="font-semibold">Customer Service</h4>
             <div className="space-y-2">
-              <Link href="/help" className="block text-sm text-muted-foreground hover:text-primary">
+              <Link href="/help-center" className="block text-sm text-muted-foreground hover:text-primary">
                 Help Center
               </Link>
-              <Link href="/shipping" className="block text-sm text-muted-foreground hover:text-primary">
+              <Link href="/shipping-info" className="block text-sm text-muted-foreground hover:text-primary">
                 Shipping Info
               </Link>
               <Link href="/returns" className="block text-sm text-muted-foreground hover:text-primary">
