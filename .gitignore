@@ -1,0 +1,117 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn-integrity
+
+# Testing
+coverage/
+.nyc_output/
+
+# Next.js
+.next/
+out/
+.next/cache/
+
+# Production
+build
+dist
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment variables
+.env*.local
+.env
+.env.development
+.env.test
+.env.production
+.env.local
+
+# Vercel
+.vercel
+.vercel_build_output
+
+# IDE and Editor
+.idea
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.code-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Cache
+.cache/
+.temp/
+.tmp/
+.turbo/
+
+# Misc
+*.pem
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig
+*.rej
+*.swo
+*.swn
+*.swp
+*.sass-cache
+*.css.map
+*.sass.map
+*.scss.map
+*.lock
+*.log
+*.pot
+*.pyc
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn v2
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
