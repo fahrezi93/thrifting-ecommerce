@@ -1,6 +1,6 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
@@ -36,22 +36,22 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { data: session, status } = useSession()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    if (status === 'loading') return
-    if (!session) {
+    if (loading) return
+    if (!user) {
       router.push('/auth/signin')
     }
-  }, [session, status, router])
+  }, [user, loading, router])
 
-  if (status === 'loading') {
+  if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
-  if (!session) {
+  if (!user) {
     return null
   }
 
@@ -63,7 +63,7 @@ export default function DashboardLayout({
           <div className="bg-card rounded-lg border p-6">
             <div className="mb-6">
               <h2 className="text-lg font-semibold">Dashboard</h2>
-              <p className="text-sm text-muted-foreground">Welcome back, {session.user.name}</p>
+              <p className="text-sm text-muted-foreground">Welcome back, {user.displayName || user.email}</p>
             </div>
             
             <nav className="space-y-2">

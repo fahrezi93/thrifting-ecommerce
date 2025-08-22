@@ -1,77 +1,59 @@
-import { NextAuthOptions } from 'next-auth'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
-import GoogleProvider from 'next-auth/providers/google'
-import CredentialsProvider from 'next-auth/providers/credentials'
-import bcrypt from 'bcryptjs'
+import { NextRequest } from 'next/server'
+import { adminAuth } from './firebase-admin'
 import { prisma } from './prisma'
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    CredentialsProvider({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
+export interface AuthenticatedUser {
+  id: string
+  email: string
+  name: string | null
+  role: string
+  firebaseUid: string
+}
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
-        })
-
-        if (!user || !user.password) {
-          return null
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          image: user.image,
-        }
-      }
-    })
-  ],
-  session: {
-    strategy: 'jwt'
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.sub!
-        session.user.role = token.role as string
-      }
-      return session
+export async function getServerSession(request: NextRequest): Promise<AuthenticatedUser | null> {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return null
     }
-  },
-  pages: {
-    signIn: '/auth/signin',
-    signUp: '/auth/signup',
+
+    const token = authHeader.split('Bearer ')[1]
+    const decodedToken = await adminAuth.verifyIdToken(token)
+    
+    // Get user from database using Firebase UID (stored as id)
+    const user = await prisma.user.findUnique({
+      where: { id: decodedToken.uid }
+    })
+
+    if (!user) {
+      return null
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      firebaseUid: user.id // id is the Firebase UID
+    }
+  } catch (error) {
+    console.error('Error verifying Firebase token:', error)
+    return null
   }
+}
+
+export async function requireAuth(request: NextRequest): Promise<AuthenticatedUser> {
+  const user = await getServerSession(request)
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+  return user
+}
+
+export async function requireAdmin(request: NextRequest): Promise<AuthenticatedUser> {
+  const user = await requireAuth(request)
+  if (user.role !== 'ADMIN') {
+    throw new Error('Admin access required')
+  }
+  return user
 }

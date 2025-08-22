@@ -1,16 +1,66 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useSession, signOut } from 'next-auth/react'
-import { ShoppingBag, Search, User, Menu, X } from 'lucide-react'
+import { ShoppingBag, Search, User, Menu, X, Settings, LogOut, UserCircle, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useAuth } from '@/contexts/AuthContext'
 import { useCartStore } from '@/store/cart'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ClientOnly } from '@/components/client-only'
+
+// Component to check and display admin menu
+function AdminMenuCheck({ user }: { user: any }) {
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!user) return
+      
+      try {
+        const token = await user.getIdToken()
+        const response = await fetch('/api/auth/check-role', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+        
+        if (response.ok) {
+          const { role } = await response.json()
+          setIsAdmin(role === 'ADMIN')
+        }
+      } catch (error) {
+        console.error('Error checking admin role:', error)
+      }
+    }
+
+    checkAdminRole()
+  }, [user])
+
+  if (!isAdmin) return null
+
+  return (
+    <DropdownMenuItem asChild>
+      <Link href="/admin" className="cursor-pointer">
+        <Shield className="mr-2 h-4 w-4" />
+        <span>Admin Panel</span>
+      </Link>
+    </DropdownMenuItem>
+  )
+}
 
 export function Navbar() {
-  const { data: session } = useSession()
+  const { user, logout } = useAuth()
   const { getTotalItems, toggleCart } = useCartStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -61,50 +111,102 @@ export function Navbar() {
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
             {/* Cart */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleCart}
-              className="relative"
-            >
-              <ShoppingBag className="h-5 w-5" />
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-primary text-xs text-primary-foreground flex items-center justify-center">
-                  {getTotalItems()}
-                </span>
-              )}
-            </Button>
+            <ClientOnly fallback={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative z-50"
+                disabled
+              >
+                <ShoppingBag className="h-5 w-5" />
+              </Button>
+            }>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleCart}
+                className="relative z-50"
+                type="button"
+              >
+                <ShoppingBag className="h-5 w-5" />
+                {getTotalItems() > 0 && (
+                  <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-primary text-xs text-primary-foreground flex items-center justify-center">
+                    {getTotalItems()}
+                  </span>
+                )}
+              </Button>
+            </ClientOnly>
 
             {/* User Menu */}
-            {session ? (
+            <ClientOnly fallback={
               <div className="hidden md:flex items-center space-x-2">
-                <Link href="/dashboard">
-                  <Button variant="ghost" size="icon">
-                    <User className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  onClick={() => signOut()}
-                  className="text-sm"
-                >
-                  Sign Out
+                <Button variant="ghost" className="text-sm" disabled>
+                  Loading...
                 </Button>
               </div>
-            ) : (
-              <div className="hidden md:flex items-center space-x-2">
-                <Link href="/auth/signin">
-                  <Button variant="ghost" className="text-sm">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/auth/signup">
-                  <Button className="text-sm">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            )}
+            }>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.photoURL || ''} alt={user.displayName || user.email || ''} />
+                        <AvatarFallback>
+                          {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {user.displayName || 'User'}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="cursor-pointer">
+                        <UserCircle className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <AdminMenuCheck user={user} />
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => logout()}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="hidden md:flex items-center space-x-2">
+                  <Link href="/auth/signin">
+                    <Button variant="ghost" className="text-sm">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/auth/signup">
+                    <Button className="text-sm">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </ClientOnly>
 
             {/* Mobile Menu Button */}
             <Button
@@ -162,43 +264,72 @@ export function Navbar() {
               </div>
 
               {/* Mobile Auth */}
-              {session ? (
+              <ClientOnly fallback={
                 <div className="space-y-2 pt-4 border-t">
-                  <Link
-                    href="/dashboard"
-                    className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <button
-                    onClick={() => {
-                      signOut()
-                      setIsMenuOpen(false)
-                    }}
-                    className="block py-2 text-sm font-medium hover:text-primary transition-colors w-full text-left"
-                  >
-                    Sign Out
-                  </button>
+                  <div className="py-2 text-sm text-muted-foreground">Loading...</div>
                 </div>
-              ) : (
-                <div className="space-y-2 pt-4 border-t">
-                  <Link
-                    href="/auth/signin"
-                    className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign Up
-                  </Link>
-                </div>
-              )}
+              }>
+                {user ? (
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="flex items-center space-x-3 px-2 py-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.photoURL || ''} alt={user.displayName || user.email || ''} />
+                        <AvatarFallback>
+                          {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-medium">
+                          {user.displayName || 'User'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/profile"
+                      className="block py-2 text-sm font-medium hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      href="/dashboard"
+                      className="block py-2 text-sm font-medium hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout()
+                        setIsMenuOpen(false)
+                      }}
+                      className="block py-2 text-sm font-medium hover:text-primary transition-colors w-full text-left"
+                    >
+                      Log out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2 pt-4 border-t">
+                    <Link
+                      href="/auth/signin"
+                      className="block py-2 text-sm font-medium hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      className="block py-2 text-sm font-medium hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </ClientOnly>
             </div>
           </div>
         )}

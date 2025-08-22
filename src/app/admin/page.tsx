@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface DashboardStats {
   totalProducts: number
@@ -29,16 +30,26 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchDashboardStats()
-  }, [])
+    if (user) {
+      fetchDashboardStats()
+    }
+  }, [user])
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await fetch('/api/admin/dashboard')
+      if (!user) return
+      
+      const token = await user.getIdToken()
+      const response = await fetch('/api/admin/dashboard', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
       if (response.ok) {
         const data = await response.json()
         setStats(data)

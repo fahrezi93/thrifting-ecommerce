@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireAuth } from '../../../../../lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export async function PUT(
@@ -8,11 +7,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await requireAuth(request)
 
     const { name, street, city, state, postalCode, country, phone, isDefault } = await request.json()
 
@@ -20,7 +15,7 @@ export async function PUT(
     const existingAddress = await prisma.address.findFirst({
       where: {
         id: params.id,
-        userId: session.user.id
+        userId: user.id
       }
     })
 
@@ -32,7 +27,7 @@ export async function PUT(
     if (isDefault && !existingAddress.isDefault) {
       await prisma.address.updateMany({
         where: { 
-          userId: session.user.id,
+          userId: user.id,
           isDefault: true,
           id: { not: params.id }
         },
@@ -56,6 +51,9 @@ export async function PUT(
 
     return NextResponse.json(updatedAddress)
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Error updating address:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -66,17 +64,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const user = await requireAuth(request)
 
     // Verify the address belongs to the user
     const existingAddress = await prisma.address.findFirst({
       where: {
         id: params.id,
-        userId: session.user.id
+        userId: user.id
       }
     })
 
@@ -90,6 +84,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Address deleted successfully' })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Error deleting address:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

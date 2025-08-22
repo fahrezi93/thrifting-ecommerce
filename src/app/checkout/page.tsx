@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,7 +25,7 @@ interface Address {
 }
 
 export default function CheckoutPage() {
-  const { data: session } = useSession()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCartStore()
   
@@ -39,7 +39,9 @@ export default function CheckoutPage() {
   const totalAmount = getTotalPrice() + shippingCost
 
   useEffect(() => {
-    if (!session) {
+    if (loading) return // Wait for auth to load
+    
+    if (!user) {
       router.push('/auth/signin')
       return
     }
@@ -50,11 +52,18 @@ export default function CheckoutPage() {
     }
 
     fetchAddresses()
-  }, [session, items, router])
+  }, [user, loading, items, router])
 
   const fetchAddresses = async () => {
     try {
-      const response = await fetch('/api/user/addresses')
+      if (!user) return
+      
+      const token = await user.getIdToken()
+      const response = await fetch('/api/user/addresses', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
       if (response.ok) {
         const data = await response.json()
         setAddresses(data)
@@ -89,10 +98,14 @@ export default function CheckoutPage() {
     setError('')
 
     try {
+      if (!user) return
+      
+      const token = await user.getIdToken()
       const response = await fetch('/api/payment/create-transaction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           items: items.map(item => ({
@@ -154,7 +167,7 @@ export default function CheckoutPage() {
 
   const selectedAddress = addresses.find(addr => addr.id === selectedAddressId)
 
-  if (!session || items.length === 0) {
+  if (!user || items.length === 0) {
     return null
   }
 

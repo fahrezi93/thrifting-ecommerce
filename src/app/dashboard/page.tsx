@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2 } from 'lucide-react'
 
 export default function DashboardPage() {
-  const { data: session, update } = useSession()
+  const { user } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -17,13 +17,13 @@ export default function DashboardPage() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    if (session?.user) {
-      setName(session.user.name || '')
-      setEmail(session.user.email || '')
+    if (user) {
+      setName(user.displayName || '')
+      setEmail(user.email || '')
       // Load additional user data
       fetchUserData()
     }
-  }, [session])
+  }, [user])
 
   const fetchUserData = async () => {
     try {
@@ -56,8 +56,7 @@ export default function DashboardPage() {
 
       if (response.ok) {
         setMessage('Profile updated successfully!')
-        // Update the session with new data
-        await update({ name })
+        // Profile updated successfully - Firebase user will be updated via the API
       } else {
         setMessage('Failed to update profile')
       }

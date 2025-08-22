@@ -1,6 +1,6 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
@@ -41,27 +41,53 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { data: session, status } = useSession()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    if (status === 'loading') return
-    if (!session) {
+    if (loading) return
+    if (!user) {
       router.push('/auth/signin')
       return
     }
-    if (session.user.role !== 'ADMIN') {
-      router.push('/dashboard')
-      return
-    }
-  }, [session, status, router])
+    
+    // Check admin role
+    checkAdminRole()
+  }, [user, loading, router])
 
-  if (status === 'loading') {
+  const checkAdminRole = async () => {
+    try {
+      if (!user) return
+      
+      const token = await user.getIdToken()
+      const response = await fetch('/api/auth/check-role', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      
+      if (!response.ok) {
+        router.push('/')
+        return
+      }
+      
+      const { role } = await response.json()
+      if (role !== 'ADMIN') {
+        router.push('/')
+        return
+      }
+    } catch (error) {
+      console.error('Error checking admin role:', error)
+      router.push('/')
+    }
+  }
+
+  if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!user) {
     return null
   }
 

@@ -7,10 +7,10 @@ import { useCartStore } from '@/store/cart'
 import { Minus, Plus, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export function CartSheet() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { items, isOpen, toggleCart, updateQuantity, removeItem, getTotalPrice } = useCartStore()
 
   const formatPrice = (price: number) => {
@@ -100,7 +100,7 @@ export function CartSheet() {
                   <span className="font-bold text-lg">{formatPrice(getTotalPrice())}</span>
                 </div>
                 
-                {session ? (
+                {user ? (
                   <Button className="w-full" asChild>
                     <Link href="/checkout" onClick={toggleCart}>
                       Proceed to Checkout

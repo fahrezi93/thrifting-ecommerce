@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Plus, Edit, Trash2, MapPin } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Address {
   id: string
@@ -21,6 +22,7 @@ interface Address {
 }
 
 export default function AddressesPage() {
+  const { user } = useAuth()
   const [addresses, setAddresses] = useState<Address[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -37,12 +39,21 @@ export default function AddressesPage() {
   })
 
   useEffect(() => {
-    fetchAddresses()
-  }, [])
+    if (user) {
+      fetchAddresses()
+    }
+  }, [user])
 
   const fetchAddresses = async () => {
     try {
-      const response = await fetch('/api/user/addresses')
+      if (!user) return
+      
+      const token = await user.getIdToken()
+      const response = await fetch('/api/user/addresses', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
       if (response.ok) {
         const data = await response.json()
         setAddresses(data)
@@ -58,6 +69,9 @@ export default function AddressesPage() {
     e.preventDefault()
     
     try {
+      if (!user) return
+      
+      const token = await user.getIdToken()
       const url = editingAddress 
         ? `/api/user/addresses/${editingAddress.id}`
         : '/api/user/addresses'
@@ -68,6 +82,7 @@ export default function AddressesPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       })
@@ -100,8 +115,14 @@ export default function AddressesPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this address?')) {
       try {
+        if (!user) return
+        
+        const token = await user.getIdToken()
         const response = await fetch(`/api/user/addresses/${id}`, {
           method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
         })
         
         if (response.ok) {
