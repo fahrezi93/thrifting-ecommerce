@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sampleProducts } from '@/lib/sample-data'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,48 +13,63 @@ export async function GET(request: NextRequest) {
     const maxPrice = parseFloat(searchParams.get('maxPrice') || '10000000')
     const sortBy = searchParams.get('sortBy') || 'newest'
 
-    let filteredProducts = sampleProducts
-
-    // Apply filters
-    if (search) {
-      filteredProducts = filteredProducts.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search) ||
-          p.description.toLowerCase().includes(search) ||
-          p.brand?.toLowerCase().includes(search)
-      )
+    // Build Prisma query conditions
+    const whereConditions: any = {
+      isActive: true,
+      price: {
+        gte: minPrice,
+        lte: maxPrice
+      }
     }
+
     if (categories && categories.length > 0) {
-      filteredProducts = filteredProducts.filter((p) => categories.includes(p.category))
+      whereConditions.category = { in: categories }
     }
-    if (sizes && sizes.length > 0) {
-      filteredProducts = filteredProducts.filter((p) => sizes.includes(p.size))
-    }
-    if (conditions && conditions.length > 0) {
-      filteredProducts = filteredProducts.filter((p) => conditions.includes(p.condition))
-    }
-    filteredProducts = filteredProducts.filter((p) => p.price >= minPrice && p.price <= maxPrice)
 
-    // Apply sorting
+    if (sizes && sizes.length > 0) {
+      whereConditions.size = { in: sizes }
+    }
+
+    if (conditions && conditions.length > 0) {
+      whereConditions.condition = { in: conditions }
+    }
+
+    if (search) {
+      whereConditions.OR = [
+        { name: { contains: search } },
+        { description: { contains: search } },
+        { brand: { contains: search } }
+      ]
+    }
+
+    // Build order by clause
+    let orderBy: any = { createdAt: 'desc' }
     switch (sortBy) {
-      case 'newest':
-        filteredProducts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-        break
       case 'oldest':
-        filteredProducts.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+        orderBy = { createdAt: 'asc' }
         break
       case 'price-low':
-        filteredProducts.sort((a, b) => a.price - b.price)
+        orderBy = { price: 'asc' }
         break
       case 'price-high':
-        filteredProducts.sort((a, b) => b.price - a.price)
+        orderBy = { price: 'desc' }
         break
       case 'name':
-        filteredProducts.sort((a, b) => a.name.localeCompare(b.name))
+        orderBy = { name: 'asc' }
         break
     }
 
-    // The frontend expects an object with a 'products' property
+    const products = await prisma.product.findMany({
+      where: whereConditions,
+      orderBy
+    })
+
+    // Parse imageUrls from JSON string to array for all products
+    const filteredProducts = products.map(product => ({
+      ...product,
+      imageUrls: JSON.parse(product.imageUrls)
+    }))
+
     return NextResponse.json(filteredProducts)
   } catch (error) {
     console.error('Error fetching products:', error)

@@ -17,7 +17,13 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    return NextResponse.json(product)
+    // Parse imageUrls from JSON string to array
+    const productWithParsedImages = {
+      ...product,
+      imageUrls: JSON.parse(product.imageUrls)
+    }
+
+    return NextResponse.json(productWithParsedImages)
   } catch (error) {
     console.error('Error fetching product:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

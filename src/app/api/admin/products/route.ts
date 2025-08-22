@@ -10,7 +10,13 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json(products)
+    // Parse imageUrls from JSON string to array
+    const productsWithParsedImages = products.map(product => ({
+      ...product,
+      imageUrls: JSON.parse(product.imageUrls)
+    }))
+
+    return NextResponse.json(productsWithParsedImages)
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -46,7 +52,7 @@ export async function POST(request: NextRequest) {
         name,
         description,
         price,
-        imageUrls,
+        imageUrls: JSON.stringify(imageUrls),
         category,
         size,
         condition,

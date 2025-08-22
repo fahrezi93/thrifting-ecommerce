@@ -6,6 +6,7 @@ import { Providers } from '@/components/providers'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,6 +32,7 @@ export default function RootLayout({
               </main>
               <Footer />
             </div>
+            <Toaster />
           </Providers>
         </AuthProvider>
       </body>

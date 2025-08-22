@@ -1,16 +1,18 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit, Trash2, Package, Search } from 'lucide-react'
-import Image from 'next/image'
+import { Trash2, Edit, Plus, Upload, X, Search, Package } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { ConfirmModal, AlertModal } from '@/components/ui/modal'
 
 interface Product {
   id: string
@@ -34,15 +36,20 @@ const conditions = ['Excellent', 'Good', 'Fair']
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [uploadingImages, setUploadingImages] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState<{isOpen: boolean, productId: string, productName: string}>({isOpen: false, productId: '', productName: ''})
+  const [alertModal, setAlertModal] = useState<{isOpen: boolean, title: string, description: string, variant?: 'default' | 'success' | 'error' | 'warning'}>({isOpen: false, title: '', description: ''})
+  const { addToast } = useToast()
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
-    imageUrls: [''],
+    imageUrls: [] as string[],
     category: '',
     size: '',
     condition: '',
@@ -58,10 +65,26 @@ export default function AdminProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/admin/products')
+      const { auth } = await import('@/lib/firebase')
+      const user = auth.currentUser
+      if (!user) {
+        console.error('User not authenticated')
+        return
+      }
+      
+      const token = await user.getIdToken()
+      const response = await fetch('/api/admin/products', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       if (response.ok) {
         const data = await response.json()
         setProducts(data)
+      } else {
+        console.error('Failed to fetch products:', response.status, response.statusText)
+        setProducts([]) // Clear products on error
+        setError(`Failed to load products: ${response.status === 401 ? 'Please login as admin' : 'Server error'}`)
       }
     } catch (error) {
       console.error('Error fetching products:', error)
@@ -73,33 +96,87 @@ export default function AdminProductsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (formData.imageUrls.length === 0) {
+      setAlertModal({
+        isOpen: true,
+        title: 'Missing Images',
+        description: 'Please upload at least one image before saving the product.',
+        variant: 'warning'
+      })
+      return
+    }
+    
     try {
+      const { auth } = await import('@/lib/firebase')
+      const user = auth.currentUser
+      if (!user) {
+        console.error('User not authenticated')
+        return
+      }
+      
+      const token = await user.getIdToken()
       const url = editingProduct 
         ? `/api/admin/products/${editingProduct.id}`
         : '/api/admin/products'
       
       const method = editingProduct ? 'PUT' : 'POST'
       
+      console.log('Submitting product with imageUrls:', formData.imageUrls)
+      
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           ...formData,
           price: parseFloat(formData.price),
           stock: parseInt(formData.stock),
-          imageUrls: formData.imageUrls.filter(url => url.trim() !== ''),
+          imageUrls: formData.imageUrls,
         }),
       })
 
       if (response.ok) {
+        console.log('Product saved successfully')
         await fetchProducts()
         setIsDialogOpen(false)
         resetForm()
+        addToast({
+          title: 'Success!',
+          description: 'Product saved successfully!',
+          variant: 'success'
+        })
+      } else {
+        // Handle HTTP error responses
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`
+        
+        if (response.status === 401 || response.status === 403) {
+          setAlertModal({
+            isOpen: true,
+            title: 'Authentication Failed',
+            description: 'Please login as admin and try again.',
+            variant: 'error'
+          })
+        } else {
+          setAlertModal({
+            isOpen: true,
+            title: 'Save Failed',
+            description: `Failed to save product: ${errorMessage}`,
+            variant: 'error'
+          })
+        }
+        console.error('API Error:', errorMessage)
       }
     } catch (error) {
       console.error('Error saving product:', error)
+      setAlertModal({
+        isOpen: true,
+        title: 'Network Error',
+        description: 'Network error occurred. Please check your connection and try again.',
+        variant: 'error'
+      })
     }
   }
 
@@ -109,7 +186,7 @@ export default function AdminProductsPage() {
       name: product.name,
       description: product.description,
       price: product.price.toString(),
-      imageUrls: [...product.imageUrls, ''].slice(0, 4),
+      imageUrls: product.imageUrls,
       category: product.category,
       size: product.size,
       condition: product.condition,
@@ -121,28 +198,83 @@ export default function AdminProductsPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
+  const handleDeleteClick = (id: string, name: string) => {
+    setDeleteConfirm({
+      isOpen: true,
+      productId: id,
+      productName: name
+    })
+  }
+
+  const handleDelete = async () => {
+    const { productId } = deleteConfirm
       try {
-        const response = await fetch(`/api/admin/products/${id}`, {
+        const { auth } = await import('@/lib/firebase')
+        const user = auth.currentUser
+        if (!user) {
+          setAlertModal({
+            isOpen: true,
+            title: 'Authentication Required',
+            description: 'Please login first.',
+            variant: 'warning'
+          })
+          return
+        }
+        
+        const token = await user.getIdToken()
+        
+        const response = await fetch(`/api/admin/products/${productId}`, {
           method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         })
         
         if (response.ok) {
           await fetchProducts()
+          addToast({
+            title: 'Success!',
+            description: 'Product deleted successfully!',
+            variant: 'success'
+          })
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+          const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`
+          
+          if (response.status === 401 || response.status === 403) {
+            setAlertModal({
+              isOpen: true,
+              title: 'Authentication Failed',
+              description: 'Please login as admin and try again.',
+              variant: 'error'
+            })
+          } else {
+            setAlertModal({
+              isOpen: true,
+              title: 'Delete Failed',
+              description: `Failed to delete product: ${errorMessage}`,
+              variant: 'error'
+            })
+          }
+          console.error('Delete API Error:', errorMessage)
         }
       } catch (error) {
         console.error('Error deleting product:', error)
+        setAlertModal({
+          isOpen: true,
+          title: 'Network Error',
+          description: 'Network error occurred. Please check your connection and try again.',
+          variant: 'error'
+        })
       }
     }
-  }
 
   const resetForm = () => {
     setFormData({
       name: '',
       description: '',
       price: '',
-      imageUrls: [''],
+      imageUrls: [],
       category: '',
       size: '',
       condition: '',
@@ -159,30 +291,89 @@ export default function AdminProductsPage() {
     resetForm()
   }
 
-  const addImageUrl = () => {
-    if (formData.imageUrls.length < 4) {
-      setFormData({
-        ...formData,
-        imageUrls: [...formData.imageUrls, '']
+  const handleImageUpload = async (files: FileList) => {
+    if (formData.imageUrls.length + files.length > 4) {
+      setAlertModal({
+        isOpen: true,
+        title: 'Too Many Images',
+        description: 'Maximum 4 images allowed per product.',
+        variant: 'warning'
       })
+      return
+    }
+
+    setUploadingImages(true)
+    
+    try {
+      const { auth } = await import('@/lib/firebase')
+      const user = auth.currentUser
+      if (!user) {
+        setAlertModal({
+          isOpen: true,
+          title: 'Authentication Required',
+          description: 'Please login first.',
+          variant: 'warning'
+        })
+        return
+      }
+
+      const token = await user.getIdToken()
+      const uploadedUrls: string[] = []
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          console.log('Upload result:', result)
+          uploadedUrls.push(result.imageUrl)
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Upload failed' }))
+          console.error('Upload error:', errorData)
+          addToast({
+            title: 'Upload Failed',
+            description: `Failed to upload ${file.name}: ${errorData.error}`,
+            variant: 'destructive'
+          })
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        console.log('Setting uploaded URLs:', uploadedUrls)
+        setFormData(prev => ({
+          ...prev,
+          imageUrls: [...prev.imageUrls, ...uploadedUrls]
+        }))
+        console.log('Form data updated with images')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      setAlertModal({
+        isOpen: true,
+        title: 'Upload Error',
+        description: 'Upload failed. Please try again.',
+        variant: 'error'
+      })
+    } finally {
+      setUploadingImages(false)
     }
   }
 
-  const removeImageUrl = (index: number) => {
-    const newUrls = formData.imageUrls.filter((_, i) => i !== index)
-    setFormData({
-      ...formData,
-      imageUrls: newUrls.length === 0 ? [''] : newUrls
-    })
-  }
-
-  const updateImageUrl = (index: number, value: string) => {
-    const newUrls = [...formData.imageUrls]
-    newUrls[index] = value
-    setFormData({
-      ...formData,
-      imageUrls: newUrls
-    })
+  const removeImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter((_, i) => i !== index)
+    }))
   }
 
   const formatPrice = (price: number) => {
@@ -202,6 +393,27 @@ export default function AdminProductsPage() {
     return <div>Loading products...</div>
   }
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Authentication Required</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md mx-auto">
+            <h3 className="font-semibold mb-2">Setup Instructions:</h3>
+            <ol className="text-sm text-left space-y-1">
+              <li>1. Login with email: <code>admin@admin.com</code></li>
+              <li>2. Password: <code>123456</code></li>
+              <li>3. Open browser console (F12)</li>
+              <li>4. Copy and run the admin setup script</li>
+              <li>5. Refresh the page</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -214,7 +426,7 @@ export default function AdminProductsPage() {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Add Product
             </Button>
@@ -344,36 +556,64 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Product Images (URLs)</Label>
-                  {formData.imageUrls.map((url, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        placeholder={`Image URL ${index + 1}`}
-                        value={url}
-                        onChange={(e) => updateImageUrl(index, e.target.value)}
-                      />
-                      {formData.imageUrls.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeImageUrl(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  {formData.imageUrls.length < 4 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={addImageUrl}
-                      className="w-full"
+                  <Label>Product Images (Max 4)</Label>
+                  
+                  {/* File Upload */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
+                      className="hidden"
+                      id="image-upload"
+                      disabled={uploadingImages || formData.imageUrls.length >= 4}
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className={`cursor-pointer flex flex-col items-center justify-center py-4 ${
+                        uploadingImages || formData.imageUrls.length >= 4 
+                          ? 'opacity-50 cursor-not-allowed' 
+                          : 'hover:bg-gray-50'
+                      }`}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Image URL
-                    </Button>
+                      <Plus className="h-8 w-8 text-gray-400 mb-2" />
+                      <span className="text-sm text-gray-600">
+                        {uploadingImages 
+                          ? 'Uploading...' 
+                          : formData.imageUrls.length >= 4 
+                            ? 'Maximum 4 images reached'
+                            : 'Click to upload images or drag and drop'
+                        }
+                      </span>
+                      <span className="text-xs text-gray-400 mt-1">
+                        PNG, JPG, WebP up to 5MB
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Image Preview */}
+                  {formData.imageUrls.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {formData.imageUrls.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={url}
+                            alt={`Product image ${index + 1}`}
+                            className="w-full h-24 object-cover rounded border"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => removeImage(index)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
@@ -423,7 +663,7 @@ export default function AdminProductsPage() {
             <Card key={product.id}>
               <div className="aspect-square overflow-hidden rounded-t-lg">
                 <Image
-                  src={product.imageUrls[0]}
+                  src={product.imageUrls && product.imageUrls[0] && (product.imageUrls[0].startsWith('http') || product.imageUrls[0].startsWith('/')) ? product.imageUrls[0] : '/placeholder-image.svg'}
                   alt={product.name}
                   width={400}
                   height={400}
@@ -444,7 +684,7 @@ export default function AdminProductsPage() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleDelete(product.id)}
+                      onClick={() => handleDeleteClick(product.id, product.name)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -480,6 +720,26 @@ export default function AdminProductsPage() {
           ))}
         </div>
       )}
+
+      {/* Custom Modals */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({isOpen: false, productId: '', productName: ''})}
+        onConfirm={handleDelete}
+        title="Delete Product"
+        description={`Are you sure you want to delete "${deleteConfirm.productName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+      />
+
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal({isOpen: false, title: '', description: ''})}
+        title={alertModal.title}
+        description={alertModal.description}
+        variant={alertModal.variant}
+      />
     </div>
   )
 }

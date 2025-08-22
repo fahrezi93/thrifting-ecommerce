@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Plus, Edit, Trash2, MapPin } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { Trash2, Edit, Plus, MapPin } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/hooks/use-toast'
+import { ConfirmModal } from '@/components/ui/modal'
 
 interface Address {
   id: string
@@ -24,9 +27,10 @@ interface Address {
 export default function AddressesPage() {
   const { user } = useAuth()
   const [addresses, setAddresses] = useState<Address[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{isOpen: boolean, addressId: string, addressLabel: string}>({isOpen: false, addressId: '', addressLabel: ''})
+  const { addToast } = useToast()
   const [formData, setFormData] = useState({
     name: '',
     street: '',
@@ -60,8 +64,6 @@ export default function AddressesPage() {
       }
     } catch (error) {
       console.error('Error fetching addresses:', error)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -112,13 +114,21 @@ export default function AddressesPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this address?')) {
-      try {
-        if (!user) return
+  const handleDeleteClick = (id: string, label: string) => {
+    setDeleteConfirm({
+      isOpen: true,
+      addressId: id,
+      addressLabel: label
+    })
+  }
+
+  const handleDelete = async () => {
+    const { addressId } = deleteConfirm
+    try {
+      if (!user) return
         
         const token = await user.getIdToken()
-        const response = await fetch(`/api/user/addresses/${id}`, {
+        const response = await fetch(`/api/addresses/${addressId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -126,7 +136,12 @@ export default function AddressesPage() {
         })
         
         if (response.ok) {
-          await fetchAddresses()
+          fetchAddresses()
+          addToast({
+            title: 'Success!',
+            description: 'Address deleted successfully!',
+            variant: 'success'
+          })
         }
       } catch (error) {
         console.error('Error deleting address:', error)
@@ -316,7 +331,7 @@ export default function AddressesPage() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleDelete(address.id)}
+                      onClick={() => handleDeleteClick(address.id, address.label)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -335,6 +350,18 @@ export default function AddressesPage() {
           ))}
         </div>
       )}
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({isOpen: false, addressId: '', addressLabel: ''})}
+        onConfirm={handleDelete}
+        title="Delete Address"
+        description={`Are you sure you want to delete "${deleteConfirm.addressLabel}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+      />
     </div>
   )
 }

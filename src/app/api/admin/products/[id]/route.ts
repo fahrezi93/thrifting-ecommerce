@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export async function PUT(
@@ -8,11 +7,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAdmin(request)
 
     const { 
       name, 
@@ -34,7 +29,7 @@ export async function PUT(
         name,
         description,
         price,
-        imageUrls,
+        imageUrls: JSON.stringify(imageUrls),
         category,
         size,
         condition,
@@ -45,8 +40,20 @@ export async function PUT(
       }
     })
 
-    return NextResponse.json(product)
+    // Parse imageUrls from JSON string to array for response
+    const productWithParsedImages = {
+      ...product,
+      imageUrls: JSON.parse(product.imageUrls)
+    }
+
+    return NextResponse.json(productWithParsedImages)
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'Admin access required') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
     console.error('Error updating product:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -57,11 +64,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAdmin(request)
 
     await prisma.product.delete({
       where: { id: params.id }
@@ -69,6 +72,12 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Product deleted successfully' })
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'Admin access required') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
     console.error('Error deleting product:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/hooks/use-toast'
+import { AlertModal } from '@/components/ui/modal'
 import { Save, Store, Globe, Mail, Phone } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -22,7 +24,9 @@ interface StoreSettings {
 }
 
 export default function AdminSettingsPage() {
-  const { user } = useAuth()
+  const [saving, setSaving] = useState(false)
+  const { addToast } = useToast()
+  const [alertModal, setAlertModal] = useState<{isOpen: boolean, title: string, description: string, variant?: 'default' | 'success' | 'error' | 'warning'}>({isOpen: false, title: '', description: ''})
   const [settings, setSettings] = useState<StoreSettings>({
     storeName: 'Thrift Haven',
     storeDescription: 'Sustainable fashion for the conscious shopper. Discover unique, quality pre-loved clothing.',
@@ -34,7 +38,7 @@ export default function AdminSettingsPage() {
     maintenanceMode: false,
   })
   const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const { user } = useAuth()
 
   useEffect(() => {
     if (user) {
@@ -80,11 +84,20 @@ export default function AdminSettingsPage() {
       
       if (response.ok) {
         // Show success message
-        alert('Settings saved successfully!')
+        addToast({
+          title: 'Success!',
+          description: 'Settings saved successfully!',
+          variant: 'success'
+        })
       }
     } catch (error) {
       console.error('Error saving settings:', error)
-      alert('Error saving settings')
+      setAlertModal({
+        isOpen: true,
+        title: 'Error',
+        description: 'Error saving settings. Please try again.',
+        variant: 'error'
+      })
     } finally {
       setSaving(false)
     }
@@ -235,6 +248,15 @@ export default function AdminSettingsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal({isOpen: false, title: '', description: ''})}
+        title={alertModal.title}
+        description={alertModal.description}
+        variant={alertModal.variant}
+      />
     </div>
   )
 }
