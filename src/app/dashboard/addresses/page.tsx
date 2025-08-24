@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Trash2, Edit, Plus, MapPin } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmModal } from '@/components/ui/modal'
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 interface Address {
   id: string
@@ -27,6 +29,7 @@ interface Address {
 export default function AddressesPage() {
   const { user } = useAuth()
   const [addresses, setAddresses] = useState<Address[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{isOpen: boolean, addressId: string, addressLabel: string}>({isOpen: false, addressId: '', addressLabel: ''})
@@ -52,18 +55,25 @@ export default function AddressesPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const response = await fetch('/api/user/addresses', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const addressesRef = collection(db, 'addresses')
+      const q = query(addressesRef, where('userId', '==', user.uid))
+      const querySnapshot = await getDocs(q)
+      
+      const addressList: Address[] = []
+      querySnapshot.forEach((doc) => {
+        addressList.push({ id: doc.id, ...doc.data() } as Address)
       })
-      if (response.ok) {
-        const data = await response.json()
-        setAddresses(data)
-      }
+      
+      setAddresses(addressList)
     } catch (error) {
       console.error('Error fetching addresses:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to fetch addresses',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -73,34 +83,54 @@ export default function AddressesPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const url = editingAddress 
-        ? `/api/user/addresses/${editingAddress.id}`
-        : '/api/user/addresses'
-      
-      const method = editingAddress ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (response.ok) {
-        await fetchAddresses()
-        setIsDialogOpen(false)
-        resetForm()
+      const addressData = {
+        ...formData,
+        userId: user.uid,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
+      
+      if (editingAddress) {
+        // Update existing address
+        const addressRef = doc(db, 'addresses', editingAddress.id)
+        await updateDoc(addressRef, {
+          ...formData,
+          updatedAt: new Date().toISOString()
+        })
+      } else {
+        // Add new address
+        await addDoc(collection(db, 'addresses'), addressData)
+      }
+      
+      fetchAddresses()
+      setFormData({
+        name: '',
+        street: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: 'Indonesia',
+        phone: '',
+        isDefault: false,
+      })
+      setIsDialogOpen(false)
+      setEditingAddress(null)
+      addToast({
+        title: 'Success!',
+        description: editingAddress ? 'Address updated successfully!' : 'Address added successfully!',
+        variant: 'success'
+      })
     } catch (error) {
       console.error('Error saving address:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to save address',
+        variant: 'destructive'
+      })
     }
   }
 
   const handleEdit = (address: Address) => {
-    setEditingAddress(address)
     setFormData({
       name: address.name,
       street: address.street,
@@ -111,6 +141,7 @@ export default function AddressesPage() {
       phone: address.phone || '',
       isDefault: address.isDefault,
     })
+    setEditingAddress(address)
     setIsDialogOpen(true)
   }
 
@@ -127,29 +158,27 @@ export default function AddressesPage() {
     try {
       if (!user) return
         
-        const token = await user.getIdToken()
-        const response = await fetch(`/api/addresses/${addressId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-        
-        if (response.ok) {
-          fetchAddresses()
-          addToast({
-            title: 'Success!',
-            description: 'Address deleted successfully!',
-            variant: 'success'
-          })
-        }
-      } catch (error) {
-        console.error('Error deleting address:', error)
-      }
+      await deleteDoc(doc(db, 'addresses', addressId))
+      
+      fetchAddresses()
+      setDeleteConfirm({ isOpen: false, addressId: '', addressLabel: '' })
+      addToast({
+        title: 'Success!',
+        description: 'Address deleted successfully!',
+        variant: 'success'
+      })
+    } catch (error) {
+      console.error('Error deleting address:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to delete address',
+        variant: 'destructive'
+      })
     }
   }
 
-  const resetForm = () => {
+  const handleDialogClose = () => {
+    setIsDialogOpen(false)
     setFormData({
       name: '',
       street: '',
@@ -163,126 +192,123 @@ export default function AddressesPage() {
     setEditingAddress(null)
   }
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false)
-    resetForm()
-  }
-
   if (isLoading) {
-    return <div>Loading addresses...</div>
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Addresses</h1>
-          <p className="text-muted-foreground">
-            Manage your shipping addresses
-          </p>
+          <h1 className="text-2xl font-bold">My Addresses</h1>
+          <p className="text-gray-600">Manage your delivery addresses</p>
         </div>
-        
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={() => { setFormData({ name: '', street: '', city: '', state: '', postalCode: '', country: 'Indonesia', phone: '', isDefault: false, }); setEditingAddress(null); setIsDialogOpen(true) }}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Address
+              Add New Address
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>
-                {editingAddress ? 'Edit Address' : 'Add New Address'}
-              </DialogTitle>
+              <DialogTitle>{editingAddress ? 'Edit Address' : 'Add New Address'}</DialogTitle>
               <DialogDescription>
-                {editingAddress 
-                  ? 'Update your address information'
-                  : 'Add a new shipping address to your account'
-                }
+                {editingAddress ? 'Update your address information.' : 'Add a new delivery address to your account.'}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-4 py-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Address Name</Label>
+                  <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
-                    placeholder="e.g., Home, Office"
+                    placeholder="Full Name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="street">Street Address</Label>
-                  <Input
-                    id="street"
-                    placeholder="Enter street address"
-                    value={formData.street}
-                    onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      placeholder="City"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="state">State/Province</Label>
-                    <Input
-                      id="state"
-                      placeholder="State"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="postalCode">Postal Code</Label>
-                    <Input
-                      id="postalCode"
-                      placeholder="12345"
-                      value={formData.postalCode}
-                      onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="country">Country</Label>
-                    <Input
-                      id="country"
-                      value={formData.country}
-                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
-                    type="tel"
-                    placeholder="Phone number"
+                    placeholder="Phone Number"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="street">Street Address</Label>
+                <Input
+                  id="street"
+                  placeholder="Street Address"
+                  value={formData.street}
+                  onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    placeholder="City"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State/Province</Label>
+                  <Input
+                    id="state"
+                    placeholder="State"
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="postalCode">Postal Code</Label>
+                  <Input
+                    id="postalCode"
+                    placeholder="Postal Code"
+                    value={formData.postalCode}
+                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    placeholder="Country"
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleDialogClose}>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button type="submit">
-                  {editingAddress ? 'Update' : 'Add'} Address
+                  {editingAddress ? 'Update Address' : 'Add Address'}
                 </Button>
               </DialogFooter>
             </form>
@@ -293,33 +319,43 @@ export default function AddressesPage() {
       {addresses.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
-            <MapPin className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No addresses yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Add your first shipping address to start shopping
-            </p>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No addresses yet</h3>
+            <p className="text-gray-500 mb-4">Add your first delivery address to get started.</p>
+            <Button onClick={() => { 
+              setFormData({
+                name: '',
+                street: '',
+                city: '',
+                state: '',
+                postalCode: '',
+                country: 'Indonesia',
+                phone: '',
+                isDefault: false,
+              });
+              setEditingAddress(null);
+              setIsDialogOpen(true);
+            }}>
               <Plus className="mr-2 h-4 w-4" />
               Add Address
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {addresses.map((address) => (
-            <Card key={address.id}>
+            <Card key={address.id} className="relative">
               <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {address.name}
-                      {address.isDefault && (
-                        <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-                          Default
-                        </span>
-                      )}
-                    </CardTitle>
-                  </div>
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    {address.name}
+                    {address.isDefault && (
+                      <Badge variant="secondary" className="text-xs">
+                        Default
+                      </Badge>
+                    )}
+                  </CardTitle>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -331,7 +367,7 @@ export default function AddressesPage() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleDeleteClick(address.id, address.label)}
+                      onClick={() => handleDeleteClick(address.id, address.name)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -350,17 +386,13 @@ export default function AddressesPage() {
           ))}
         </div>
       )}
-
-      {/* Confirm Modal */}
+      
       <ConfirmModal
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({isOpen: false, addressId: '', addressLabel: ''})}
         onConfirm={handleDelete}
         title="Delete Address"
         description={`Are you sure you want to delete "${deleteConfirm.addressLabel}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="destructive"
       />
     </div>
   )

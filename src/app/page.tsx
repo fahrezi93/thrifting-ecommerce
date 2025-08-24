@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ShoppingBag, Recycle, Heart, Star } from 'lucide-react'
 import { CartSheet } from '@/components/cart/cart-sheet'
+import AnimatedBackground from '@/components/ui/AnimatedBackground'
 
 export default function HomePage() {
   const featuredProducts = [
@@ -52,22 +53,51 @@ export default function HomePage() {
     <>
       <div className="min-h-screen">
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-r from-primary/10 to-primary/5 py-20 md:py-32">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
+        <section className="relative py-20 md:py-32 overflow-hidden">
+          {/* Animated CSS Background */}
+          <AnimatedBackground />
+          
+          {/* Gradient Overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/85 to-background/90"></div>
+          
+          <div className="container mx-auto px-4 relative z-20">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                  <Recycle className="h-4 w-4" />
+                  Sustainable Fashion
+                </div>
                 <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                   Sustainable Fashion
-                  <span className="block text-primary">Starts Here</span>
+                  <span className="block text-primary bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    Starts Here
+                  </span>
                 </h1>
-                <p className="text-lg md:text-xl text-muted-foreground">
+                <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
                   Discover unique, quality pre-loved clothing that tells a story. 
-                  Shop consciously, dress beautifully.
+                  Shop consciously, dress beautifully, and make a positive impact on our planet.
                 </p>
+                
+                {/* Stats */}
+                <div className="flex flex-wrap gap-6 py-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">1000+</div>
+                    <div className="text-sm text-muted-foreground">Happy Customers</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">5000+</div>
+                    <div className="text-sm text-muted-foreground">Items Sold</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">95%</div>
+                    <div className="text-sm text-muted-foreground">Satisfaction Rate</div>
+                  </div>
+                </div>
+                
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button asChild size="lg" className="text-lg">
+                  <Button asChild size="lg" className="text-lg group">
                     <Link href="/products">
-                      <ShoppingBag className="mr-2 h-5 w-5" />
+                      <ShoppingBag className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
                       Shop Now
                     </Link>
                   </Button>
@@ -76,15 +106,28 @@ export default function HomePage() {
                   </Button>
                 </div>
               </div>
-              <div className="relative">
-                <div className="aspect-square rounded-2xl overflow-hidden bg-muted">
+              
+              <div className="relative lg:col-span-1">
+                {/* Decorative rings */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-primary/10 rounded-full blur-2xl animate-pulse"></div>
+                <div className="absolute -inset-2 border border-primary/20 rounded-full animate-spin-slow"></div>
+                
+                <div className="relative aspect-square max-w-sm mx-auto rounded-2xl overflow-hidden bg-muted shadow-2xl">
                   <Image
-                    src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=600&fit=crop"
+                    src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=400&fit=crop"
                     alt="Thrift fashion collection"
-                    width={600}
-                    height={600}
-                    className="object-cover w-full h-full"
+                    width={400}
+                    height={400}
+                    className="object-cover w-full h-full hover:scale-105 transition-transform duration-700"
                   />
+                  
+                  {/* Floating badges */}
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-primary shadow-lg">
+                    ✨ Curated
+                  </div>
+                  <div className="absolute bottom-4 right-4 bg-primary text-primary-foreground rounded-full px-3 py-1 text-xs font-medium shadow-lg">
+                    Eco-Friendly
+                  </div>
                 </div>
               </div>
             </div>
@@ -205,7 +248,7 @@ export default function HomePage() {
                   <Link href="/auth/signup">Create Account</Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                  <Link href="/products">Browse Collection</Link>
+                  <Link href="/products" className="text-primary-foreground hover:text-primary">Browse Collection</Link>
                 </Button>
               </div>
             </div>

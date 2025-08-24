@@ -8,9 +8,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useCartStore } from '@/store/cart'
-import { ArrowLeft, Heart, Share2, ShoppingCart } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, ShoppingCart, Check } from 'lucide-react'
 import Link from 'next/link'
 import { CartSheet } from '@/components/cart/cart-sheet'
+import { useToast } from '@/hooks/use-toast'
 
 interface Product {
   id: string
@@ -31,7 +32,9 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [isSaved, setIsSaved] = useState(false)
   const { addItem } = useCartStore()
+  const { addToast } = useToast()
 
   useEffect(() => {
     if (params.id) {
@@ -63,8 +66,98 @@ export default function ProductDetailPage() {
         size: product.size,
         stock: product.stock,
       })
+      addToast({
+        title: 'Added to Cart!',
+        description: `${product.name} has been added to your cart.`,
+        variant: 'success'
+      })
     }
   }
+
+  const handleSaveForLater = () => {
+    if (!product) return
+    
+    const savedItems = JSON.parse(localStorage.getItem('savedItems') || '[]')
+    
+    if (isSaved) {
+      // Remove from saved items
+      const updatedItems = savedItems.filter((item: any) => item.id !== product.id)
+      localStorage.setItem('savedItems', JSON.stringify(updatedItems))
+      setIsSaved(false)
+      addToast({
+        title: 'Removed from Saved Items',
+        description: `${product.name} has been removed from your saved items.`,
+        variant: 'default'
+      })
+    } else {
+      // Add to saved items
+      const savedItem = {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        imageUrl: product.imageUrls[0],
+        size: product.size,
+        savedAt: new Date().toISOString()
+      }
+      savedItems.push(savedItem)
+      localStorage.setItem('savedItems', JSON.stringify(savedItems))
+      setIsSaved(true)
+      addToast({
+        title: 'Saved for Later!',
+        description: `${product.name} has been saved to your wishlist.`,
+        variant: 'success'
+      })
+    }
+  }
+
+  const handleShare = async () => {
+    if (!product) return
+    
+    const shareData = {
+      title: product.name,
+      text: `Check out this ${product.name} on Thrift Haven - ${formatPrice(product.price)}`,
+      url: window.location.href
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(window.location.href)
+        addToast({
+          title: 'Link Copied!',
+          description: 'Product link has been copied to your clipboard.',
+          variant: 'success'
+        })
+      }
+    } catch (error) {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        addToast({
+          title: 'Link Copied!',
+          description: 'Product link has been copied to your clipboard.',
+          variant: 'success'
+        })
+      } catch (clipboardError) {
+        addToast({
+          title: 'Share Failed',
+          description: 'Unable to share this product. Please try again.',
+          variant: 'destructive'
+        })
+      }
+    }
+  }
+
+  // Check if item is saved on component mount
+  useEffect(() => {
+    if (product) {
+      const savedItems = JSON.parse(localStorage.getItem('savedItems') || '[]')
+      const isItemSaved = savedItems.some((item: any) => item.id === product.id)
+      setIsSaved(isItemSaved)
+    }
+  }, [product])
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -222,11 +315,23 @@ export default function ProductDetailPage() {
               </Button>
 
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1">
-                  <Heart className="mr-2 h-4 w-4" />
-                  Save for Later
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={handleSaveForLater}
+                >
+                  {isSaved ? (
+                    <Check className="mr-2 h-4 w-4 text-green-600" />
+                  ) : (
+                    <Heart className="mr-2 h-4 w-4" />
+                  )}
+                  {isSaved ? 'Saved' : 'Save for Later'}
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={handleShare}
+                >
                   <Share2 className="mr-2 h-4 w-4" />
                   Share
                 </Button>

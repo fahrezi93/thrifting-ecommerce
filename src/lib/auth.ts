@@ -14,10 +14,25 @@ export async function getServerSession(request: NextRequest): Promise<Authentica
   try {
     const authHeader = request.headers.get('authorization')
     if (!authHeader?.startsWith('Bearer ')) {
+      console.log('No valid authorization header found')
       return null
     }
 
     const token = authHeader.split('Bearer ')[1]
+    if (!token || token.trim() === '') {
+      console.log('Empty or invalid token')
+      return null
+    }
+
+    console.log('Attempting to verify token:', token.substring(0, 20) + '...')
+    
+    // Validate token format - Firebase ID tokens are JWTs with 3 parts separated by dots
+    const tokenParts = token.split('.')
+    if (tokenParts.length !== 3) {
+      console.log('Invalid token format - not a valid JWT')
+      return null
+    }
+    
     const decodedToken = await adminAuth.verifyIdToken(token)
     
     // Get user from database using Firebase UID (stored as id)
