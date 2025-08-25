@@ -123,10 +123,23 @@ export default function CheckoutPage() {
       if (response.ok) {
         const { transactionToken } = await response.json()
         
-        // Load Midtrans Snap
+        // Check if this is a development mock token
+        if (transactionToken.startsWith('dev-mock-token-')) {
+          // For development, simulate successful payment
+          const shouldSucceed = confirm('Development Mode: Simulate successful payment?')
+          if (shouldSucceed) {
+            clearCart()
+            router.push(`/dashboard/orders?success=true`)
+          } else {
+            setError('Payment cancelled in development mode')
+          }
+          return
+        }
+        
+        // Load Midtrans Snap for real transactions
         const script = document.createElement('script')
         script.src = 'https://app.sandbox.midtrans.com/snap/snap.js'
-        script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY!)
+        script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || 'SB-Mid-client-dummy-key-for-dev')
         document.head.appendChild(script)
 
         script.onload = () => {

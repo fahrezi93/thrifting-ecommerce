@@ -106,3 +106,20 @@ model OrderItem {
 
   @@unique([orderId, productId])
 }
+
+model Payment {
+  id               String   @id @default(cuid())
+  orderId          String
+  transactionId    String   @unique
+  paymentMethod    String
+  amount           Float
+  status           String   @default("PENDING") // PENDING, SUCCESS, FAILED, EXPIRED
+  midtransResponse String?  // JSON string
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([transactionId])
+  @@index([status])
+}

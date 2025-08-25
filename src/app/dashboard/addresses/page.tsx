@@ -11,8 +11,6 @@ import { Trash2, Edit, Plus, MapPin } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmModal } from '@/components/ui/modal'
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 
 interface Address {
   id: string
@@ -48,25 +46,54 @@ export default function AddressesPage() {
   useEffect(() => {
     if (user) {
       fetchAddresses()
+    } else {
+      // If no user, stop loading immediately
+      setIsLoading(false)
     }
   }, [user])
+  
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('Address loading timeout - stopping loading state')
+        setIsLoading(false)
+        setAddresses([])
+      }
+    }, 10000) // 10 second timeout
+    
+    return () => clearTimeout(timeout)
+  }, [isLoading])
 
   const fetchAddresses = async () => {
     try {
-      if (!user) return
+      if (!user) {
+        setIsLoading(false)
+        return
+      }
       
-      const addressesRef = collection(db, 'addresses')
-      const q = query(addressesRef, where('userId', '==', user.uid))
-      const querySnapshot = await getDocs(q)
-      
-      const addressList: Address[] = []
-      querySnapshot.forEach((doc) => {
-        addressList.push({ id: doc.id, ...doc.data() } as Address)
+      const token = await user.getIdToken()
+      const response = await fetch('/api/user/addresses', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
       
-      setAddresses(addressList)
+      if (response.ok) {
+        const addressList = await response.json()
+        setAddresses(addressList)
+      } else {
+        console.error('Failed to fetch addresses:', response.status)
+        setAddresses([])
+        addToast({
+          title: 'Error',
+          description: 'Failed to fetch addresses',
+          variant: 'destructive'
+        })
+      }
     } catch (error) {
       console.error('Error fetching addresses:', error)
+      setAddresses([])
       addToast({
         title: 'Error',
         description: 'Failed to fetch addresses',
@@ -83,23 +110,36 @@ export default function AddressesPage() {
     try {
       if (!user) return
       
-      const addressData = {
-        ...formData,
-        userId: user.uid,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
+      const token = await user.getIdToken()
       
       if (editingAddress) {
         // Update existing address
-        const addressRef = doc(db, 'addresses', editingAddress.id)
-        await updateDoc(addressRef, {
-          ...formData,
-          updatedAt: new Date().toISOString()
+        const response = await fetch(`/api/user/addresses/${editingAddress.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
         })
+        
+        if (!response.ok) {
+          throw new Error('Failed to update address')
+        }
       } else {
         // Add new address
-        await addDoc(collection(db, 'addresses'), addressData)
+        const response = await fetch('/api/user/addresses', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to add address')
+        }
       }
       
       fetchAddresses()
@@ -157,8 +197,18 @@ export default function AddressesPage() {
     const { addressId } = deleteConfirm
     try {
       if (!user) return
-        
-      await deleteDoc(doc(db, 'addresses', addressId))
+      
+      const token = await user.getIdToken()
+      const response = await fetch(`/api/user/addresses/${addressId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete address')
+      }
       
       fetchAddresses()
       setDeleteConfirm({ isOpen: false, addressId: '', addressLabel: '' })

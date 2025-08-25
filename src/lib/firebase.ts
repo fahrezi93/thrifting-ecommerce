@@ -11,7 +11,32 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 }
 
-const app = initializeApp(firebaseConfig)
-export const auth = getAuth(app)
-export const db = getFirestore(app)
+// Check if all required config values are present
+const isConfigValid = firebaseConfig.apiKey && 
+                     firebaseConfig.authDomain && 
+                     firebaseConfig.projectId && 
+                     firebaseConfig.appId
+
+let app: any
+let auth: any
+let db: any
+
+if (isConfigValid) {
+  try {
+    app = initializeApp(firebaseConfig)
+    auth = getAuth(app)
+    db = getFirestore(app)
+    console.log('Firebase initialized successfully')
+  } catch (error) {
+    console.error('Firebase initialization failed:', error)
+    auth = null
+    db = null
+  }
+} else {
+  console.warn('Firebase config incomplete. Missing environment variables.')
+  auth = null
+  db = null
+}
+
+export { auth, db }
 export default app

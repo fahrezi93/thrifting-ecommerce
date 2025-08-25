@@ -28,6 +28,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(orders)
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     console.error('Error fetching orders:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

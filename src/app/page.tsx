@@ -118,6 +118,7 @@ export default function HomePage() {
                     alt="Thrift fashion collection"
                     width={400}
                     height={400}
+                    priority
                     className="object-cover w-full h-full hover:scale-105 transition-transform duration-700"
                   />
                   

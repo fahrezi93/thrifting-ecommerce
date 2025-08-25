@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ShoppingBag, Package, Truck, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { ShoppingBag, Package, Truck, CheckCircle, XCircle, Clock, CreditCard } from 'lucide-react'
 import Image from 'next/image'
 
 interface OrderItem {
@@ -50,6 +51,7 @@ const statusConfig = {
 
 export default function OrdersPage() {
   const searchParams = useSearchParams()
+  const { user } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
@@ -67,13 +69,35 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('/api/user/orders')
+      if (!user) {
+        setLoading(false)
+        return
+      }
+      
+      const token = await user.getIdToken()
+      const response = await fetch('/api/user/orders', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
       if (response.ok) {
         const data = await response.json()
-        setOrders(data)
+        // Validate that data is an array and not an error object
+        if (Array.isArray(data)) {
+          setOrders(data)
+        } else {
+          console.error('Invalid data format received:', data)
+          setOrders([])
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to fetch orders:', response.status, errorData)
+        setOrders([])
       }
     } catch (error) {
       console.error('Error fetching orders:', error)
+      setOrders([])
     } finally {
       setLoading(false)
     }
@@ -155,16 +179,31 @@ export default function OrdersPage() {
                 <CardContent className="space-y-4">
                   {/* Order Items */}
                   <div className="space-y-3">
-                    {order.orderItems.map((item) => (
-                      <div key={item.id} className="flex gap-4 p-3 bg-muted rounded-lg">
-                        <div className="relative h-16 w-16 flex-shrink-0">
-                          <Image
-                            src={item.product.imageUrls[0]}
-                            alt={item.product.name}
-                            fill
-                            className="object-cover rounded-md"
-                          />
-                        </div>
+                    {order.orderItems.map((item) => {
+                      // Validate image URL
+                      const imageUrl = item.product.imageUrls && item.product.imageUrls.length > 0 
+                        ? item.product.imageUrls[0] 
+                        : '/placeholder-image.jpg'
+                      
+                      // Ensure the URL is valid and starts with proper protocol
+                      const validImageUrl = imageUrl.startsWith('http') || imageUrl.startsWith('/') 
+                        ? imageUrl 
+                        : '/placeholder-image.jpg'
+
+                      return (
+                        <div key={item.id} className="flex gap-4 p-3 bg-muted rounded-lg">
+                          <div className="relative h-16 w-16 flex-shrink-0">
+                            <Image
+                              src={validImageUrl}
+                              alt={item.product.name}
+                              fill
+                              className="object-cover rounded-md"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                target.src = '/placeholder-image.jpg'
+                              }}
+                            />
+                          </div>
                         <div className="flex-1">
                           <h4 className="font-medium">{item.product.name}</h4>
                           <p className="text-sm text-muted-foreground">
@@ -172,8 +211,9 @@ export default function OrdersPage() {
                           </p>
                           <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
                         </div>
-                      </div>
-                    ))}
+                        </div>
+                      )
+                    })}
                   </div>
 
                   {/* Shipping Address */}
@@ -205,6 +245,17 @@ export default function OrdersPage() {
                           <span>{formatPrice(order.totalAmount)}</span>
                         </div>
                       </div>
+                    </div>
+                    
+                    {/* Pay Now Button for All Orders (for testing) */}
+                    <div className="mt-4 pt-4 border-t">
+                      <Button 
+                        className="w-full"
+                        onClick={() => window.location.href = `/payment?orderId=${order.id}`}
+                      >
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Bayar Sekarang
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

@@ -1,0 +1,515 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { 
+  CreditCard, 
+  Smartphone, 
+  Building2, 
+  Wallet, 
+  CheckCircle,
+  Clock,
+  ArrowLeft
+} from 'lucide-react'
+import Image from 'next/image'
+
+interface PaymentMethod {
+  id: string
+  name: string
+  type: 'ewallet' | 'bank' | 'retail'
+  icon: string
+  description: string
+  fee: number
+  processingTime: string
+}
+
+interface OrderSummary {
+  orderId: string
+  orderNumber: string
+  items: Array<{
+    name: string
+    quantity: number
+    price: number
+    size: string
+  }>
+  subtotal: number
+  shipping: number
+  total: number
+}
+
+const paymentMethods: PaymentMethod[] = [
+  {
+    id: 'qris',
+    name: 'QRIS',
+    type: 'ewallet',
+    icon: '/payment-icons/qris.png',
+    description: 'Scan QR code dengan aplikasi e-money dan bank',
+    fee: 0,
+    processingTime: 'Instan'
+  },
+  {
+    id: 'ovo',
+    name: 'OVO',
+    type: 'ewallet',
+    icon: '/payment-icons/ovo.png',
+    description: 'Bayar dengan saldo OVO atau OVO PayLater',
+    fee: 0,
+    processingTime: 'Instan'
+  },
+  {
+    id: 'dana',
+    name: 'DANA',
+    type: 'ewallet',
+    icon: '/payment-icons/dana.png',
+    description: 'Bayar dengan saldo DANA',
+    fee: 0,
+    processingTime: 'Instan'
+  },
+  {
+    id: 'linkaja',
+    name: 'LinkAja',
+    type: 'ewallet',
+    icon: '/payment-icons/linkaja.png',
+    description: 'Bayar dengan saldo LinkAja',
+    fee: 0,
+    processingTime: 'Instan'
+  },
+  {
+    id: 'gopay',
+    name: 'GoPay',
+    type: 'ewallet',
+    icon: '/payment-icons/gopay.png',
+    description: 'Bayar dengan saldo GoPay',
+    fee: 0,
+    processingTime: 'Instan'
+  },
+  {
+    id: 'bca',
+    name: 'BCA Virtual Account',
+    type: 'bank',
+    icon: '/payment-icons/bca.png',
+    description: 'Transfer ke Virtual Account BCA',
+    fee: 4000,
+    processingTime: '1-10 menit'
+  },
+  {
+    id: 'bni',
+    name: 'BNI Virtual Account',
+    type: 'bank',
+    icon: '/payment-icons/bni.png',
+    description: 'Transfer ke Virtual Account BNI',
+    fee: 4000,
+    processingTime: '1-10 menit'
+  },
+  {
+    id: 'bri',
+    name: 'BRI Virtual Account',
+    type: 'bank',
+    icon: '/payment-icons/bri.png',
+    description: 'Transfer ke Virtual Account BRI',
+    fee: 4000,
+    processingTime: '1-10 menit'
+  },
+  {
+    id: 'mandiri',
+    name: 'Mandiri Virtual Account',
+    type: 'bank',
+    icon: '/payment-icons/mandiri.png',
+    description: 'Transfer ke Virtual Account Mandiri',
+    fee: 4000,
+    processingTime: '1-10 menit'
+  },
+  {
+    id: 'alfamart',
+    name: 'Alfamart',
+    type: 'retail',
+    icon: '/payment-icons/alfamart.png',
+    description: 'Bayar di kasir Alfamart terdekat',
+    fee: 2500,
+    processingTime: '1-24 jam'
+  },
+  {
+    id: 'indomaret',
+    name: 'Indomaret',
+    type: 'retail',
+    icon: '/payment-icons/indomaret.png',
+    description: 'Bayar di kasir Indomaret terdekat',
+    fee: 2500,
+    processingTime: '1-24 jam'
+  }
+]
+
+export default function PaymentPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const { user } = useAuth()
+  const [selectedMethod, setSelectedMethod] = useState<string>('')
+  const [orderSummary, setOrderSummary] = useState<OrderSummary | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [processing, setProcessing] = useState(false)
+
+  const orderId = searchParams.get('orderId')
+
+  useEffect(() => {
+    if (orderId) {
+      fetchOrderSummary()
+    } else {
+      setLoading(false)
+    }
+  }, [orderId])
+
+  const fetchOrderSummary = async () => {
+    try {
+      // Always create a test order for payment testing
+      setOrderSummary({
+        orderId: orderId || 'test-order-' + Date.now(),
+        orderNumber: 'TH-' + Date.now().toString().slice(-6),
+        items: [
+          {
+            name: 'Vintage Denim Jacket',
+            quantity: 1,
+            price: 125000,
+            size: 'L'
+          },
+          {
+            name: 'Cotton T-Shirt',
+            quantity: 2,
+            price: 45000,
+            size: 'M'
+          }
+        ],
+        subtotal: 215000,
+        shipping: 15000,
+        total: 230000
+      })
+    } catch (error) {
+      console.error('Error creating test order:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+    }).format(price)
+  }
+
+  const getMethodIcon = (type: string) => {
+    switch (type) {
+      case 'ewallet':
+        return <Smartphone className="w-5 h-5" />
+      case 'bank':
+        return <Building2 className="w-5 h-5" />
+      case 'retail':
+        return <CreditCard className="w-5 h-5" />
+      default:
+        return <Wallet className="w-5 h-5" />
+    }
+  }
+
+  const handlePayment = async () => {
+    if (!selectedMethod || !orderSummary) return
+
+    setProcessing(true)
+    try {
+      const token = await user?.getIdToken()
+      const response = await fetch('/api/payment/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          orderId: orderSummary.orderId,
+          paymentMethod: selectedMethod
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Redirect to payment gateway or show payment instructions
+        if (data.redirectUrl) {
+          window.location.href = data.redirectUrl
+        } else {
+          router.push(`/payment/instructions?orderId=${orderSummary.orderId}&method=${selectedMethod}`)
+        }
+      }
+    } catch (error) {
+      console.error('Payment error:', error)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading payment information...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!orderSummary) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="text-center py-12">
+            <h3 className="text-lg font-semibold mb-2">Order not found</h3>
+            <p className="text-muted-foreground mb-4">
+              The order you're trying to pay for could not be found.
+            </p>
+            <Button onClick={() => router.push('/dashboard/orders')}>
+              View Orders
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const selectedPaymentMethod = paymentMethods.find(m => m.id === selectedMethod)
+  const finalTotal = orderSummary.total + (selectedPaymentMethod?.fee || 0)
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Kembali
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Pilih Metode Pembayaran</h1>
+          <p className="text-muted-foreground">
+            Order #{orderSummary.orderNumber}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Payment Methods */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* E-Wallet */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Smartphone className="w-5 h-5" />
+                E-Wallet
+              </CardTitle>
+              <CardDescription>
+                Pembayaran instan dengan dompet digital
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {paymentMethods.filter(m => m.type === 'ewallet').map((method) => (
+                <div
+                  key={method.id}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                    selectedMethod === method.id 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onClick={() => setSelectedMethod(method.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-8 bg-gray-100 rounded flex items-center justify-center">
+                        <span className="text-xs font-medium">{method.name}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{method.name}</p>
+                        <p className="text-sm text-muted-foreground">{method.description}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-green-600">Gratis</p>
+                      <p className="text-xs text-muted-foreground">{method.processingTime}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Bank Transfer */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Transfer Bank
+              </CardTitle>
+              <CardDescription>
+                Transfer ke Virtual Account bank
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {paymentMethods.filter(m => m.type === 'bank').map((method) => (
+                <div
+                  key={method.id}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                    selectedMethod === method.id 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onClick={() => setSelectedMethod(method.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-8 bg-gray-100 rounded flex items-center justify-center">
+                        <span className="text-xs font-medium">{method.name.split(' ')[0]}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{method.name}</p>
+                        <p className="text-sm text-muted-foreground">{method.description}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{formatPrice(method.fee)}</p>
+                      <p className="text-xs text-muted-foreground">{method.processingTime}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Retail */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Retail Store
+              </CardTitle>
+              <CardDescription>
+                Bayar di toko retail terdekat
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {paymentMethods.filter(m => m.type === 'retail').map((method) => (
+                <div
+                  key={method.id}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                    selectedMethod === method.id 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onClick={() => setSelectedMethod(method.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-8 bg-gray-100 rounded flex items-center justify-center">
+                        <span className="text-xs font-medium">{method.name}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{method.name}</p>
+                        <p className="text-sm text-muted-foreground">{method.description}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{formatPrice(method.fee)}</p>
+                      <p className="text-xs text-muted-foreground">{method.processingTime}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Order Summary */}
+        <div className="space-y-6">
+          <Card className="sticky top-4">
+            <CardHeader>
+              <CardTitle>Ringkasan Pesanan</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Items */}
+              <div className="space-y-3">
+                {orderSummary.items.map((item, index) => (
+                  <div key={index} className="flex justify-between text-sm">
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-muted-foreground">
+                        Size {item.size} × {item.quantity}
+                      </p>
+                    </div>
+                    <p className="font-medium">{formatPrice(item.price * item.quantity)}</p>
+                  </div>
+                ))}
+              </div>
+
+              <Separator />
+
+              {/* Pricing */}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatPrice(orderSummary.subtotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Ongkos Kirim</span>
+                  <span>{formatPrice(orderSummary.shipping)}</span>
+                </div>
+                {selectedPaymentMethod && selectedPaymentMethod.fee > 0 && (
+                  <div className="flex justify-between">
+                    <span>Biaya Admin</span>
+                    <span>{formatPrice(selectedPaymentMethod.fee)}</span>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="flex justify-between font-semibold">
+                <span>Total</span>
+                <span>{formatPrice(finalTotal)}</span>
+              </div>
+
+              {/* Payment Button */}
+              <Button 
+                className="w-full" 
+                size="lg"
+                disabled={!selectedMethod || processing}
+                onClick={handlePayment}
+              >
+                {processing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Bayar Sekarang
+                  </>
+                )}
+              </Button>
+
+              {selectedMethod && (
+                <div className="text-xs text-muted-foreground text-center">
+                  Dengan melanjutkan, Anda menyetujui syarat dan ketentuan pembayaran
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}

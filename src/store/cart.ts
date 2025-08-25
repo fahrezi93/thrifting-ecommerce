@@ -36,26 +36,42 @@ export const useCartStore = create<CartStore>()(
       setUserId: (userId) => {
         const currentUserId = get().userId
         if (currentUserId !== userId) {
-          // Clear cart when switching users
-          set({ userId, items: [] })
+          // Set new user ID but don't clear cart immediately
+          set({ userId })
           if (userId) {
+            // Load cart from server for new user
             get().loadUserCart(userId)
+          } else {
+            // Clear cart only when logging out
+            set({ items: [] })
           }
         }
       },
 
       loadUserCart: async (userId) => {
         try {
-          // Load cart from server for this user
+          // Get current user and token
+          const auth = (window as any).firebase?.auth()
+          const currentUser = auth?.currentUser
+          
+          if (!currentUser) {
+            console.log('No current user, skipping cart load')
+            return
+          }
+          
+          const token = await currentUser.getIdToken()
           const response = await fetch(`/api/user/cart`, {
             headers: {
-              'Authorization': `Bearer ${await (window as any).firebase?.auth()?.currentUser?.getIdToken()}`,
+              'Authorization': `Bearer ${token}`,
             },
           })
           
           if (response.ok) {
             const { items } = await response.json()
             set({ items: items || [] })
+            console.log('Cart loaded successfully:', items?.length || 0, 'items')
+          } else {
+            console.error('Failed to load cart:', response.status)
           }
         } catch (error) {
           console.error('Error loading user cart:', error)

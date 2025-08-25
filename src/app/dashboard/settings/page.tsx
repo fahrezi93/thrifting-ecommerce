@@ -289,11 +289,9 @@ export default function SettingsPage() {
             </Button>
             
             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="flex items-center gap-2">
-                  <Trash2 className="h-4 w-4" />
-                  Delete Account
-                </Button>
+              <AlertDialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2 gap-2">
+                <Trash2 className="h-4 w-4" />
+                Delete Account
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>

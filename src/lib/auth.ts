@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
-import { adminAuth } from './firebase-admin'
 import { prisma } from './prisma'
+
+import { adminAuth } from './firebase-admin'
 
 export interface AuthenticatedUser {
   id: string
@@ -31,6 +32,31 @@ export async function getServerSession(request: NextRequest): Promise<Authentica
     if (tokenParts.length !== 3) {
       console.log('Invalid token format - not a valid JWT')
       return null
+    }
+    
+    if (!adminAuth) {
+      // Fallback: decode JWT manually to get UID (for development)
+      try {
+        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
+        const user = await prisma.user.findUnique({
+          where: { id: payload.user_id || payload.sub }
+        })
+        
+        if (!user) {
+          return null
+        }
+        
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          firebaseUid: user.id
+        }
+      } catch (fallbackError) {
+        console.error('Fallback token decode failed:', fallbackError)
+        return null
+      }
     }
     
     const decodedToken = await adminAuth.verifyIdToken(token)

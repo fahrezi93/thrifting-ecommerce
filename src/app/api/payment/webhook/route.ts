@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    // Find the order
+    // Find the order by orderNumber (not id)
     const order = await prisma.order.findUnique({
-      where: { id: orderId },
+      where: { orderNumber: orderId },
       include: {
         orderItems: {
           include: {

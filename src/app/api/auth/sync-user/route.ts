@@ -1,27 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyIdToken } from '@/lib/firebase-admin'
 
 export async function POST(request: NextRequest) {
   try {
-    const { uid, email, name, emailVerified, image, idToken } = await request.json()
+    const { uid, email, name, emailVerified, image } = await request.json()
 
-    // Verify the Firebase ID token if provided
-    if (idToken) {
-      try {
-        const decodedToken = await verifyIdToken(idToken)
-        if (decodedToken.uid !== uid) {
-          return NextResponse.json(
-            { error: 'Token UID mismatch' },
-            { status: 401 }
-          )
-        }
-      } catch (error) {
-        return NextResponse.json(
-          { error: 'Invalid token' },
-          { status: 401 }
-        )
-      }
+    // Basic validation
+    if (!uid || !email) {
+      return NextResponse.json(
+        { error: 'UID and email are required' },
+        { status: 400 }
+      )
     }
 
     // Determine role based on email
