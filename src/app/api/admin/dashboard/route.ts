@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin(request)
+    const user = await requireAdmin(request)
 
     // Get total counts
     const [totalProducts, totalOrders, totalUsers] = await Promise.all([
@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
       prisma.user.count(),
     ])
 
-    // Get total revenue from completed orders
+    // Get total revenue from paid orders
     const revenueResult = await prisma.order.aggregate({
-      where: { status: 'COMPLETED' },
+      where: { status: 'PAID' },
       _sum: { totalAmount: true }
     })
     const totalRevenue = Number(revenueResult._sum.totalAmount) || 0
@@ -59,6 +59,12 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (error instanceof Error && error.message === 'Admin access required') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

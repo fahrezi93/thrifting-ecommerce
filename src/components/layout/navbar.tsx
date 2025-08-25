@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAuth } from '@/contexts/AuthContext'
-import { useCartStore } from '@/store/cart'
+import { useCart } from '@/store/cart'
 import { useRouter } from 'next/navigation'
 import { ClientOnly } from '@/components/client-only'
 
@@ -74,7 +74,7 @@ function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobi
 
 export function Navbar() {
   const { user, logout } = useAuth()
-  const { getTotalItems, toggleCart } = useCartStore()
+  const { getTotalItems, toggleCart } = useCart()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 

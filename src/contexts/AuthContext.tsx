@@ -69,8 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Update cart store with user ID
       try {
-        const { useCartStore } = require('@/store/cart')
-        useCartStore.getState().setUserId(firebaseUser?.uid || null)
+        const { useCart } = require('@/store/cart')
+        useCart.getState().setUserId(firebaseUser?.uid || null)
       } catch (error) {
         console.warn('Cart store not available:', error)
       }

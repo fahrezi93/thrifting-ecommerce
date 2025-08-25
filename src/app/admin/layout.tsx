@@ -20,6 +20,11 @@ const sidebarItems = [
     icon: Package,
   },
   {
+    title: 'Categories',
+    href: '/admin/categories',
+    icon: Package,
+  },
+  {
     title: 'Orders',
     href: '/admin/orders',
     icon: ShoppingCart,

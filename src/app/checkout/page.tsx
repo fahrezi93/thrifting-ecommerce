@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { useCartStore } from '@/store/cart'
+import { useCart } from '@/store/cart'
 import { ChevronLeft, ChevronRight, MapPin, CreditCard } from 'lucide-react'
 import Image from 'next/image'
 
@@ -27,7 +27,7 @@ interface Address {
 export default function CheckoutPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const { items, getTotalPrice, clearCart } = useCartStore()
+  const { items, getTotalPrice, clearCart } = useCart()
   
   const [currentStep, setCurrentStep] = useState(1)
   const [addresses, setAddresses] = useState<Address[]>([])

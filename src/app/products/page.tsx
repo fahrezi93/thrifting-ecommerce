@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { Search, Filter, SlidersHorizontal } from 'lucide-react'
-import { useCartStore } from '@/store/cart'
+import { useCart } from '@/store/cart'
 import { CartSheet } from '@/components/cart/cart-sheet'
 
 interface Product {
@@ -52,7 +52,7 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState('newest')
   const [showFilters, setShowFilters] = useState(false)
   
-  const { addItem } = useCartStore()
+  const { addItem } = useCart()
 
   useEffect(() => {
     fetchProducts()

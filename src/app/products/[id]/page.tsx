@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { useCartStore } from '@/store/cart'
+import { useCart } from '@/store/cart'
 import { ArrowLeft, Heart, Share2, ShoppingCart, Check } from 'lucide-react'
 import Link from 'next/link'
 import { CartSheet } from '@/components/cart/cart-sheet'
@@ -33,7 +33,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isSaved, setIsSaved] = useState(false)
-  const { addItem } = useCartStore()
+  const { addItem } = useCart()
   const { addToast } = useToast()
 
   useEffect(() => {

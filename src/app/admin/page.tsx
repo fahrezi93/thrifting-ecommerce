@@ -50,12 +50,33 @@ export default function AdminDashboard() {
           'Authorization': `Bearer ${token}`,
         },
       })
+      
       if (response.ok) {
         const data = await response.json()
         setStats(data)
+      } else {
+        console.error('Failed to fetch dashboard stats:', response.status, response.statusText)
+        // Set empty stats to prevent error display
+        setStats({
+          totalProducts: 0,
+          totalOrders: 0,
+          totalUsers: 0,
+          totalRevenue: 0,
+          recentOrders: [],
+          lowStockProducts: []
+        })
       }
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)
+      // Set empty stats to prevent error display
+      setStats({
+        totalProducts: 0,
+        totalOrders: 0,
+        totalUsers: 0,
+        totalRevenue: 0,
+        recentOrders: [],
+        lowStockProducts: []
+      })
     } finally {
       setLoading(false)
     }

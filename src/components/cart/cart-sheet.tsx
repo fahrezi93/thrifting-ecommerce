@@ -3,7 +3,7 @@
 import React from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { useCartStore } from '@/store/cart'
+import { useCart } from '@/store/cart'
 import { Minus, Plus, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext'
 
 export function CartSheet() {
   const { user } = useAuth()
-  const { items, isOpen, toggleCart, updateQuantity, removeItem, getTotalPrice } = useCartStore()
+  const { items, isOpen, toggleCart, updateQuantity, removeItem, getTotalPrice } = useCart()
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {

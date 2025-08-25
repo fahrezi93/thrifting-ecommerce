@@ -26,7 +26,7 @@ interface CartStore {
   loadUserCart: (userId: string) => void
 }
 
-export const useCartStore = create<CartStore>()(
+export const useCart = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
