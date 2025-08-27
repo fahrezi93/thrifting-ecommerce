@@ -11,6 +11,7 @@ import { Trash2, Edit, Plus, MapPin } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmModal } from '@/components/ui/modal'
+import { apiClient } from '@/lib/api-client'
 
 interface Address {
   id: string
@@ -72,25 +73,8 @@ export default function AddressesPage() {
         return
       }
       
-      const token = await user.getIdToken()
-      const response = await fetch('/api/user/addresses', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (response.ok) {
-        const addressList = await response.json()
-        setAddresses(addressList)
-      } else {
-        console.error('Failed to fetch addresses:', response.status)
-        setAddresses([])
-        addToast({
-          title: 'Error',
-          description: 'Failed to fetch addresses',
-          variant: 'destructive'
-        })
-      }
+      const addressList = await apiClient.get('/api/user/addresses')
+      setAddresses(addressList)
     } catch (error) {
       console.error('Error fetching addresses:', error)
       setAddresses([])
@@ -110,36 +94,12 @@ export default function AddressesPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      
       if (editingAddress) {
         // Update existing address
-        const response = await fetch(`/api/user/addresses/${editingAddress.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to update address')
-        }
+        await apiClient.put(`/api/user/addresses/${editingAddress.id}`, formData)
       } else {
         // Add new address
-        const response = await fetch('/api/user/addresses', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to add address')
-        }
+        await apiClient.post('/api/user/addresses', formData)
       }
       
       fetchAddresses()
@@ -198,17 +158,7 @@ export default function AddressesPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const response = await fetch(`/api/user/addresses/${addressId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete address')
-      }
+      await apiClient.delete(`/api/user/addresses/${addressId}`)
       
       fetchAddresses()
       setDeleteConfirm({ isOpen: false, addressId: '', addressLabel: '' })

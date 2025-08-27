@@ -18,35 +18,40 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/store/cart'
 import { useRouter } from 'next/navigation'
 import { ClientOnly } from '@/components/client-only'
+import { apiClient } from '@/lib/api-client'
 
 // Component to check and display admin menu
 function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobile?: boolean, onClose?: () => void }) {
   const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const checkAdminRole = async () => {
-      if (!user) return
+      if (!user) {
+        setLoading(false)
+        return
+      }
       
       try {
-        const token = await user.getIdToken()
-        const response = await fetch('/api/auth/check-role', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-        
-        if (response.ok) {
-          const { role } = await response.json()
-          setIsAdmin(role === 'ADMIN')
-        }
+        const { role } = await apiClient.get('/api/auth/check-role')
+        console.log('User role from API:', role)
+        setIsAdmin(role === 'ADMIN')
       } catch (error) {
         console.error('Error checking admin role:', error)
+        // Fallback: check if user email is admin
+        if (user.email === 'admin@admin.com') {
+          console.log('Fallback: Setting admin based on email')
+          setIsAdmin(true)
+        }
+      } finally {
+        setLoading(false)
       }
     }
 
     checkAdminRole()
   }, [user])
 
+  if (loading) return null
   if (!isAdmin) return null
 
   if (isMobile) {

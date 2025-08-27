@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Eye, Package, Truck, CheckCircle, XCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { apiClient } from '@/lib/api-client'
+import { toast } from 'sonner'
 
 interface Order {
   id: string
@@ -43,18 +45,11 @@ export default function AdminOrdersPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const response = await fetch('/api/admin/orders', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setOrders(data)
-      }
+      const data = await apiClient.get('/api/admin/orders')
+      setOrders(data)
     } catch (error) {
       console.error('Error fetching orders:', error)
+      toast.error('Failed to fetch orders')
     } finally {
       setLoading(false)
     }
@@ -64,21 +59,12 @@ export default function AdminOrdersPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const response = await fetch(`/api/admin/orders/${orderId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      })
-      
-      if (response.ok) {
-        fetchOrders() // Refresh orders
-      }
+      await apiClient.put(`/api/admin/orders/${orderId}`, { status: newStatus })
+      toast.success('Order status updated successfully')
+      fetchOrders() // Refresh orders
     } catch (error) {
       console.error('Error updating order status:', error)
+      toast.error('Failed to update order status')
     }
   }
 

@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge'
 import { Trash2, Edit, Plus, Upload, X, Search, Package } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmModal, AlertModal } from '@/components/ui/modal'
+import { apiClient } from '@/lib/api-client'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Product {
   id: string
@@ -35,6 +37,7 @@ const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const conditions = ['Excellent', 'Good', 'Fair']
 
 export default function AdminProductsPage() {
+  const { user } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -65,29 +68,12 @@ export default function AdminProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const { auth } = await import('@/lib/firebase')
-      const user = auth.currentUser
-      if (!user) {
-        console.error('User not authenticated')
-        return
-      }
-      
-      const token = await user.getIdToken()
-      const response = await fetch('/api/admin/products', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setProducts(data)
-      } else {
-        console.error('Failed to fetch products:', response.status, response.statusText)
-        setProducts([]) // Clear products on error
-        setError(`Failed to load products: ${response.status === 401 ? 'Please login as admin' : 'Server error'}`)
-      }
+      const data = await apiClient.get('/api/admin/products')
+      setProducts(data)
     } catch (error) {
       console.error('Error fetching products:', error)
+      setProducts([])
+      setError('Failed to load products: Please login as admin')
     } finally {
       setLoading(false)
     }
@@ -107,74 +93,35 @@ export default function AdminProductsPage() {
     }
     
     try {
-      const { auth } = await import('@/lib/firebase')
-      const user = auth.currentUser
-      if (!user) {
-        console.error('User not authenticated')
-        return
+      if (!user) return
+      
+      const productData = {
+        ...formData,
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock),
+        imageUrls: formData.imageUrls,
       }
       
-      const token = await user.getIdToken()
-      const url = editingProduct 
-        ? `/api/admin/products/${editingProduct.id}`
-        : '/api/admin/products'
-      
-      const method = editingProduct ? 'PUT' : 'POST'
-      
-      console.log('Submitting product with imageUrls:', formData.imageUrls)
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock),
-          imageUrls: formData.imageUrls,
-        }),
-      })
-
-      if (response.ok) {
-        console.log('Product saved successfully')
-        await fetchProducts()
-        setIsDialogOpen(false)
-        resetForm()
-        addToast({
-          title: 'Success!',
-          description: 'Product saved successfully!',
-          variant: 'success'
-        })
+      if (editingProduct) {
+        await apiClient.put(`/api/admin/products/${editingProduct.id}`, productData)
       } else {
-        // Handle HTTP error responses
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`
-        
-        if (response.status === 401 || response.status === 403) {
-          setAlertModal({
-            isOpen: true,
-            title: 'Authentication Failed',
-            description: 'Please login as admin and try again.',
-            variant: 'error'
-          })
-        } else {
-          setAlertModal({
-            isOpen: true,
-            title: 'Save Failed',
-            description: `Failed to save product: ${errorMessage}`,
-            variant: 'error'
-          })
-        }
-        console.error('API Error:', errorMessage)
+        await apiClient.post('/api/admin/products', productData)
       }
+      
+      await fetchProducts()
+      setIsDialogOpen(false)
+      resetForm()
+      addToast({
+        title: 'Success!',
+        description: 'Product saved successfully!',
+        variant: 'success'
+      })
     } catch (error) {
       console.error('Error saving product:', error)
       setAlertModal({
         isOpen: true,
-        title: 'Network Error',
-        description: 'Network error occurred. Please check your connection and try again.',
+        title: 'Save Failed',
+        description: 'Failed to save product. Please try again.',
         variant: 'error'
       })
     }
@@ -208,66 +155,26 @@ export default function AdminProductsPage() {
 
   const handleDelete = async () => {
     const { productId } = deleteConfirm
-      try {
-        const { auth } = await import('@/lib/firebase')
-        const user = auth.currentUser
-        if (!user) {
-          setAlertModal({
-            isOpen: true,
-            title: 'Authentication Required',
-            description: 'Please login first.',
-            variant: 'warning'
-          })
-          return
-        }
-        
-        const token = await user.getIdToken()
-        
-        const response = await fetch(`/api/admin/products/${productId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        
-        if (response.ok) {
-          await fetchProducts()
-          addToast({
-            title: 'Success!',
-            description: 'Product deleted successfully!',
-            variant: 'success'
-          })
-        } else {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-          const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`
-          
-          if (response.status === 401 || response.status === 403) {
-            setAlertModal({
-              isOpen: true,
-              title: 'Authentication Failed',
-              description: 'Please login as admin and try again.',
-              variant: 'error'
-            })
-          } else {
-            setAlertModal({
-              isOpen: true,
-              title: 'Delete Failed',
-              description: `Failed to delete product: ${errorMessage}`,
-              variant: 'error'
-            })
-          }
-          console.error('Delete API Error:', errorMessage)
-        }
-      } catch (error) {
-        console.error('Error deleting product:', error)
-        setAlertModal({
-          isOpen: true,
-          title: 'Network Error',
-          description: 'Network error occurred. Please check your connection and try again.',
-          variant: 'error'
-        })
-      }
+    try {
+      if (!user) return
+      
+      await apiClient.delete(`/api/admin/products/${productId}`)
+      await fetchProducts()
+      addToast({
+        title: 'Success!',
+        description: 'Product deleted successfully!',
+        variant: 'success'
+      })
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      setAlertModal({
+        isOpen: true,
+        title: 'Delete Failed',
+        description: 'Failed to delete product. Please try again.',
+        variant: 'error'
+      })
     }
+  }
 
   const resetForm = () => {
     setFormData({
@@ -305,8 +212,6 @@ export default function AdminProductsPage() {
     setUploadingImages(true)
     
     try {
-      const { auth } = await import('@/lib/firebase')
-      const user = auth.currentUser
       if (!user) {
         setAlertModal({
           isOpen: true,
@@ -317,32 +222,21 @@ export default function AdminProductsPage() {
         return
       }
 
-      const token = await user.getIdToken()
       const uploadedUrls: string[] = []
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
-        const formData = new FormData()
-        formData.append('file', file)
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', file)
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
-        })
-
-        if (response.ok) {
-          const result = await response.json()
-          console.log('Upload result:', result)
+        try {
+          const result = await apiClient.post('/api/upload', uploadFormData)
           uploadedUrls.push(result.imageUrl)
-        } else {
-          const errorData = await response.json().catch(() => ({ error: 'Upload failed' }))
-          console.error('Upload error:', errorData)
+        } catch (error) {
+          console.error('Upload error:', error)
           addToast({
             title: 'Upload Failed',
-            description: `Failed to upload ${file.name}: ${errorData.error}`,
+            description: `Failed to upload ${file.name}`,
             variant: 'destructive'
           })
         }

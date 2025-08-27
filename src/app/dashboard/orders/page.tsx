@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ShoppingBag, Package, Truck, CheckCircle, XCircle, Clock, CreditCard } from 'lucide-react'
 import Image from 'next/image'
+import { apiClient } from '@/lib/api-client'
 
 interface OrderItem {
   id: string
@@ -74,25 +75,12 @@ export default function OrdersPage() {
         return
       }
       
-      const token = await user.getIdToken()
-      const response = await fetch('/api/user/orders', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        // Validate that data is an array and not an error object
-        if (Array.isArray(data)) {
-          setOrders(data)
-        } else {
-          console.error('Invalid data format received:', data)
-          setOrders([])
-        }
+      const data = await apiClient.get('/api/user/orders')
+      // Validate that data is an array and not an error object
+      if (Array.isArray(data)) {
+        setOrders(data)
       } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Failed to fetch orders:', response.status, errorData)
+        console.error('Invalid data format received:', data)
         setOrders([])
       }
     } catch (error) {

@@ -50,22 +50,21 @@ export const useCart = create<CartStore>()(
 
       loadUserCart: async (userId) => {
         try {
-          // Get current user and token
-          const auth = (window as any).firebase?.auth()
-          const currentUser = auth?.currentUser
-          
+          const { auth } = await import('@/lib/firebase')
+          const currentUser = auth.currentUser
+
           if (!currentUser) {
             console.log('No current user, skipping cart load')
             return
           }
-          
+
           const token = await currentUser.getIdToken()
           const response = await fetch(`/api/user/cart`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
           })
-          
+
           if (response.ok) {
             const { items } = await response.json()
             set({ items: items || [] })
@@ -100,11 +99,13 @@ export const useCart = create<CartStore>()(
         
         // Save to server
         try {
+          const { auth } = await import('@/lib/firebase')
+          const token = await auth.currentUser?.getIdToken()
           await fetch('/api/user/cart', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await (window as any).firebase?.auth()?.currentUser?.getIdToken()}`,
+              'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({ items: newItems }),
           })
@@ -122,11 +123,13 @@ export const useCart = create<CartStore>()(
         
         // Save to server
         try {
+          const { auth } = await import('@/lib/firebase')
+          const token = await auth.currentUser?.getIdToken()
           await fetch('/api/user/cart', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await (window as any).firebase?.auth()?.currentUser?.getIdToken()}`,
+              'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({ items: newItems }),
           })
@@ -154,11 +157,13 @@ export const useCart = create<CartStore>()(
         
         // Save to server
         try {
+          const { auth } = await import('@/lib/firebase')
+          const token = await auth.currentUser?.getIdToken()
           await fetch('/api/user/cart', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await (window as any).firebase?.auth()?.currentUser?.getIdToken()}`,
+              'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({ items: newItems }),
           })

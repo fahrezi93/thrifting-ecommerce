@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Determine role based on email
+    // Determine role based on email - use enum values
     const role = email === 'admin@admin.com' ? 'ADMIN' : 'USER'
 
     // Upsert user in database
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         name,
         emailVerified,
         image,
+        role, // Ensure role is also updated
         updatedAt: new Date()
       },
       create: {

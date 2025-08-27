@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
     // Update order with transaction ID
     await prisma.order.update({
       where: { id: order.id },
-      data: { transactionId: transactionToken }
+      data: { midtransTransactionId: transactionToken }
     })
 
     return NextResponse.json({

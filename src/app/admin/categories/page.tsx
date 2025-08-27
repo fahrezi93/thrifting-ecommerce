@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Trash2, Edit, Plus, Package } from 'lucide-react'
 import { toast } from 'sonner'
+import { apiClient } from '@/lib/api-client'
 
 interface Category {
   id: string
@@ -44,19 +45,8 @@ export default function CategoriesPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const response = await fetch('/api/admin/categories', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setCategories(data)
-      } else {
-        toast.error('Failed to fetch categories')
-      }
+      const data = await apiClient.get('/api/admin/categories')
+      setCategories(data)
     } catch (error) {
       console.error('Error fetching categories:', error)
       toast.error('Error fetching categories')
@@ -71,32 +61,18 @@ export default function CategoriesPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const url = editingCategory 
-        ? `/api/admin/categories/${editingCategory.id}`
-        : '/api/admin/categories'
-      
-      const method = editingCategory ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      })
-      
-      if (response.ok) {
-        toast.success(editingCategory ? 'Category updated!' : 'Category created!')
-        setShowForm(false)
-        setEditingCategory(null)
-        setFormData({ name: '', description: '', imageUrl: '', isActive: true })
-        fetchCategories()
+      if (editingCategory) {
+        await apiClient.put(`/api/admin/categories/${editingCategory.id}`, formData)
+        toast.success('Category updated!')
       } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to save category')
+        await apiClient.post('/api/admin/categories', formData)
+        toast.success('Category created!')
       }
+      
+      setShowForm(false)
+      setEditingCategory(null)
+      setFormData({ name: '', description: '', imageUrl: '', isActive: true })
+      fetchCategories()
     } catch (error) {
       console.error('Error saving category:', error)
       toast.error('Error saving category')
@@ -127,21 +103,9 @@ export default function CategoriesPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const response = await fetch(`/api/admin/categories/${category.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-      
-      if (response.ok) {
-        toast.success('Category deleted!')
-        fetchCategories()
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to delete category')
-      }
+      await apiClient.delete(`/api/admin/categories/${category.id}`)
+      toast.success('Category deleted!')
+      fetchCategories()
     } catch (error) {
       console.error('Error deleting category:', error)
       toast.error('Error deleting category')

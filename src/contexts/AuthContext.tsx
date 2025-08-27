@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { useCart } from '@/store/cart'
 import { 
   User,
   signInWithEmailAndPassword,
@@ -68,12 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
       
       // Update cart store with user ID
-      try {
-        const { useCart } = require('@/store/cart')
-        useCart.getState().setUserId(firebaseUser?.uid || null)
-      } catch (error) {
-        console.warn('Cart store not available:', error)
-      }
+      useCart.getState().setUserId(firebaseUser?.uid || null)
     })
 
     return unsubscribe

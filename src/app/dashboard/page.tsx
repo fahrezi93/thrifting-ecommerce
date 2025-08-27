@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
+import { apiClient } from '@/lib/api-client'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -27,13 +28,11 @@ export default function DashboardPage() {
 
   const fetchUserData = async () => {
     try {
-      const response = await fetch('/api/user/profile')
-      if (response.ok) {
-        const userData = await response.json()
-        setPhone(userData.phone || '')
-      }
+      const userData = await apiClient.get('/api/user/profile')
+      setPhone(userData.phone || '')
     } catch (error) {
       console.error('Error fetching user data:', error)
+      // Continue without phone data if API fails
     }
   }
 
@@ -43,10 +42,12 @@ export default function DashboardPage() {
     setMessage('')
 
     try {
+      const token = await user?.getIdToken()
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           name,
@@ -56,7 +57,6 @@ export default function DashboardPage() {
 
       if (response.ok) {
         setMessage('Profile updated successfully!')
-        // Profile updated successfully - Firebase user will be updated via the API
       } else {
         setMessage('Failed to update profile')
       }

@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast'
 import { AlertModal } from '@/components/ui/modal'
 import { Save, Store, Globe, Mail, Phone } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { apiClient } from '@/lib/api-client'
+import { toast } from 'sonner'
 
 interface StoreSettings {
   storeName: string
@@ -50,18 +52,11 @@ export default function AdminSettingsPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const response = await fetch('/api/admin/settings', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setSettings(data)
-      }
+      const data = await apiClient.get('/api/admin/settings')
+      setSettings(data)
     } catch (error) {
       console.error('Error fetching settings:', error)
+      toast.error('Failed to fetch settings')
     } finally {
       setLoading(false)
     }
@@ -72,32 +67,11 @@ export default function AdminSettingsPage() {
       if (!user) return
       
       setSaving(true)
-      const token = await user.getIdToken()
-      const response = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(settings),
-      })
-      
-      if (response.ok) {
-        // Show success message
-        addToast({
-          title: 'Success!',
-          description: 'Settings saved successfully!',
-          variant: 'success'
-        })
-      }
+      await apiClient.put('/api/admin/settings', settings)
+      toast.success('Settings saved successfully!')
     } catch (error) {
       console.error('Error saving settings:', error)
-      setAlertModal({
-        isOpen: true,
-        title: 'Error',
-        description: 'Error saving settings. Please try again.',
-        variant: 'error'
-      })
+      toast.error('Failed to save settings')
     } finally {
       setSaving(false)
     }

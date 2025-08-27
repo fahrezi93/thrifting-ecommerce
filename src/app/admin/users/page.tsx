@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Shield, User, Mail, Calendar, MoreHorizontal } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { apiClient } from '@/lib/api-client'
+import { toast } from 'sonner'
 
 interface UserData {
   id: string
@@ -37,18 +39,11 @@ export default function AdminUsersPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const response = await fetch('/api/admin/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setUsers(data)
-      }
+      const data = await apiClient.get('/api/admin/users')
+      setUsers(data)
     } catch (error) {
       console.error('Error fetching users:', error)
+      toast.error('Failed to fetch users')
     } finally {
       setLoading(false)
     }
@@ -58,21 +53,12 @@ export default function AdminUsersPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ role: newRole }),
-      })
-      
-      if (response.ok) {
-        fetchUsers() // Refresh users
-      }
+      await apiClient.put(`/api/admin/users/${userId}`, { role: newRole })
+      toast.success('User role updated successfully')
+      fetchUsers() // Refresh users
     } catch (error) {
       console.error('Error updating user role:', error)
+      toast.error('Failed to update user role')
     }
   }
 
