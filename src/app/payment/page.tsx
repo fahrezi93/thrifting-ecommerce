@@ -165,30 +165,26 @@ export default function PaymentPage() {
 
   const fetchOrderSummary = async () => {
     try {
-      // Always create a test order for payment testing
-      setOrderSummary({
-        orderId: orderId || 'test-order-' + Date.now(),
-        orderNumber: 'TH-' + Date.now().toString().slice(-6),
-        items: [
-          {
-            name: 'Vintage Denim Jacket',
-            quantity: 1,
-            price: 125000,
-            size: 'L'
-          },
-          {
-            name: 'Cotton T-Shirt',
-            quantity: 2,
-            price: 45000,
-            size: 'M'
-          }
-        ],
-        subtotal: 215000,
-        shipping: 15000,
-        total: 230000
+      if (!user || !orderId) {
+        setLoading(false)
+        return
+      }
+
+      const token = await user.getIdToken()
+      const response = await fetch(`/api/orders/${orderId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
+
+      if (response.ok) {
+        const data = await response.json()
+        setOrderSummary(data)
+      } else {
+        console.error('Failed to fetch order:', response.statusText)
+      }
     } catch (error) {
-      console.error('Error creating test order:', error)
+      console.error('Error fetching order:', error)
     } finally {
       setLoading(false)
     }

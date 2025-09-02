@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Edit, Plus, Upload, X, Search, Package } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { Trash2, Edit, Plus, Upload, X, Search, Package, Star } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmModal, AlertModal } from '@/components/ui/modal'
 import { apiClient } from '@/lib/api-client'
@@ -29,6 +30,7 @@ interface Product {
   color?: string
   stock: number
   isActive: boolean
+  isFeatured: boolean
   createdAt: string
 }
 
@@ -60,6 +62,7 @@ export default function AdminProductsPage() {
     color: '',
     stock: '1',
     isActive: true,
+    isFeatured: false,
   })
 
   useEffect(() => {
@@ -141,6 +144,7 @@ export default function AdminProductsPage() {
       color: product.color || '',
       stock: product.stock.toString(),
       isActive: product.isActive,
+      isFeatured: product.isFeatured,
     })
     setIsDialogOpen(true)
   }
@@ -189,6 +193,7 @@ export default function AdminProductsPage() {
       color: '',
       stock: '1',
       isActive: true,
+      isFeatured: false,
     })
     setEditingProduct(null)
   }
@@ -268,6 +273,36 @@ export default function AdminProductsPage() {
       ...prev,
       imageUrls: prev.imageUrls.filter((_, i) => i !== index)
     }))
+  }
+
+  const toggleFeatured = async (productId: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/products/${productId}/featured`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isFeatured: !currentStatus })
+      })
+
+      if (response.ok) {
+        await fetchProducts()
+        addToast({
+          title: 'Success!',
+          description: `Product ${!currentStatus ? 'added to' : 'removed from'} featured items`,
+          variant: 'success'
+        })
+      } else {
+        throw new Error('Failed to update featured status')
+      }
+    } catch (error) {
+      console.error('Error toggling featured status:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to update featured status',
+        variant: 'destructive'
+      })
+    }
   }
 
   const formatPrice = (price: number) => {
@@ -449,6 +484,17 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.isFeatured}
+                    onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
+                  />
+                  <Label className="flex items-center gap-2">
+                    <Star className="h-4 w-4" />
+                    Featured on Homepage
+                  </Label>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Product Images (Max 4)</Label>
                   
@@ -569,6 +615,14 @@ export default function AdminProductsPage() {
                   <h3 className="font-semibold line-clamp-2">{product.name}</h3>
                   <div className="flex gap-1">
                     <Button
+                      variant={product.isFeatured ? "default" : "outline"}
+                      size="icon"
+                      onClick={() => toggleFeatured(product.id, product.isFeatured)}
+                      title={product.isFeatured ? "Remove from featured" : "Add to featured"}
+                    >
+                      <Star className={`h-4 w-4 ${product.isFeatured ? 'fill-current' : ''}`} />
+                    </Button>
+                    <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(product)}
@@ -590,9 +644,17 @@ export default function AdminProductsPage() {
                     <span className="font-bold text-primary">
                       {formatPrice(product.price)}
                     </span>
-                    <Badge variant={product.isActive ? 'default' : 'secondary'}>
-                      {product.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <div className="flex gap-1">
+                      <Badge variant={product.isActive ? 'default' : 'secondary'}>
+                        {product.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                      {product.isFeatured && (
+                        <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                          <Star className="h-3 w-3 mr-1 fill-current" />
+                          Featured
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="flex justify-between text-sm text-muted-foreground">

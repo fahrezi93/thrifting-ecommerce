@@ -36,16 +36,31 @@ export async function getServerSession(request: NextRequest): Promise<Authentica
     
     if (!adminAuth) {
       // Fallback: decode JWT manually to get UID (for development)
+      console.log('Firebase Admin SDK not available, using fallback authentication')
       try {
         const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
-        const user = await prisma.user.findUnique({
-          where: { id: payload.user_id || payload.sub }
+        console.log('Decoded token payload:', { 
+          user_id: payload.user_id, 
+          sub: payload.sub, 
+          email: payload.email 
         })
         
-        if (!user) {
+        const userId = payload.user_id || payload.sub
+        if (!userId) {
+          console.log('No user ID found in token payload')
           return null
         }
         
+        const user = await prisma.user.findUnique({
+          where: { id: userId }
+        })
+        
+        if (!user) {
+          console.log('User not found in database:', userId)
+          return null
+        }
+        
+        console.log('Fallback authentication successful for user:', user.email, 'role:', user.role)
         return {
           id: user.id,
           email: user.email,

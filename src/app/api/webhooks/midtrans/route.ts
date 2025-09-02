@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { OrderStatus } from '@prisma/client'
 import crypto from 'crypto'
+
+// Define order status constants
+const ORDER_STATUS = {
+  PENDING: 'PENDING',
+  PAID: 'PAID',
+  CANCELLED: 'CANCELLED',
+  FAILED: 'FAILED'
+} as const
+
+type OrderStatus = typeof ORDER_STATUS[keyof typeof ORDER_STATUS]
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,36 +60,36 @@ export async function POST(request: NextRequest) {
     }
 
     // Prevent duplicate processing
-    if (order.status === ('PAID' as OrderStatus) && transaction_status === 'settlement') {
+    if (order.status === ORDER_STATUS.PAID && transaction_status === 'settlement') {
       console.log(`Order ${order_id} already processed as PAID`)
       return NextResponse.json({ message: 'Order already processed' })
     }
 
     // Determine new order status based on transaction status
-    let newStatus: OrderStatus = order.status
+    let newStatus: OrderStatus = order.status as OrderStatus
     let paidAt: Date | null = null
 
     switch (transaction_status) {
       case 'capture':
         if (fraud_status === 'accept') {
-          newStatus = 'PAID' as OrderStatus
+          newStatus = ORDER_STATUS.PAID
           paidAt = new Date()
         }
         break
       case 'settlement':
-        newStatus = 'PAID' as OrderStatus
+        newStatus = ORDER_STATUS.PAID
         paidAt = settlement_time ? new Date(settlement_time) : new Date()
         break
       case 'pending':
-        newStatus = 'PENDING' as OrderStatus
+        newStatus = ORDER_STATUS.PENDING
         break
       case 'deny':
       case 'cancel':
       case 'expire':
-        newStatus = 'CANCELLED' as OrderStatus
+        newStatus = ORDER_STATUS.CANCELLED
         break
       case 'failure':
-        newStatus = 'FAILED' as OrderStatus
+        newStatus = ORDER_STATUS.FAILED
         break
     }
 
@@ -97,7 +106,7 @@ export async function POST(request: NextRequest) {
       })
 
       // If payment failed or cancelled, restore product stock
-      if ((newStatus === ('FAILED' as OrderStatus) || newStatus === ('CANCELLED' as OrderStatus)) && order.status === ('PENDING' as OrderStatus)) {
+      if ((newStatus === ORDER_STATUS.FAILED || newStatus === ORDER_STATUS.CANCELLED) && order.status === ORDER_STATUS.PENDING) {
         for (const orderItem of order.orderItems) {
           await tx.product.update({
             where: { id: orderItem.productId },

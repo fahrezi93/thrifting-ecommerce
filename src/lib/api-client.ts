@@ -1,9 +1,11 @@
 import { auth } from './firebase'
 
 class ApiClient {
-  private async getAuthHeaders(): Promise<HeadersInit> {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+  private async getAuthHeaders(includeContentType: boolean = true): Promise<HeadersInit> {
+    const headers: HeadersInit = {}
+    
+    if (includeContentType) {
+      headers['Content-Type'] = 'application/json'
     }
 
     if (auth?.currentUser) {
@@ -33,11 +35,14 @@ class ApiClient {
   }
 
   async post(url: string, data?: any) {
-    const headers = await this.getAuthHeaders()
+    // Check if data is FormData (for file uploads)
+    const isFormData = data instanceof FormData
+    const headers = await this.getAuthHeaders(!isFormData)
+    
     const response = await fetch(url, {
       method: 'POST',
       headers,
-      body: data ? JSON.stringify(data) : undefined,
+      body: isFormData ? data : (data ? JSON.stringify(data) : undefined),
     })
 
     if (!response.ok) {

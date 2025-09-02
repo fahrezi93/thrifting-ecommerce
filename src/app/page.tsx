@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -5,42 +7,43 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ShoppingBag, Recycle, Heart, Star } from 'lucide-react'
 import { CartSheet } from '@/components/cart/cart-sheet'
 import AnimatedBackground from '@/components/ui/AnimatedBackground'
+import { useAuth } from '@/contexts/AuthContext'
+import { useState, useEffect } from 'react'
+
+interface Product {
+  id: string
+  name: string
+  price: number
+  imageUrls: string
+  size: string
+  category: {
+    name: string
+    slug: string
+  }
+}
 
 export default function HomePage() {
-  const featuredProducts = [
-    {
-      id: '1',
-      name: 'Vintage Denim Jacket',
-      price: 150000,
-      imageUrl: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=400&fit=crop',
-      category: 'OUTERWEAR',
-      size: 'M'
-    },
-    {
-      id: '2',
-      name: 'Floral Summer Dress',
-      price: 120000,
-      imageUrl: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&fit=crop',
-      category: 'DRESSES',
-      size: 'S'
-    },
-    {
-      id: '3',
-      name: 'Classic White Sneakers',
-      price: 200000,
-      imageUrl: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop',
-      category: 'SHOES',
-      size: '42'
-    },
-    {
-      id: '4',
-      name: 'Leather Crossbody Bag',
-      price: 180000,
-      imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop',
-      category: 'ACCESSORIES',
-      size: 'One Size'
+  const { user } = useAuth()
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        const response = await fetch('/api/products/featured')
+        if (response.ok) {
+          const products = await response.json()
+          setFeaturedProducts(products)
+        }
+      } catch (error) {
+        console.error('Error fetching featured products:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+
+    fetchFeaturedProducts()
+  }, [])
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -196,34 +199,59 @@ export default function HomePage() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <Card key={product.id} className="group cursor-pointer hover:shadow-lg transition-shadow">
-                  <Link href={`/products/${product.id}`}>
-                    <div className="aspect-square overflow-hidden rounded-t-lg">
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        width={400}
-                        height={400}
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: 4 }).map((_, index) => (
+                  <Card key={index} className="animate-pulse">
+                    <div className="aspect-square bg-muted rounded-t-lg"></div>
                     <CardContent className="p-4">
-                      <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
-                        {product.name}
-                      </h3>
+                      <div className="h-4 bg-muted rounded mb-2"></div>
                       <div className="flex justify-between items-center">
-                        <span className="text-lg font-bold text-primary">
-                          {formatPrice(product.price)}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          Size {product.size}
-                        </span>
+                        <div className="h-4 bg-muted rounded w-20"></div>
+                        <div className="h-4 bg-muted rounded w-16"></div>
                       </div>
                     </CardContent>
-                  </Link>
-                </Card>
-              ))}
+                  </Card>
+                ))
+              ) : featuredProducts.length > 0 ? (
+                featuredProducts.map((product) => {
+                  const imageUrls = JSON.parse(product.imageUrls || '[]')
+                  const firstImage = imageUrls[0] || '/placeholder-image.jpg'
+                  
+                  return (
+                    <Card key={product.id} className="group cursor-pointer hover:shadow-lg transition-shadow">
+                      <Link href={`/products/${product.id}`}>
+                        <div className="aspect-square overflow-hidden rounded-t-lg">
+                          <Image
+                            src={firstImage}
+                            alt={product.name}
+                            width={400}
+                            height={400}
+                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">
+                            {product.name}
+                          </h3>
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-bold text-primary">
+                              {formatPrice(product.price)}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              Size {product.size}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Link>
+                    </Card>
+                  )
+                })
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-muted-foreground">No featured products available at the moment.</p>
+                </div>
+              )}
             </div>
             
             <div className="text-center mt-12">
@@ -245,11 +273,13 @@ export default function HomePage() {
                 Join thousands of conscious shoppers who have already discovered the joy of thrift fashion.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" variant="secondary" asChild>
-                  <Link href="/auth/signup">Create Account</Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                  <Link href="/products" className="text-primary-foreground hover:text-primary">Browse Collection</Link>
+                {!user && (
+                  <Button size="lg" variant="secondary" asChild>
+                    <Link href="/auth/signup">Create Account</Link>
+                  </Button>
+                )}
+                <Button size="lg" variant="outline" asChild className="border-primary-foreground hover:bg-primary-foreground">
+                  <Link href="/products" className="text-black hover:text-primary">Browse Collection</Link>
                 </Button>
               </div>
             </div>

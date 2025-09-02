@@ -36,7 +36,7 @@ export default function ProductDetailPage() {
   const [isSaved, setIsSaved] = useState(false)
   const { addItem } = useCart()
   const { user } = useAuth()
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   useEffect(() => {
     if (params.id) {
@@ -90,7 +90,7 @@ export default function ProductDetailPage() {
         size: product.size,
         stock: product.stock,
       })
-      toast({
+      addToast({
         title: 'Added to Cart!',
         description: `${product.name} has been added to your cart.`,
         variant: 'success'
@@ -98,9 +98,42 @@ export default function ProductDetailPage() {
     }
   }
 
+  const handleShare = async () => {
+    if (!product) return
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.name,
+          text: product.description,
+          url: window.location.href,
+        })
+      } catch (error) {
+        console.log('Error sharing:', error)
+      }
+    } else {
+      // Fallback: copy URL to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        addToast({
+          title: 'Link Copied!',
+          description: 'Product link has been copied to clipboard.',
+          variant: 'success'
+        })
+      } catch (error) {
+        console.error('Failed to copy link:', error)
+        addToast({
+          title: 'Share Failed',
+          description: 'Unable to share this product.',
+          variant: 'destructive'
+        })
+      }
+    }
+  }
+
   const handleSaveForLater = async () => {
     if (!product || !user) {
-      toast({
+      addToast({
         title: 'Authentication Required',
         description: 'Please sign in to save items to your wishlist.',
         variant: 'destructive'
@@ -119,7 +152,7 @@ export default function ProductDetailPage() {
 
         if (response.ok) {
           setIsSaved(false)
-          toast({
+          addToast({
             title: 'Removed from Wishlist',
             description: `${product.name} has been removed from your wishlist.`,
           })
@@ -139,7 +172,7 @@ export default function ProductDetailPage() {
 
         if (response.ok) {
           setIsSaved(true)
-          toast({
+          addToast({
             title: 'Saved to Wishlist!',
             description: `${product.name} has been added to your wishlist.`,
             variant: 'success'
@@ -150,7 +183,7 @@ export default function ProductDetailPage() {
       }
     } catch (error) {
       console.error('Error updating wishlist:', error)
-      toast({
+      addToast({
         title: 'Error',
         description: 'Something went wrong. Please try again.',
         variant: 'destructive'

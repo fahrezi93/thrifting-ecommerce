@@ -281,56 +281,13 @@ export function Navbar() {
                 </Link>
               </div>
 
-              {/* Mobile Auth */}
+              {/* Mobile Auth - Only show Sign In/Sign Up for non-authenticated users */}
               <ClientOnly fallback={
                 <div className="space-y-2 pt-4 border-t">
                   <div className="py-2 text-sm text-muted-foreground">Loading...</div>
                 </div>
               }>
-                {user ? (
-                  <div className="space-y-2 pt-4 border-t">
-                    <div className="flex items-center space-x-3 px-2 py-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.photoURL || ''} alt={user.displayName || user.email || ''} />
-                        <AvatarFallback>
-                          {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <p className="text-sm font-medium">
-                          {user.displayName || 'User'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-                    <Link
-                      href="/profile"
-                      className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Profile
-                    </Link>
-                    <Link
-                      href="/dashboard"
-                      className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
-                    <AdminMenuCheck user={user} isMobile={true} onClose={() => setIsMenuOpen(false)} />
-                    <button
-                      onClick={() => {
-                        logout()
-                        setIsMenuOpen(false)
-                      }}
-                      className="block py-2 text-sm font-medium hover:text-primary transition-colors w-full text-left"
-                    >
-                      Log out
-                    </button>
-                  </div>
-                ) : (
+                {!user && (
                   <div className="space-y-2 pt-4 border-t">
                     <Link
                       href="/auth/signin"
