@@ -10,7 +10,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Using String types for SQLite compatibility
+// Enums for better type safety
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  EXPIRED
+}
 
 model User {
   id            String    @id // Firebase UID
@@ -18,7 +39,7 @@ model User {
   email         String    @unique
   emailVerified Boolean   @default(false)
   image         String?
-  role          String  @default("USER")
+  role          UserRole  @default(USER)
   phone         String?
   password      String?
   cartData      String?   // JSON string for cart items
@@ -110,7 +131,7 @@ model Order {
   orderNumber           String      @unique @default(cuid())
   totalAmount           Float
   shippingCost          Float       @default(0)
-  status                String @default("PENDING")
+  status                OrderStatus @default(PENDING)
   paymentMethod         String?
   midtransTransactionId String?     @unique
   userId                String
@@ -148,7 +169,7 @@ model Payment {
   transactionId    String        @unique
   paymentMethod    String
   amount           Float
-  status           String @default("PENDING")
+  status           PaymentStatus @default(PENDING)
   midtransResponse String?       // JSON string
   expiresAt        DateTime
   createdAt        DateTime      @default(now())

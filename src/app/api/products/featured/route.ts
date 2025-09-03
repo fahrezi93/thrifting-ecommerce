@@ -3,21 +3,42 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    // Use raw SQL to fetch featured products until Prisma client is updated
-    const featuredProducts = await prisma.$queryRaw`
-      SELECT p.*, c.name as categoryName, c.slug as categorySlug 
-      FROM Product p 
-      LEFT JOIN Category c ON p.categoryId = c.id 
-      WHERE p.isFeatured = 1 AND p.isActive = 1 AND p.stock > 0 
-      ORDER BY p.updatedAt DESC 
-      LIMIT 8
-    `
+    // Use Prisma ORM instead of raw SQL for better database compatibility
+    const featuredProducts = await prisma.product.findMany({
+      where: {
+        isFeatured: true,
+        isActive: true,
+        stock: {
+          gt: 0
+        }
+      },
+      include: {
+        category: {
+          select: {
+            name: true,
+            slug: true
+          }
+        }
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      },
+      take: 8
+    })
 
-    return NextResponse.json(featuredProducts)
+    // Transform the data to match the expected format
+    const transformedProducts = featuredProducts.map(product => ({
+      ...product,
+      categoryName: product.category?.name || null,
+      categorySlug: product.category?.slug || null
+    }))
+
+    return NextResponse.json(transformedProducts)
   } catch (error) {
     console.error('Error fetching featured products:', error)
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json(
-      { error: 'Failed to fetch featured products' },
+      { error: 'Failed to fetch featured products', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

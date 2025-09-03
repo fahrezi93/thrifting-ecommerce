@@ -40,8 +40,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ user })
   } catch (error) {
     console.error('Error syncing user:', error)
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return NextResponse.json(
-      { error: 'Failed to sync user' },
+      { error: 'Failed to sync user', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

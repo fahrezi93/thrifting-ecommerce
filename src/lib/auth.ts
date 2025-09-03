@@ -35,15 +35,35 @@ export async function getServerSession(request: NextRequest): Promise<Authentica
     }
     
     if (!adminAuth) {
-      // Fallback: decode JWT manually to get UID (for development)
+      // Fallback: decode JWT manually to get UID (when Firebase Admin SDK is not available)
       console.log('Firebase Admin SDK not available, using fallback authentication')
       try {
         const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
         console.log('Decoded token payload:', { 
           user_id: payload.user_id, 
           sub: payload.sub, 
-          email: payload.email 
+          email: payload.email,
+          aud: payload.aud,
+          iss: payload.iss
         })
+        
+        // Validate that this is a Firebase token
+        if (!payload.iss || !payload.iss.includes('securetoken.google.com')) {
+          console.log('Invalid token issuer:', payload.iss)
+          return null
+        }
+        
+        if (!payload.aud || payload.aud !== 'thrifting-ecommerce') {
+          console.log('Invalid token audience:', payload.aud)
+          return null
+        }
+        
+        // Check token expiration
+        const now = Math.floor(Date.now() / 1000)
+        if (payload.exp && payload.exp < now) {
+          console.log('Token expired:', payload.exp, 'current:', now)
+          return null
+        }
         
         const userId = payload.user_id || payload.sub
         if (!userId) {
