@@ -1,71 +1,102 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getFirebaseAdminStatus, retryFirebaseAdminInit } from '@/lib/firebase-admin'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('=== Firebase Admin SDK Test Endpoint ===')
     
-    // Check if environment variable exists
+    // Get current Firebase Admin status
+    const status = getFirebaseAdminStatus()
+    console.log('Firebase Admin Status:', status)
+    
+    // Check environment variable details
     const hasEnvVar = !!process.env.FIREBASE_ADMIN_SDK_JSON
-    console.log('FIREBASE_ADMIN_SDK_JSON exists:', hasEnvVar)
+    let envVarDetails = null
     
     if (hasEnvVar) {
-      console.log('Environment variable length:', process.env.FIREBASE_ADMIN_SDK_JSON?.length)
+      const envVarLength = process.env.FIREBASE_ADMIN_SDK_JSON?.length || 0
+      console.log('Environment variable length:', envVarLength)
       
-      // Try to parse the JSON
+      // Try to parse the JSON to validate format
       try {
         const parsed = JSON.parse(process.env.FIREBASE_ADMIN_SDK_JSON!)
-        console.log('JSON parsed successfully')
-        console.log('Project ID from credentials:', parsed.project_id)
-        console.log('Client email from credentials:', parsed.client_email)
+        envVarDetails = {
+          project_id: parsed.project_id,
+          client_email: parsed.client_email,
+          hasPrivateKey: !!parsed.private_key,
+          privateKeyLength: parsed.private_key?.length || 0
+        }
+        console.log('Environment variable details:', envVarDetails)
       } catch (parseError) {
         console.error('Failed to parse FIREBASE_ADMIN_SDK_JSON:', parseError)
         return NextResponse.json({
           success: false,
           error: 'Failed to parse Firebase credentials JSON',
-          details: parseError instanceof Error ? parseError.message : 'Unknown parse error'
+          details: parseError instanceof Error ? parseError.message : 'Unknown parse error',
+          status,
+          envVarLength
         }, { status: 500 })
       }
     }
     
-    // Try to import and initialize Firebase Admin
+    // If initialization failed, try to retry
+    if (status.initializationError && hasEnvVar) {
+      console.log('Retrying Firebase Admin initialization...')
+      const retryResult = retryFirebaseAdminInit()
+      console.log('Retry result:', retryResult)
+    }
+    
+    // Test Firebase Admin functionality
+    let testResults = {
+      canGetApps: false,
+      appsCount: 0,
+      canGetAuth: false,
+      authTest: null as any
+    }
+    
     try {
-      const { getApps, initializeApp, cert } = await import('firebase-admin/app')
+      const { getApps } = await import('firebase-admin/app')
       const { getAuth } = await import('firebase-admin/auth')
       
-      console.log('Firebase Admin modules imported successfully')
-      console.log('Current apps count:', getApps().length)
+      testResults.canGetApps = true
+      testResults.appsCount = getApps().length
+      console.log('Current Firebase apps count:', testResults.appsCount)
       
-      if (!getApps().length && hasEnvVar) {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SDK_JSON!)
+      if (testResults.appsCount > 0) {
+        const auth = getAuth()
+        testResults.canGetAuth = true
         
-        const app = initializeApp({
-          credential: cert(serviceAccount),
-          projectId: 'thrifting-ecommerce'
-        })
-        
-        console.log('Firebase Admin app initialized:', app.name)
+        // Try to create a custom token as a test (this will fail if credentials are invalid)
+        try {
+          // This is just a test - we're not actually using this token
+          await auth.createCustomToken('test-uid-12345')
+          testResults.authTest = 'success'
+        } catch (authError) {
+          testResults.authTest = authError instanceof Error ? authError.message : 'Unknown auth error'
+        }
       }
       
-      const auth = getAuth()
-      console.log('Firebase Auth instance obtained')
-      
-      return NextResponse.json({
-        success: true,
-        message: 'Firebase Admin SDK test successful',
-        hasEnvVar,
-        appsCount: getApps().length,
-        timestamp: new Date().toISOString()
-      })
-      
-    } catch (firebaseError) {
-      console.error('Firebase initialization error:', firebaseError)
+    } catch (importError) {
+      console.error('Failed to import Firebase Admin modules:', importError)
       return NextResponse.json({
         success: false,
-        error: 'Firebase initialization failed',
-        details: firebaseError instanceof Error ? firebaseError.message : 'Unknown Firebase error',
-        stack: firebaseError instanceof Error ? firebaseError.stack : undefined
+        error: 'Failed to import Firebase Admin modules',
+        details: importError instanceof Error ? importError.message : 'Unknown import error',
+        status,
+        envVarDetails
       }, { status: 500 })
     }
+    
+    const finalStatus = getFirebaseAdminStatus()
+    
+    return NextResponse.json({
+      success: !finalStatus.initializationError,
+      message: finalStatus.initializationError ? 'Firebase Admin SDK has initialization errors' : 'Firebase Admin SDK test completed',
+      status: finalStatus,
+      envVarDetails,
+      testResults,
+      timestamp: new Date().toISOString()
+    })
     
   } catch (error) {
     console.error('General error in test endpoint:', error)

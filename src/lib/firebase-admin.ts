@@ -4,41 +4,91 @@ import { getFirestore } from 'firebase-admin/firestore'
 
 let adminAuth: any = null
 let adminDb: any = null
+let initializationAttempted = false
+let initializationError: Error | null = null
 
-try {
-  let serviceAccount;
+function initializeFirebaseAdmin() {
+  if (initializationAttempted) {
+    return { adminAuth, adminDb, error: initializationError }
+  }
   
-  // Try to get credentials from environment variable first (for production/Vercel)
-  if (process.env.FIREBASE_ADMIN_SDK_JSON) {
-    serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SDK_JSON);
-    console.log('Using Firebase Admin SDK from environment variable')
-  } else {
-    // Fallback to local file (for development)
-    try {
-      serviceAccount = require('../../../thrifting-ecommerce-firebase-adminsdk-fbsvc-d9f4bfdff5.json')
-      console.log('Using Firebase Admin SDK from local file')
-    } catch (fileError) {
-      console.error('Local Firebase Admin SDK file not found:', fileError)
-      throw new Error('Firebase Admin SDK credentials not available')
+  initializationAttempted = true
+  
+  try {
+    let serviceAccount;
+    
+    // Try to get credentials from environment variable first (for production/Vercel)
+    if (process.env.FIREBASE_ADMIN_SDK_JSON) {
+      console.log('Found FIREBASE_ADMIN_SDK_JSON environment variable')
+      try {
+        serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SDK_JSON);
+        console.log('Successfully parsed Firebase Admin SDK from environment variable')
+        console.log('Project ID:', serviceAccount.project_id)
+        console.log('Client email:', serviceAccount.client_email)
+      } catch (parseError) {
+        console.error('Failed to parse FIREBASE_ADMIN_SDK_JSON:', parseError)
+        throw new Error(`Invalid JSON in FIREBASE_ADMIN_SDK_JSON: ${parseError}`)
+      }
+    } else {
+      // Fallback to local file (for development)
+      console.log('FIREBASE_ADMIN_SDK_JSON not found, trying local file')
+      try {
+        serviceAccount = require('../../../thrifting-ecommerce-firebase-adminsdk-fbsvc-d9f4bfdff5.json')
+        console.log('Using Firebase Admin SDK from local file')
+      } catch (fileError) {
+        console.error('Local Firebase Admin SDK file not found:', fileError)
+        throw new Error('Firebase Admin SDK credentials not available - no environment variable or local file')
+      }
     }
+    
+    // Validate required fields
+    if (!serviceAccount.project_id || !serviceAccount.private_key || !serviceAccount.client_email) {
+      throw new Error('Invalid Firebase Admin SDK credentials - missing required fields')
+    }
+    
+    // Initialize Firebase Admin SDK
+    if (!getApps().length) {
+      const app = initializeApp({
+        credential: cert(serviceAccount),
+        projectId: serviceAccount.project_id
+      })
+      console.log('Firebase Admin app initialized:', app.name)
+    }
+    
+    adminAuth = getAuth()
+    adminDb = getFirestore()
+    console.log('Firebase Admin SDK initialized successfully')
+    
+    return { adminAuth, adminDb, error: null }
+  } catch (error) {
+    console.error('Failed to initialize Firebase Admin SDK:', error)
+    initializationError = error instanceof Error ? error : new Error('Unknown initialization error')
+    return { adminAuth: null, adminDb: null, error: initializationError }
   }
-  
-  // Initialize Firebase Admin SDK
-  if (!getApps().length) {
-    initializeApp({
-      credential: cert(serviceAccount),
-      projectId: 'thrifting-ecommerce'
-    })
-  }
-  
-  adminAuth = getAuth()
-  adminDb = getFirestore()
-  console.log('Firebase Admin SDK initialized successfully')
-} catch (error) {
-  console.error('Failed to initialize Firebase Admin SDK:', error)
 }
 
+// Initialize on module load
+initializeFirebaseAdmin()
+
 export { adminAuth, adminDb }
+
+// Export function to get initialization status and retry if needed
+export function getFirebaseAdminStatus() {
+  return {
+    adminAuth,
+    adminDb,
+    initializationAttempted,
+    initializationError: initializationError?.message || null,
+    hasEnvVar: !!process.env.FIREBASE_ADMIN_SDK_JSON
+  }
+}
+
+// Export function to retry initialization
+export function retryFirebaseAdminInit() {
+  initializationAttempted = false
+  initializationError = null
+  return initializeFirebaseAdmin()
+}
 
 // Helper function to verify Firebase ID token
 export async function verifyIdToken(idToken: string) {
