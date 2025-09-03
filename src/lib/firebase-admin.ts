@@ -30,11 +30,21 @@ function initializeFirebaseAdmin() {
         throw new Error(`Invalid JSON in FIREBASE_ADMIN_SDK_JSON: ${parseError}`)
       }
     } else {
-      // Fallback to local file (for development)
+      // Fallback to local file (for development only)
       console.log('FIREBASE_ADMIN_SDK_JSON not found, trying local file')
       try {
-        serviceAccount = require('../../../thrifting-ecommerce-firebase-adminsdk-fbsvc-d9f4bfdff5.json')
-        console.log('Using Firebase Admin SDK from local file')
+        // Use dynamic import to prevent build errors when file doesn't exist
+        const fs = require('fs')
+        const path = require('path')
+        const filePath = path.join(process.cwd(), 'thrifting-ecommerce-firebase-adminsdk-fbsvc-d9f4bfdff5.json')
+        
+        if (fs.existsSync(filePath)) {
+          const fileContent = fs.readFileSync(filePath, 'utf8')
+          serviceAccount = JSON.parse(fileContent)
+          console.log('Using Firebase Admin SDK from local file')
+        } else {
+          throw new Error('Local Firebase Admin SDK file not found')
+        }
       } catch (fileError) {
         console.error('Local Firebase Admin SDK file not found:', fileError)
         throw new Error('Firebase Admin SDK credentials not available - no environment variable or local file')
