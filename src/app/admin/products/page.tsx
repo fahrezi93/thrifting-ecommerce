@@ -11,12 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
-import { Trash2, Edit, Plus, Upload, X, Search, Package, Star } from 'lucide-react'
+import { Star, Plus, Pencil, Trash2, Upload, X, Sparkles, Search, Package, Edit } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmModal, AlertModal } from '@/components/ui/modal'
 import { apiClient } from '@/lib/api-client'
 import { useAuth } from '@/contexts/AuthContext'
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { uploadImageToSupabase } from '@/lib/supabase-storage'
 
 interface Product {
   id: string
@@ -45,6 +45,7 @@ export default function AdminProductsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [uploadingImages, setUploadingImages] = useState(false)
+  const [generatingDescription, setGeneratingDescription] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{isOpen: boolean, productId: string, productName: string}>({isOpen: false, productId: '', productName: ''})
   const [alertModal, setAlertModal] = useState<{isOpen: boolean, title: string, description: string, variant?: 'default' | 'success' | 'error' | 'warning'}>({isOpen: false, title: '', description: ''})
   const { addToast } = useToast()
@@ -134,18 +135,18 @@ export default function AdminProductsPage() {
   const handleEdit = (product: Product) => {
     setEditingProduct(product)
     setFormData({
-      name: product.name,
-      description: product.description,
+      name: product.name || '',
+      description: product.description || '',
       price: product.price.toString(),
-      imageUrls: product.imageUrls,
-      category: product.category,
-      size: product.size,
-      condition: product.condition,
+      imageUrls: product.imageUrls || [],
+      category: product.category || '',
+      size: product.size || '',
+      condition: product.condition || '',
       brand: product.brand || '',
       color: product.color || '',
       stock: product.stock.toString(),
       isActive: product.isActive,
-      isFeatured: product.isFeatured,
+      isFeatured: product.isFeatured || false,
     })
     setIsDialogOpen(true)
   }
@@ -204,6 +205,73 @@ export default function AdminProductsPage() {
     resetForm()
   }
 
+  const handleGenerateDescription = async () => {
+    if (!formData.name.trim()) {
+      addToast({
+        title: 'Product Name Required',
+        description: 'Please enter a product name before generating description.',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    setGeneratingDescription(true)
+    
+    try {
+      if (!user) {
+        addToast({
+          title: 'Authentication Required',
+          description: 'Please login to use AI features.',
+          variant: 'destructive'
+        })
+        return
+      }
+
+      const token = await user.getIdToken()
+      const response = await fetch('/api/admin/generate-description', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productName: formData.name,
+          category: formData.category,
+          brand: formData.brand,
+          color: formData.color,
+          size: formData.size,
+          condition: formData.condition
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setFormData({ ...formData, description: data.description })
+        addToast({
+          title: 'Description Generated',
+          description: 'AI has generated a product description for you.',
+          variant: 'default'
+        })
+      } else {
+        const errorData = await response.json()
+        addToast({
+          title: 'Generation Failed',
+          description: errorData.error || 'Failed to generate description.',
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      console.error('Error generating description:', error)
+      addToast({
+        title: 'Error',
+        description: 'An error occurred while generating description.',
+        variant: 'destructive'
+      })
+    } finally {
+      setGeneratingDescription(false)
+    }
+  }
+
   const handleImageUpload = async (files: FileList) => {
     if (formData.imageUrls.length + files.length > 4) {
       setAlertModal({
@@ -228,24 +296,30 @@ export default function AdminProductsPage() {
         return
       }
 
-      const storage = getStorage() // Inisialisasi Firebase Storage
       const uploadedUrls: string[] = []
+      const failedUploads: string[] = []
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
-        const timestamp = Date.now()
-        const extension = file.name.split('.').pop()
-        const filename = `product-${timestamp}.${extension}`
-        const storageRef = ref(storage, `products/${filename}`)
-
+        
         try {
-          // 1. Unggah file ke Firebase Storage
-          const snapshot = await uploadBytes(storageRef, file)
-          // 2. Dapatkan URL publik dari file yang diunggah
-          const downloadURL = await getDownloadURL(snapshot.ref)
-          uploadedUrls.push(downloadURL)
+          // Upload file ke Supabase Storage
+          const result = await uploadImageToSupabase(file)
+          
+          if (result.success && result.url) {
+            uploadedUrls.push(result.url)
+          } else {
+            failedUploads.push(file.name)
+            console.error('Supabase Storage upload error:', result.error)
+            addToast({
+              title: 'Upload Failed',
+              description: `Gagal mengunggah ${file.name}: ${result.error}`,
+              variant: 'destructive'
+            })
+          }
         } catch (error) {
-          console.error('Firebase Storage upload error:', error)
+          failedUploads.push(file.name)
+          console.error('Upload error:', error)
           addToast({
             title: 'Upload Failed',
             description: `Gagal mengunggah ${file.name}`,
@@ -406,19 +480,42 @@ export default function AdminProductsPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Description</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateDescription}
+                      disabled={!formData.name || generatingDescription}
+                      className="text-xs"
+                    >
+                      {generatingDescription ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-1"></div>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3 w-3 mr-1" />
+                          Generate with AI
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     required
+                    placeholder="Enter product description or use AI to generate one..."
                   />
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                    <Select value={formData.category || ''} onValueChange={(value) => setFormData({ ...formData, category: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -433,7 +530,7 @@ export default function AdminProductsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="size">Size</Label>
-                    <Select value={formData.size} onValueChange={(value) => setFormData({ ...formData, size: value })}>
+                    <Select value={formData.size || ''} onValueChange={(value) => setFormData({ ...formData, size: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select size" />
                       </SelectTrigger>
@@ -448,7 +545,7 @@ export default function AdminProductsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="condition">Condition</Label>
-                    <Select value={formData.condition} onValueChange={(value) => setFormData({ ...formData, condition: value })}>
+                    <Select value={formData.condition || ''} onValueChange={(value) => setFormData({ ...formData, condition: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select condition" />
                       </SelectTrigger>

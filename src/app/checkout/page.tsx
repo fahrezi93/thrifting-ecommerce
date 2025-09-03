@@ -123,18 +123,9 @@ export default function CheckoutPage() {
       if (response.ok) {
         const { transactionToken } = await response.json()
         
-        // Check if this is a development mock token
-        if (transactionToken.startsWith('dev-mock-token-')) {
-          // For development, simulate successful payment
-          const shouldSucceed = confirm('Development Mode: Simulate successful payment?')
-          if (shouldSucceed) {
-            clearCart()
-            router.push(`/dashboard/orders?success=true`)
-          } else {
-            setError('Payment cancelled in development mode')
-          }
-          return
-        }
+        // Redirect to payment method selection
+        router.push(`/payment?token=${transactionToken}&amount=${totalAmount}`)
+        return
         
         // Load Midtrans Snap for real transactions
         const script = document.createElement('script')
@@ -274,10 +265,10 @@ export default function CheckoutPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
-                    Payment & Review
+                    Order Review
                   </CardTitle>
                   <CardDescription>
-                    Review your order and proceed to payment
+                    Review your order before proceeding to payment
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -336,11 +327,11 @@ export default function CheckoutPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-4">
+            <Card className="sticky top-4 h-fit">
               <CardHeader>
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pb-6">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal ({items.length} items)</span>
@@ -357,27 +348,26 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-4">
-                  {currentStep > 1 && (
-                    <Button variant="outline" onClick={handlePrevStep} className="flex-1">
-                      <ChevronLeft className="h-4 w-4 mr-2" />
-                      Back
-                    </Button>
-                  )}
-                  
+                <div className="pt-4 space-y-2">
                   {currentStep === 1 ? (
-                    <Button onClick={handleNextStep} className="flex-1">
+                    <Button onClick={handleNextStep} className="w-full">
                       Continue
                       <ChevronRight className="h-4 w-4 ml-2" />
                     </Button>
                   ) : (
-                    <Button 
-                      onClick={handlePayment} 
-                      className="flex-1"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Processing...' : 'Pay Now'}
-                    </Button>
+                    <>
+                      <Button variant="outline" onClick={handlePrevStep} className="w-full">
+                        <ChevronLeft className="h-4 w-4 mr-2" />
+                        Back
+                      </Button>
+                      <Button 
+                        onClick={handlePayment} 
+                        className="w-full"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Processing...' : 'Proceed to Payment'}
+                      </Button>
+                    </>
                   )}
                 </div>
               </CardContent>

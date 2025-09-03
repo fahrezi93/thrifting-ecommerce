@@ -1,0 +1,19 @@
+[
+  {
+    "origin": [
+      "https://thrift-haven-fkyx7yglf-fahrezis-projects.vercel.app",
+      "https://thrift-haven-d00*.vercel.app",
+      "https://*.vercel.app",
+      "http://localhost:3000",
+      "https://thrifting-haven.vercel.app"
+    ],
+    "method": ["POST", "GET", "PUT", "DELETE", "HEAD", "OPTIONS"],
+    "responseHeader": [
+      "Content-Type",
+      "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Methods",
+      "Access-Control-Allow-Headers"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]

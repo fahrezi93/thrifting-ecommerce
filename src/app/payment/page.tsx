@@ -28,19 +28,6 @@ interface PaymentMethod {
   processingTime: string
 }
 
-interface OrderSummary {
-  orderId: string
-  orderNumber: string
-  items: Array<{
-    name: string
-    quantity: number
-    price: number
-    size: string
-  }>
-  subtotal: number
-  shipping: number
-  total: number
-}
 
 const paymentMethods: PaymentMethod[] = [
   {
@@ -149,46 +136,21 @@ export default function PaymentPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [selectedMethod, setSelectedMethod] = useState<string>('')
-  const [orderSummary, setOrderSummary] = useState<OrderSummary | null>(null)
+  const [orderSummary, setOrderSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
 
-  const orderId = searchParams.get('orderId')
+  const token = searchParams.get('token')
+  const amount = searchParams.get('amount')
 
   useEffect(() => {
-    if (orderId) {
-      fetchOrderSummary()
-    } else {
-      setLoading(false)
+    if (!token || !amount) {
+      router.push('/checkout')
+      return
     }
-  }, [orderId])
+    setLoading(false)
+  }, [token, amount, router])
 
-  const fetchOrderSummary = async () => {
-    try {
-      if (!user || !orderId) {
-        setLoading(false)
-        return
-      }
-
-      const token = await user.getIdToken()
-      const response = await fetch(`/api/orders/${orderId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setOrderSummary(data)
-      } else {
-        console.error('Failed to fetch order:', response.statusText)
-      }
-    } catch (error) {
-      console.error('Error fetching order:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -211,35 +173,37 @@ export default function PaymentPage() {
   }
 
   const handlePayment = async () => {
-    if (!selectedMethod || !orderSummary) return
+    if (!selectedMethod || !token) return
 
     setProcessing(true)
     try {
-      const token = await user?.getIdToken()
-      const response = await fetch('/api/payment/process', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          orderId: orderSummary.orderId,
-          paymentMethod: selectedMethod
-        })
-      })
+      // Load Midtrans Snap
+      const script = document.createElement('script')
+      script.src = 'https://app.sandbox.midtrans.com/snap/snap.js'
+      script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || 'SB-Mid-client-dummy-key-for-dev')
+      document.head.appendChild(script)
 
-      if (response.ok) {
-        const data = await response.json()
-        // Redirect to payment gateway or show payment instructions
-        if (data.redirectUrl) {
-          window.location.href = data.redirectUrl
-        } else {
-          router.push(`/payment/instructions?orderId=${orderSummary.orderId}&method=${selectedMethod}`)
-        }
+      script.onload = () => {
+        // @ts-ignore
+        window.snap.pay(token, {
+          onSuccess: (result: any) => {
+            router.push(`/dashboard/orders?success=true`)
+          },
+          onPending: (result: any) => {
+            router.push(`/dashboard/orders?pending=true`)
+          },
+          onError: (result: any) => {
+            console.error('Payment failed:', result)
+            setProcessing(false)
+          },
+          onClose: () => {
+            console.log('Payment popup closed')
+            setProcessing(false)
+          }
+        })
       }
     } catch (error) {
       console.error('Payment error:', error)
-    } finally {
       setProcessing(false)
     }
   }
@@ -257,17 +221,17 @@ export default function PaymentPage() {
     )
   }
 
-  if (!orderSummary) {
+  if (!token || !amount) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>
           <CardContent className="text-center py-12">
-            <h3 className="text-lg font-semibold mb-2">Order not found</h3>
+            <h3 className="text-lg font-semibold mb-2">Invalid Payment Session</h3>
             <p className="text-muted-foreground mb-4">
-              The order you're trying to pay for could not be found.
+              Payment session not found. Please start from checkout.
             </p>
-            <Button onClick={() => router.push('/dashboard/orders')}>
-              View Orders
+            <Button onClick={() => router.push('/checkout')}>
+              Back to Checkout
             </Button>
           </CardContent>
         </Card>
@@ -276,7 +240,8 @@ export default function PaymentPage() {
   }
 
   const selectedPaymentMethod = paymentMethods.find(m => m.id === selectedMethod)
-  const finalTotal = orderSummary.total + (selectedPaymentMethod?.fee || 0)
+  const baseAmount = amount ? parseInt(amount) : 0
+  const finalTotal = baseAmount + (selectedPaymentMethod?.fee || 0)
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -293,7 +258,7 @@ export default function PaymentPage() {
         <div>
           <h1 className="text-2xl font-bold">Pilih Metode Pembayaran</h1>
           <p className="text-muted-foreground">
-            Order #{orderSummary.orderNumber}
+            Total: {amount ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(parseInt(amount)) : ''}
           </p>
         </div>
       </div>
@@ -435,32 +400,11 @@ export default function PaymentPage() {
               <CardTitle>Ringkasan Pesanan</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Items */}
-              <div className="space-y-3">
-                {orderSummary.items.map((item, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-muted-foreground">
-                        Size {item.size} × {item.quantity}
-                      </p>
-                    </div>
-                    <p className="font-medium">{formatPrice(item.price * item.quantity)}</p>
-                  </div>
-                ))}
-              </div>
-
-              <Separator />
-
               {/* Pricing */}
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>{formatPrice(orderSummary.subtotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Ongkos Kirim</span>
-                  <span>{formatPrice(orderSummary.shipping)}</span>
+                  <span>Total Pesanan</span>
+                  <span>{formatPrice(baseAmount)}</span>
                 </div>
                 {selectedPaymentMethod && selectedPaymentMethod.fee > 0 && (
                   <div className="flex justify-between">

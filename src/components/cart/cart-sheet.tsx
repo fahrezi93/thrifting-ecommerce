@@ -94,7 +94,7 @@ export function CartSheet() {
               </div>
 
               {/* Cart Footer */}
-              <div className="border-t pt-4 space-y-4">
+              <div className="border-t pt-4 pb-4 space-y-4 mt-auto">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total:</span>
                   <span className="font-bold text-lg">{formatPrice(getTotalPrice())}</span>

@@ -9,6 +9,10 @@ export async function PUT(
   try {
     await requireAdmin(request)
 
+    const requestBody = await request.json()
+    console.log('Update product request body:', requestBody)
+    console.log('Product ID:', params.id)
+
     const { 
       name, 
       description, 
@@ -20,23 +24,44 @@ export async function PUT(
       brand, 
       color, 
       stock, 
-      isActive 
-    } = await request.json()
+      isActive,
+      isFeatured 
+    } = requestBody
+
+    // Convert price and stock to numbers
+    const numericPrice = parseFloat(price)
+    const numericStock = parseInt(stock)
+
+    console.log('Parsed values:', {
+      name,
+      description,
+      price: numericPrice,
+      imageUrls,
+      category,
+      size,
+      condition,
+      brand,
+      color,
+      stock: numericStock,
+      isActive,
+      isFeatured
+    })
 
     const product = await prisma.product.update({
       where: { id: params.id },
       data: {
         name,
         description,
-        price,
+        price: numericPrice,
         imageUrls: JSON.stringify(imageUrls),
         category,
         size,
         condition,
         brand,
         color,
-        stock,
+        stock: numericStock,
         isActive,
+        isFeatured,
       }
     })
 
@@ -55,7 +80,15 @@ export async function PUT(
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
     console.error('Error updating product:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      productId: params.id
+    })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 
