@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
 import { getServerSession } from '@/lib/auth'
+import { uploadProductImage } from '@/lib/firebase-storage'
 
 export async function POST(request: NextRequest) {
   console.log('Upload API called')
@@ -52,41 +50,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    console.log('Converting file to buffer...')
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    console.log('Buffer created, size:', buffer.length, 'bytes')
-
-    // Generate unique filename
-    const timestamp = Date.now()
-    const extension = file.name.split('.').pop()
-    const filename = `product-${timestamp}.${extension}`
-    console.log('Generated filename:', filename)
-
-    // Ensure uploads directory exists
-    const uploadsDir = join(process.cwd(), 'public', 'uploads')
-    console.log('Uploads directory path:', uploadsDir)
-    
-    if (!existsSync(uploadsDir)) {
-      console.log('Creating uploads directory...')
-      await mkdir(uploadsDir, { recursive: true })
-      console.log('Uploads directory created successfully')
-    } else {
-      console.log('Uploads directory exists')
-    }
-
-    // Save to public/uploads directory
-    const path = join(uploadsDir, filename)
-    console.log('Writing file to:', path)
-    await writeFile(path, buffer)
-    console.log('File written successfully')
-
-    // Return the public URL
-    const imageUrl = `/uploads/${filename}`
+    console.log('Uploading file to Firebase Storage...')
+    // Upload to Firebase Storage instead of local filesystem
+    const imageUrl = await uploadProductImage(file)
+    console.log('File uploaded successfully:', imageUrl)
 
     return NextResponse.json({ 
-      message: 'File uploaded successfully',
-      imageUrl 
+      success: true, 
+      imageUrl: imageUrl,
+      filename: file.name
     })
   } catch (error) {
     console.error('Error uploading file:', error)
