@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast'
 import { ConfirmModal, AlertModal } from '@/components/ui/modal'
 import { apiClient } from '@/lib/api-client'
 import { useAuth } from '@/contexts/AuthContext'
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 interface Product {
   id: string
@@ -207,8 +208,8 @@ export default function AdminProductsPage() {
     if (formData.imageUrls.length + files.length > 4) {
       setAlertModal({
         isOpen: true,
-        title: 'Too Many Images',
-        description: 'Maximum 4 images allowed per product.',
+        title: 'Maksimal 4 Gambar',
+        description: 'Anda hanya dapat mengunggah maksimal 4 gambar per produk.',
         variant: 'warning'
       })
       return
@@ -218,50 +219,58 @@ export default function AdminProductsPage() {
     
     try {
       if (!user) {
-        setAlertModal({
-          isOpen: true,
+        addToast({
           title: 'Authentication Required',
-          description: 'Please login first.',
-          variant: 'warning'
+          description: 'Otentikasi diperlukan. Silakan login kembali.',
+          variant: 'destructive'
         })
+        setUploadingImages(false)
         return
       }
 
+      const storage = getStorage() // Inisialisasi Firebase Storage
       const uploadedUrls: string[] = []
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
-        const uploadFormData = new FormData()
-        uploadFormData.append('file', file)
+        const timestamp = Date.now()
+        const extension = file.name.split('.').pop()
+        const filename = `product-${timestamp}.${extension}`
+        const storageRef = ref(storage, `products/${filename}`)
 
         try {
-          const result = await apiClient.post('/api/upload', uploadFormData)
-          uploadedUrls.push(result.imageUrl)
+          // 1. Unggah file ke Firebase Storage
+          const snapshot = await uploadBytes(storageRef, file)
+          // 2. Dapatkan URL publik dari file yang diunggah
+          const downloadURL = await getDownloadURL(snapshot.ref)
+          uploadedUrls.push(downloadURL)
         } catch (error) {
-          console.error('Upload error:', error)
+          console.error('Firebase Storage upload error:', error)
           addToast({
             title: 'Upload Failed',
-            description: `Failed to upload ${file.name}`,
+            description: `Gagal mengunggah ${file.name}`,
             variant: 'destructive'
           })
         }
       }
 
       if (uploadedUrls.length > 0) {
-        console.log('Setting uploaded URLs:', uploadedUrls)
         setFormData(prev => ({
           ...prev,
           imageUrls: [...prev.imageUrls, ...uploadedUrls]
         }))
-        console.log('Form data updated with images')
+        addToast({
+          title: 'Success!',
+          description: `${uploadedUrls.length} gambar berhasil diunggah!`,
+          variant: 'success'
+        })
       }
     } catch (error) {
       console.error('Upload error:', error)
-      setAlertModal({
-        isOpen: true,
+      addToast({
         title: 'Upload Error',
-        description: 'Upload failed. Please try again.',
-        variant: 'error'
+        description: 'Terjadi kesalahan saat mengunggah gambar.',
+        variant: 'destructive'
       })
     } finally {
       setUploadingImages(false)
