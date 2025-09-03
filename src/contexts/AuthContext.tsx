@@ -89,7 +89,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     if (!auth) throw new Error('Firebase not initialized')
     const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    })
+    try {
+      await signInWithPopup(auth, provider)
+    } catch (error: any) {
+      // Handle popup blocked or COOP policy errors
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
+        console.warn('Popup blocked, consider using redirect method')
+        throw new Error('Popup was blocked. Please allow popups for this site or try again.')
+      }
+      throw error
+    }
   }
 
   const logout = async () => {

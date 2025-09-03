@@ -6,7 +6,22 @@ let adminAuth: any = null
 let adminDb: any = null
 
 try {
-  const serviceAccount = require('../../thrifting-ecommerce-firebase-adminsdk-fbsvc-d9f4bfdff5.json')
+  let serviceAccount;
+  
+  // Try to get credentials from environment variable first (for production/Vercel)
+  if (process.env.FIREBASE_ADMIN_SDK_JSON) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SDK_JSON);
+    console.log('Using Firebase Admin SDK from environment variable')
+  } else {
+    // Fallback to local file (for development)
+    try {
+      serviceAccount = require('../../../thrifting-ecommerce-firebase-adminsdk-fbsvc-d9f4bfdff5.json')
+      console.log('Using Firebase Admin SDK from local file')
+    } catch (fileError) {
+      console.error('Local Firebase Admin SDK file not found:', fileError)
+      throw new Error('Firebase Admin SDK credentials not available')
+    }
+  }
   
   // Initialize Firebase Admin SDK
   if (!getApps().length) {
