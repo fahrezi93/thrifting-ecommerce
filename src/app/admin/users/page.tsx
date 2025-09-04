@@ -152,7 +152,7 @@ export default function AdminUsersPage() {
                       >
                         Make Admin
                       </Button>
-                    ) : userData.id !== user?.uid && (
+                    ) : userData.id !== user?.id && (
                       <Button
                         size="sm"
                         variant="outline"
