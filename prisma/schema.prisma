@@ -188,6 +188,8 @@ model StoreSettings {
   storeEmail        String   @default("hello@thrifthaven.com")
   storePhone        String   @default("+62 123 456 7890")
   storeAddress      String   @default("Jakarta, Indonesia")
+  supportEmail      String   @default("support@thrifthaven.com")
+  businessHours     String   @default("Mon-Sun, 9 AM - 9 PM")
   isStoreActive     Boolean  @default(true)
   allowRegistration Boolean  @default(true)
   maintenanceMode   Boolean  @default(false)

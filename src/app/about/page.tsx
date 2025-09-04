@@ -1,8 +1,21 @@
+'use client'
+
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Heart, Recycle, Users, Shield } from 'lucide-react'
+import { useStoreSettings } from '@/hooks/use-store-settings'
 
 export default function AboutPage() {
+  const { settings, loading } = useStoreSettings()
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Hero Section */}
@@ -151,9 +164,9 @@ export default function AboutPage() {
             Have questions or want to learn more about our mission? We'd love to hear from you!
           </p>
           <div className="space-y-2 text-sm">
-            <p><strong>Email:</strong> hello@thrifthaven.com</p>
-            <p><strong>Phone:</strong> +62 123 456 7890</p>
-            <p><strong>Address:</strong> Jakarta, Indonesia</p>
+            <p><strong>Email:</strong> {settings.storeEmail}</p>
+            <p><strong>Phone:</strong> {settings.storePhone}</p>
+            <p><strong>Address:</strong> {settings.storeAddress}</p>
           </div>
         </CardContent>
       </Card>

@@ -64,9 +64,8 @@ export default function ProfilePage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken(true) // Force refresh token
-      console.log('Profile token length:', token.length)
-      console.log('Profile token preview:', token.substring(0, 50) + '...')
+      const token = await user.getIdToken?.() // Force refresh token
+      if (!token) return
       
       const response = await fetch('/api/user/profile', {
         headers: {
@@ -95,7 +94,9 @@ export default function ProfilePage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
+      const token = await user.getIdToken?.()
+      if (!token) return
+      
       const response = await fetch('/api/user/orders', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -117,7 +118,8 @@ export default function ProfilePage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
+      const token = await user.getIdToken?.()
+      if (!token) return
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {

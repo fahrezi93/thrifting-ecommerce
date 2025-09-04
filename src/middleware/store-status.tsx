@@ -2,7 +2,9 @@
 
 import { useEffect } from 'react'
 import { useStore } from '@/contexts/StoreContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 interface StoreStatusProps {
   children: React.ReactNode
@@ -10,23 +12,31 @@ interface StoreStatusProps {
 
 export function StoreStatusWrapper({ children }: StoreStatusProps) {
   const { settings, loading } = useStore()
+  const { user } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!loading && settings) {
-      // If maintenance mode is enabled, redirect to maintenance page
-      if (settings.maintenanceMode) {
-        router.push('/maintenance')
-        return
+      // Skip maintenance mode for admin users
+      if (settings.maintenanceMode && user?.role !== 'ADMIN') {
+        // Allow home page during maintenance, but block shop/product pages
+        const restrictedPaths = ['/shop', '/products', '/cart', '/checkout', '/profile']
+        const isRestrictedPath = restrictedPaths.some(path => pathname.startsWith(path))
+        
+        if (isRestrictedPath) {
+          router.push('/maintenance')
+          return
+        }
       }
       
-      // If store is not active, redirect to store closed page
+      // Store closed affects everyone (including admin to see the status)
       if (!settings.isStoreActive) {
         router.push('/store-closed')
         return
       }
     }
-  }, [settings, loading, router])
+  }, [settings, loading, router, user, pathname])
 
   // Show loading while checking store status
   if (loading) {
@@ -40,8 +50,8 @@ export function StoreStatusWrapper({ children }: StoreStatusProps) {
     )
   }
 
-  // If maintenance mode or store inactive, don't render children
-  if (settings?.maintenanceMode || !settings?.isStoreActive) {
+  // Only block rendering if store is completely inactive
+  if (!settings?.isStoreActive) {
     return null
   }
 

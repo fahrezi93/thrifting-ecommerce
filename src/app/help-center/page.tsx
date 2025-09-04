@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { useStoreSettings } from '@/hooks/use-store-settings'
 
 const faqs = [
   {
@@ -43,6 +44,7 @@ const faqs = [
 ]
 
 export default function HelpCenter() {
+  const { settings, loading } = useStoreSettings()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [contactForm, setContactForm] = useState({
     name: '',
@@ -61,6 +63,16 @@ export default function HelpCenter() {
     console.log('Contact form submitted:', contactForm)
     alert('Thank you for your message! We\'ll get back to you within 24 hours.')
     setContactForm({ name: '', email: '', subject: '', message: '' })
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -132,14 +144,14 @@ export default function HelpCenter() {
                 <div className="flex items-center space-x-3">
                   <Phone className="h-5 w-5 text-green-500" />
                   <div>
-                    <p className="font-medium">+62 21 1234 5678</p>
+                    <p className="font-medium">{settings.storePhone}</p>
                     <p className="text-sm text-gray-600">Mon-Fri, 9 AM - 6 PM</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Mail className="h-5 w-5 text-red-500" />
                   <div>
-                    <p className="font-medium">support@thrifthaven.com</p>
+                    <p className="font-medium">{settings.supportEmail}</p>
                     <p className="text-sm text-gray-600">We reply within 24 hours</p>
                   </div>
                 </div>
@@ -147,7 +159,7 @@ export default function HelpCenter() {
                   <Clock className="h-5 w-5 text-purple-500" />
                   <div>
                     <p className="font-medium">Business Hours</p>
-                    <p className="text-sm text-gray-600">Mon-Sun, 9 AM - 9 PM</p>
+                    <p className="text-sm text-gray-600">{settings.businessHours}</p>
                   </div>
                 </div>
               </CardContent>

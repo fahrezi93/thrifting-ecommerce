@@ -37,7 +37,12 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ user })
+    return NextResponse.json({ 
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role
+    })
   } catch (error) {
     console.error('Error syncing user:', error)
     console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')

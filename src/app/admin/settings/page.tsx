@@ -21,6 +21,8 @@ interface StoreSettings {
   storeEmail: string
   storePhone: string
   storeAddress: string
+  supportEmail: string
+  businessHours: string
   isStoreActive: boolean
   allowRegistration: boolean
   maintenanceMode: boolean
@@ -36,6 +38,8 @@ export default function AdminSettingsPage() {
     storeEmail: 'hello@thrifthaven.com',
     storePhone: '+62 123 456 7890',
     storeAddress: 'Jakarta, Indonesia',
+    supportEmail: 'support@thrifthaven.com',
+    businessHours: 'Mon-Sun, 9 AM - 9 PM',
     isStoreActive: true,
     allowRegistration: true,
     maintenanceMode: false,
@@ -159,6 +163,26 @@ export default function AdminSettingsPage() {
                   id="storeAddress"
                   value={settings.storeAddress}
                   onChange={(e) => handleInputChange('storeAddress', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="supportEmail">Support Email</Label>
+                <Input
+                  id="supportEmail"
+                  type="email"
+                  value={settings.supportEmail}
+                  onChange={(e) => handleInputChange('supportEmail', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="businessHours">Business Hours</Label>
+                <Input
+                  id="businessHours"
+                  value={settings.businessHours}
+                  onChange={(e) => handleInputChange('businessHours', e.target.value)}
                 />
               </div>
             </div>

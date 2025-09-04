@@ -3,6 +3,7 @@
 import { Truck, Clock, MapPin, Package, Shield, CreditCard } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useStoreSettings } from '@/hooks/use-store-settings'
 
 const shippingOptions = [
   {
@@ -40,6 +41,18 @@ const coverageAreas = [
 ]
 
 export default function ShippingInfo() {
+  const { settings, loading } = useStoreSettings()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -210,15 +223,15 @@ export default function ShippingInfo() {
             <div className="grid md:grid-cols-3 gap-4 text-center">
               <div>
                 <h4 className="font-semibold">📞 Phone</h4>
-                <p className="text-sm text-gray-600">+62 21 1234 5678</p>
+                <p className="text-sm text-gray-600">{settings.storePhone}</p>
               </div>
               <div>
                 <h4 className="font-semibold">✉️ Email</h4>
-                <p className="text-sm text-gray-600">shipping@thrifthaven.com</p>
+                <p className="text-sm text-gray-600">{settings.supportEmail}</p>
               </div>
               <div>
                 <h4 className="font-semibold">💬 Live Chat</h4>
-                <p className="text-sm text-gray-600">Available 9 AM - 9 PM</p>
+                <p className="text-sm text-gray-600">{settings.businessHours}</p>
               </div>
             </div>
           </CardContent>

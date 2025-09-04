@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useStoreSettings } from '@/hooks/use-store-settings'
 
 const returnReasons = [
   "Item doesn't fit",
@@ -47,6 +48,18 @@ const returnProcess = [
 ]
 
 export default function Returns() {
+  const { settings, loading } = useStoreSettings()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -217,7 +230,7 @@ export default function Returns() {
             <div>
               <h3 className="font-semibold mb-2">1. Contact Customer Service</h3>
               <p className="text-sm text-gray-600 mb-2">
-                Email us at <strong>returns@thrifthaven.com</strong> or call <strong>+62 21 1234 5678</strong>
+                Email us at <strong>{settings.supportEmail}</strong> or call <strong>{settings.storePhone}</strong>
               </p>
               <p className="text-sm text-gray-600">
                 Include your order number, item(s) to return, and reason for return.
@@ -328,18 +341,18 @@ export default function Returns() {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="text-center">
                 <h4 className="font-semibold mb-2">📧 Email</h4>
-                <p className="text-sm text-gray-600">returns@thrifthaven.com</p>
+                <p className="text-sm text-gray-600">{settings.supportEmail}</p>
                 <p className="text-xs text-gray-500">Response within 24 hours</p>
               </div>
               <div className="text-center">
                 <h4 className="font-semibold mb-2">📞 Phone</h4>
-                <p className="text-sm text-gray-600">+62 21 1234 5678</p>
+                <p className="text-sm text-gray-600">{settings.storePhone}</p>
                 <p className="text-xs text-gray-500">Mon-Fri, 9 AM - 6 PM</p>
               </div>
               <div className="text-center">
                 <h4 className="font-semibold mb-2">💬 Live Chat</h4>
                 <p className="text-sm text-gray-600">Available on website</p>
-                <p className="text-xs text-gray-500">9 AM - 9 PM daily</p>
+                <p className="text-xs text-gray-500">{settings.businessHours}</p>
               </div>
             </div>
             <div className="mt-6 text-center">

@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google'
 import { Providers } from '@/components/providers'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { StoreProvider } from '@/contexts/StoreContext'
+import { StoreStatusWrapper } from '@/middleware/store-status'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { ToastViewport } from '@/components/ui/toast'
@@ -35,16 +36,18 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <StoreProvider>
-            <Providers>
-              <div className="min-h-screen flex flex-col">
-                <Navbar />
-                <main className="flex-1">
-                  {children}
-                </main>
-                <Footer />
-              </div>
-              <ToastViewport />
-            </Providers>
+            <StoreStatusWrapper>
+              <Providers>
+                <div className="min-h-screen flex flex-col">
+                  <Navbar />
+                  <main className="flex-1">
+                    {children}
+                  </main>
+                  <Footer />
+                </div>
+                <ToastViewport />
+              </Providers>
+            </StoreStatusWrapper>
           </StoreProvider>
         </AuthProvider>
       </body>

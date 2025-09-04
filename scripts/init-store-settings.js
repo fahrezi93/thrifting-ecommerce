@@ -25,6 +25,8 @@ async function initStoreSettings() {
         storeEmail: 'hello@thrifthaven.com',
         storePhone: '+62 123 456 7890',
         storeAddress: 'Jakarta, Indonesia',
+        supportEmail: 'support@thrifthaven.com',
+        businessHours: 'Mon-Sun, 9 AM - 9 PM',
         isStoreActive: true,
         allowRegistration: true,
         maintenanceMode: false,

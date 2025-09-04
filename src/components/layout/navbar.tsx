@@ -35,13 +35,11 @@ function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobi
       
       try {
         const { role } = await apiClient.get('/api/auth/check-role')
-        console.log('User role from API:', role)
         setIsAdmin(role === 'ADMIN')
       } catch (error) {
         console.error('Error checking admin role:', error)
         // Fallback: check if user email is admin
         if (user.email === 'admin@admin.com') {
-          console.log('Fallback: Setting admin based on email')
           setIsAdmin(true)
         }
       } finally {
@@ -172,9 +170,9 @@ export function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.photoURL || ''} alt={user.displayName || user.email || ''} />
+                        <AvatarImage src={''} alt={user.name || user.email || ''} />
                         <AvatarFallback>
-                          {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                          {user.name ? user.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -183,7 +181,7 @@ export function Navbar() {
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
-                          {user.displayName || 'User'}
+                          {user.name || 'User'}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}

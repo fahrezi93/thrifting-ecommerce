@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useCart } from '@/store/cart'
 import { 
-  User,
+  User as FirebaseUser,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
@@ -14,6 +14,14 @@ import {
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { prisma } from '@/lib/prisma'
+
+interface User {
+  id: string
+  email: string
+  name: string | null
+  role: string
+  getIdToken?: () => Promise<string>
+}
 
 interface AuthContextType {
   user: User | null
@@ -41,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: User | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         // Sync user with database using ID token for verification
         try {
@@ -57,15 +65,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             })
           })
           
-          if (!response.ok) {
+          if (response.ok) {
+            const userData = await response.json()
+            setUser({
+              id: userData.id,
+              email: userData.email,
+              name: userData.name,
+              role: userData.role,
+              getIdToken: () => firebaseUser.getIdToken()
+            })
+          } else {
             console.warn('User sync failed, but continuing with authentication')
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              name: firebaseUser.displayName,
+              role: 'USER',
+              getIdToken: () => firebaseUser.getIdToken()
+            })
           }
         } catch (error) {
           console.error('Error syncing user:', error)
           // Continue with authentication even if sync fails
+          setUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.displayName,
+            role: 'USER',
+            getIdToken: () => firebaseUser.getIdToken()
+          })
         }
+      } else {
+        setUser(null)
       }
-      setUser(firebaseUser)
       setLoading(false)
       
       // Update cart store with user ID

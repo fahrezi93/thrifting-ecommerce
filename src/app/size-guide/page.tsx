@@ -5,6 +5,7 @@ import { Ruler, User, Shirt, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { useStoreSettings } from '@/hooks/use-store-settings'
 
 const womenSizes = {
   tops: [
@@ -91,7 +92,18 @@ const measurementTips = [
 ]
 
 export default function SizeGuide() {
+  const { settings, loading } = useStoreSettings()
   const [selectedGender, setSelectedGender] = useState<'women' | 'men'>('women')
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -405,11 +417,11 @@ export default function SizeGuide() {
               </div>
               <div>
                 <h4 className="font-semibold mb-2">📧 Email</h4>
-                <p className="text-sm text-gray-600">sizing@thrifthaven.com</p>
+                <p className="text-sm text-gray-600">{settings.supportEmail}</p>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">📞 Phone</h4>
-                <p className="text-sm text-gray-600">+62 21 1234 5678</p>
+                <p className="text-sm text-gray-600">{settings.storePhone}</p>
               </div>
             </div>
           </CardContent>

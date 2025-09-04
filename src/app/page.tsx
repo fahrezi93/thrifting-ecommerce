@@ -5,10 +5,9 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ShoppingBag, Recycle, Heart, Star } from 'lucide-react'
-import { CartSheet } from '@/components/cart/cart-sheet'
-import AnimatedBackground from '@/components/ui/AnimatedBackground'
-import { useAuth } from '@/contexts/AuthContext'
+import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { useStore } from '@/contexts/StoreContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { useState, useEffect } from 'react'
 
 interface Product {
@@ -56,11 +55,12 @@ export default function HomePage() {
 
   return (
     <>
+      <MaintenanceBanner />
       <div className="min-h-screen">
         {/* Hero Section */}
         <section className="relative py-20 md:py-32 overflow-hidden">
           {/* Animated CSS Background */}
-          <AnimatedBackground />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5"></div>
           
           {/* Gradient Overlay for readability */}
           <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/85 to-background/90"></div>
@@ -289,7 +289,6 @@ export default function HomePage() {
         </section>
       </div>
       
-      <CartSheet />
     </>
   )
 }
