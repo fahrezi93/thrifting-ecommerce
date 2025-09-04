@@ -77,7 +77,7 @@ function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobi
 }
 
 export function Navbar() {
-  const { user, logout } = useAuth()
+  const { user, logout, loading } = useAuth()
   const { getTotalItems, toggleCart } = useCart()
   const { settings } = useStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -165,7 +165,13 @@ export function Navbar() {
                 </Button>
               </div>
             }>
-              {user ? (
+              {loading ? (
+                <div className="hidden md:flex items-center space-x-2">
+                  <Button variant="ghost" className="text-sm" disabled>
+                    Loading...
+                  </Button>
+                </div>
+              ) : user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -289,7 +295,11 @@ export function Navbar() {
                   <div className="py-2 text-sm text-muted-foreground">Loading...</div>
                 </div>
               }>
-                {!user && (
+                {loading ? (
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="py-2 text-sm text-muted-foreground">Loading...</div>
+                  </div>
+                ) : !user && (
                   <div className="space-y-2 pt-4 border-t">
                     <Link
                       href="/auth/signin"
