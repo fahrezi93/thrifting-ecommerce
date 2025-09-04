@@ -65,7 +65,8 @@ export default function AdminLayout({
     try {
       if (!user) return
       
-      const token = await user.getIdToken()
+      const token = await user.getIdToken?.()
+      if (!token) return
       const response = await fetch('/api/auth/check-role', {
         headers: {
           'Authorization': `Bearer ${token}`,
