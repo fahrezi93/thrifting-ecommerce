@@ -61,7 +61,7 @@ export default function ProductDetailPage() {
   // Check if item is saved on component mount
   useEffect(() => {
     const checkIsSaved = async () => {
-      if (user && product) {
+      if (user && product && user.getIdToken) {
         try {
           const token = await user.getIdToken()
           const response = await fetch('/api/user/wishlist', {
@@ -81,6 +81,18 @@ export default function ProductDetailPage() {
   }, [product, user])
 
   const handleAddToCart = () => {
+    if (!user) {
+      addToast({
+        title: 'Authentication Required',
+        description: 'Please sign in to add items to your cart.',
+        variant: 'destructive'
+      })
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        window.location.href = '/auth/signin'
+      }, 1500)
+      return
+    }
     if (product) {
       addItem({
         id: product.id,
@@ -142,6 +154,7 @@ export default function ProductDetailPage() {
     }
 
     try {
+      if (!user || !user.getIdToken) return
       const token = await user.getIdToken()
       if (isSaved) {
         // Remove from saved items
@@ -341,9 +354,11 @@ export default function ProductDetailPage() {
                 disabled={product.stock === 0}
                 className="w-full"
                 size="lg"
+                variant={!user ? 'outline' : 'default'}
+                title={!user ? 'Please sign in to add items to cart' : ''}
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                {product.stock === 0 ? 'Out of Stock' : !user ? 'Sign In to Add to Cart' : 'Add to Cart'}
               </Button>
 
               <div className="flex gap-2">

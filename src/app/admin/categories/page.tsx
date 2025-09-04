@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import { Trash2, Edit, Plus, Package } from 'lucide-react'
+import { Trash2, Edit, Plus, Package, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api-client'
+import { uploadImageToSupabase } from '@/lib/supabase-storage'
 
 interface Category {
   id: string
@@ -36,6 +37,7 @@ export default function CategoriesPage() {
     imageUrl: '',
     isActive: true
   })
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     fetchCategories()
@@ -112,6 +114,35 @@ export default function CategoriesPage() {
     }
   }
 
+  const handleImageUpload = async (file: File) => {
+    setUploadingImage(true)
+    
+    try {
+      if (!user) {
+        toast.error('Authentication required')
+        return
+      }
+
+      const result = await uploadImageToSupabase(file)
+      
+      if (result.success && result.url) {
+        setFormData({ ...formData, imageUrl: result.url })
+        toast.success('Image uploaded successfully!')
+      } else {
+        toast.error(`Upload failed: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error('Failed to upload image')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const removeImage = () => {
+    setFormData({ ...formData, imageUrl: '' })
+  }
+
   const resetForm = () => {
     setShowForm(false)
     setEditingCategory(null)
@@ -162,13 +193,53 @@ export default function CategoriesPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="imageUrl">Image URL</Label>
-                  <Input
-                    id="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <Label htmlFor="categoryImage">Category Image</Label>
+                  
+                  {/* File Upload */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mt-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                      className="hidden"
+                      id="category-image-upload"
+                      disabled={uploadingImage}
+                    />
+                    <label
+                      htmlFor="category-image-upload"
+                      className={`cursor-pointer flex flex-col items-center justify-center py-4 ${
+                        uploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                      <span className="text-sm text-gray-600">
+                        {uploadingImage ? 'Uploading...' : 'Click to upload image or drag and drop'}
+                      </span>
+                      <span className="text-xs text-gray-400 mt-1">
+                        PNG, JPG, WebP up to 5MB
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Image Preview */}
+                  {formData.imageUrl && (
+                    <div className="mt-4 relative inline-block">
+                      <img
+                        src={formData.imageUrl}
+                        alt="Category preview"
+                        className="w-32 h-32 object-cover rounded border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={removeImage}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
               

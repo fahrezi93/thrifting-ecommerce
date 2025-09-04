@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react'
+import { Github, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react'
 import { useStore } from '@/contexts/StoreContext'
 
 export function Footer() {
@@ -17,14 +17,14 @@ export function Footer() {
               {settings?.storeDescription || 'Sustainable fashion for the conscious shopper. Discover unique, quality pre-loved clothing.'}
             </p>
             <div className="flex space-x-4">
-              <Link href="#" className="text-muted-foreground hover:text-primary">
-                <Facebook className="h-5 w-5" />
+              <Link href="https://github.com/fahrezi93" className="text-muted-foreground hover:text-primary">
+                <Github className="h-5 w-5" />
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary">
+              <Link href="https://instagram.com/moh.fahrezi" className="text-muted-foreground hover:text-primary">
                 <Instagram className="h-5 w-5" />
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-primary">
-                <Twitter className="h-5 w-5" />
+              <Link href="mailto:mohfahrezi93@gmail.com" className="text-muted-foreground hover:text-primary">
+                <Mail className="h-5 w-5" />
               </Link>
             </div>
           </div>
@@ -89,7 +89,7 @@ export function Footer() {
 
         <div className="border-t mt-8 pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 {settings?.storeName || 'Thrift Haven'}. All rights reserved.
+            © 2025 {settings?.storeName || 'Thrift Haven'}. All rights reserved.
           </p>
         </div>
       </div>

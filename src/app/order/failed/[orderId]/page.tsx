@@ -27,6 +27,7 @@ export default function OrderFailedPage() {
       if (!user || !orderId) return
 
       try {
+        if (!user || !user.getIdToken) return
         const token = await user.getIdToken()
         const response = await fetch(`/api/orders/${orderId}`, {
           headers: {
@@ -53,6 +54,7 @@ export default function OrderFailedPage() {
 
     setRetrying(true)
     try {
+      if (!user || !user.getIdToken) return
       const token = await user.getIdToken()
       const response = await fetch('/api/tokenizer', {
         method: 'POST',

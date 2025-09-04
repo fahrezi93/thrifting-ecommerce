@@ -44,6 +44,7 @@ export default function OrderSuccessPage() {
       if (!user || !orderId) return
 
       try {
+        if (!user || !user.getIdToken) return
         const token = await user.getIdToken()
         const response = await fetch(`/api/orders/${orderId}`, {
           headers: {

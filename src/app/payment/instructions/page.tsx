@@ -78,7 +78,7 @@ export default function PaymentInstructionsPage() {
 
   const fetchPaymentInstructions = async () => {
     try {
-      if (!user) return
+      if (!user || !user.getIdToken) return
       
       const token = await user.getIdToken()
       const response = await fetch(`/api/payment/instructions?orderId=${orderId}&method=${method}`, {
@@ -105,7 +105,7 @@ export default function PaymentInstructionsPage() {
     
     setCheckingStatus(true)
     try {
-      if (!user) return
+      if (!user || !user.getIdToken) return
       
       const token = await user.getIdToken()
       const response = await fetch(`/api/payment/status?orderId=${orderId}`, {

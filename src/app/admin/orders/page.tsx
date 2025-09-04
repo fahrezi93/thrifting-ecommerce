@@ -167,16 +167,16 @@ export default function AdminOrdersPage() {
   const renderOrderCard = (order: Order) => (
     <Card key={order.id}>
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg">Order #{order.orderNumber}</CardTitle>
-            <CardDescription>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-start space-y-2 md:space-y-0">
+          <div className="flex-1">
+            <CardTitle className="text-base md:text-lg">Order #{order.orderNumber}</CardTitle>
+            <CardDescription className="text-sm">
               {order.user.name} • {order.user.email}
             </CardDescription>
           </div>
-          <div className="text-right">
+          <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start md:text-right">
             {getStatusBadge(order.status)}
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs md:text-sm text-muted-foreground md:mt-1">
               {formatDate(order.createdAt)}
             </p>
           </div>
@@ -193,11 +193,11 @@ export default function AdminOrdersPage() {
                   <img
                     src={images[0]}
                     alt={item.product.name}
-                    className="w-12 h-12 object-cover rounded"
+                    className="w-10 h-10 md:w-12 md:h-12 object-cover rounded flex-shrink-0"
                   />
-                  <div className="flex-1">
-                    <p className="font-medium">{item.product.name}</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm md:text-base truncate">{item.product.name}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Qty: {item.quantity} × {formatPrice(item.price)}
                     </p>
                   </div>
@@ -207,17 +207,18 @@ export default function AdminOrdersPage() {
           </div>
 
           {/* Total and Actions */}
-          <div className="flex justify-between items-center pt-4 border-t">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center pt-4 border-t space-y-3 md:space-y-0">
             <div>
-              <p className="font-semibold">Total: {formatPrice(order.totalAmount)}</p>
+              <p className="font-semibold text-sm md:text-base">Total: {formatPrice(order.totalAmount)}</p>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               {order.status === 'PENDING' && (
                 <Button
                   size="sm"
                   onClick={() => updateOrderStatus(order.id, 'PROCESSING')}
+                  className="text-xs"
                 >
-                  <Package className="w-4 h-4 mr-1" />
+                  <Package className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                   Process
                 </Button>
               )}
@@ -225,8 +226,9 @@ export default function AdminOrdersPage() {
                 <Button
                   size="sm"
                   onClick={() => updateOrderStatus(order.id, 'SHIPPED')}
+                  className="text-xs"
                 >
-                  <Truck className="w-4 h-4 mr-1" />
+                  <Truck className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                   Ship Order
                 </Button>
               )}
@@ -234,9 +236,10 @@ export default function AdminOrdersPage() {
                 <Button
                   size="sm"
                   onClick={() => updateOrderStatus(order.id, 'DELIVERED')}
+                  className="text-xs"
                 >
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  Mark Delivered
+                  <CheckCircle className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                  <span className="hidden sm:inline">Mark </span>Delivered
                 </Button>
               )}
               {(order.status === 'PENDING' || order.status === 'PROCESSING') && (
@@ -244,8 +247,9 @@ export default function AdminOrdersPage() {
                   size="sm"
                   variant="destructive"
                   onClick={() => updateOrderStatus(order.id, 'CANCELLED')}
+                  className="text-xs"
                 >
-                  <XCircle className="w-4 h-4 mr-1" />
+                  <XCircle className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                   Cancel
                 </Button>
               )}
@@ -254,8 +258,9 @@ export default function AdminOrdersPage() {
                   size="sm"
                   variant="destructive"
                   onClick={() => deleteOrder(order.id)}
+                  className="text-xs"
                 >
-                  <Trash2 className="w-4 h-4 mr-1" />
+                  <Trash2 className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                   Delete
                 </Button>
               )}
@@ -290,15 +295,31 @@ export default function AdminOrdersPage() {
 
       {/* Order Status Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
-          <TabsTrigger value="pending">Pending ({counts.pending})</TabsTrigger>
-          <TabsTrigger value="processing">Processing ({counts.processing})</TabsTrigger>
-          <TabsTrigger value="paid">Paid ({counts.paid})</TabsTrigger>
-          <TabsTrigger value="shipped">Shipped ({counts.shipped})</TabsTrigger>
-          <TabsTrigger value="delivered">Delivered ({counts.delivered})</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancelled ({counts.cancelled})</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto">
+          <TabsList className="inline-flex w-max min-w-full h-auto p-1 md:grid md:grid-cols-7 md:w-full">
+            <TabsTrigger value="all" className="text-xs md:text-sm px-2 py-1.5 whitespace-nowrap">
+              All ({counts.all})
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="text-xs md:text-sm px-2 py-1.5 whitespace-nowrap">
+              Pending ({counts.pending})
+            </TabsTrigger>
+            <TabsTrigger value="processing" className="text-xs md:text-sm px-2 py-1.5 whitespace-nowrap">
+              Processing ({counts.processing})
+            </TabsTrigger>
+            <TabsTrigger value="paid" className="text-xs md:text-sm px-2 py-1.5 whitespace-nowrap">
+              Paid ({counts.paid})
+            </TabsTrigger>
+            <TabsTrigger value="shipped" className="text-xs md:text-sm px-2 py-1.5 whitespace-nowrap">
+              Shipped ({counts.shipped})
+            </TabsTrigger>
+            <TabsTrigger value="delivered" className="text-xs md:text-sm px-2 py-1.5 whitespace-nowrap">
+              Delivered ({counts.delivered})
+            </TabsTrigger>
+            <TabsTrigger value="cancelled" className="text-xs md:text-sm px-2 py-1.5 whitespace-nowrap">
+              Cancelled ({counts.cancelled})
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value={activeTab} className="space-y-4">
           {filteredOrders.length === 0 ? (

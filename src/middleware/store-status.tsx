@@ -30,10 +30,16 @@ export function StoreStatusWrapper({ children }: StoreStatusProps) {
         }
       }
       
-      // Store closed affects everyone (including admin to see the status)
-      if (!settings.isStoreActive) {
-        router.push('/store-closed')
-        return
+      // Store closed behavior - similar to maintenance mode
+      if (!settings.isStoreActive && user?.role !== 'ADMIN') {
+        // Allow home page when store is closed, but block shop/product pages
+        const restrictedPaths = ['/shop', '/products', '/cart', '/checkout', '/profile']
+        const isRestrictedPath = restrictedPaths.some(path => pathname.startsWith(path))
+        
+        if (isRestrictedPath) {
+          router.push('/store-closed')
+          return
+        }
       }
     }
   }, [settings, loading, router, user, pathname])
@@ -50,10 +56,8 @@ export function StoreStatusWrapper({ children }: StoreStatusProps) {
     )
   }
 
-  // Only block rendering if store is completely inactive
-  if (!settings?.isStoreActive) {
-    return null
-  }
+  // Remove the blocking logic - let pages render normally
+  // Store closure is now handled by redirect logic above
 
   return <>{children}</>
 }

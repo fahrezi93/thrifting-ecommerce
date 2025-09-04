@@ -107,18 +107,18 @@ export default function AdminUsersPage() {
         ) : (
           users.map((userData) => (
             <Card key={userData.id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-12 w-12">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                  <div className="flex items-start space-x-3 md:space-x-4 flex-1">
+                    <Avatar className="h-10 w-10 md:h-12 md:w-12 flex-shrink-0">
                       <AvatarImage src={userData.image || ''} alt={userData.name || userData.email} />
                       <AvatarFallback>
                         {userData.name ? userData.name.charAt(0).toUpperCase() : userData.email.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h3 className="font-semibold">{userData.name || 'No Name'}</h3>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-sm md:text-base truncate">{userData.name || 'No Name'}</h3>
                         {getRoleBadge(userData.role)}
                         {userData.emailVerified && (
                           <Badge variant="outline" className="text-xs">
@@ -126,29 +126,30 @@ export default function AdminUsersPage() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <div className="flex items-center">
-                          <Mail className="w-3 h-3 mr-1" />
-                          {userData.email}
+                      <div className="space-y-1">
+                        <div className="flex items-center text-xs md:text-sm text-muted-foreground">
+                          <Mail className="w-3 h-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{userData.email}</span>
                         </div>
-                        <div className="flex items-center">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          Joined {formatDate(userData.createdAt)}
+                        <div className="flex items-center text-xs md:text-sm text-muted-foreground">
+                          <Calendar className="w-3 h-3 mr-1 flex-shrink-0" />
+                          <span>Joined {formatDate(userData.createdAt)}</span>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                        <span>{userData._count.orders} orders</span>
-                        <span>{userData._count.addresses} addresses</span>
+                        <div className="flex items-center space-x-4 text-xs md:text-sm text-muted-foreground">
+                          <span>{userData._count.orders} orders</span>
+                          <span>{userData._count.addresses} addresses</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
+                  <div className="flex justify-end md:justify-start">
                     {userData.role === 'USER' ? (
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => updateUserRole(userData.id, 'ADMIN')}
+                        className="text-xs md:text-sm"
                       >
                         Make Admin
                       </Button>
@@ -157,6 +158,7 @@ export default function AdminUsersPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => updateUserRole(userData.id, 'USER')}
+                        className="text-xs md:text-sm"
                       >
                         Remove Admin
                       </Button>

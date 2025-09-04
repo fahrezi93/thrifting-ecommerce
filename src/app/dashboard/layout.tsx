@@ -63,7 +63,7 @@ export default function DashboardLayout({
           <div className="bg-card rounded-lg border p-6">
             <div className="mb-6">
               <h2 className="text-lg font-semibold">Dashboard</h2>
-              <p className="text-sm text-muted-foreground">Welcome back, {user.displayName || user.email}</p>
+              <p className="text-sm text-muted-foreground">Welcome back, {user.name || user.email}</p>
             </div>
             
             <nav className="space-y-2">

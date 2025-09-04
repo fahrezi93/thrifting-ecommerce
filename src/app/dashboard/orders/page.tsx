@@ -168,37 +168,65 @@ export default function OrdersPage() {
                   {/* Order Items */}
                   <div className="space-y-3">
                     {order.orderItems.map((item) => {
-                      // Validate image URL
-                      const imageUrl = item.product.imageUrls && item.product.imageUrls.length > 0 
-                        ? item.product.imageUrls[0] 
-                        : '/placeholder-image.jpg'
+                      // Parse imageUrls JSON string
+                      let imageUrls: string[] = []
+                      try {
+                        if (item.product.imageUrls) {
+                          if (typeof item.product.imageUrls === 'string') {
+                            imageUrls = JSON.parse(item.product.imageUrls)
+                          } else if (Array.isArray(item.product.imageUrls)) {
+                            imageUrls = item.product.imageUrls
+                          }
+                        }
+                      } catch (error) {
+                        console.error('Error parsing imageUrls:', error)
+                        imageUrls = []
+                      }
                       
-                      // Ensure the URL is valid and starts with proper protocol
-                      const validImageUrl = imageUrl.startsWith('http') || imageUrl.startsWith('/') 
-                        ? imageUrl 
-                        : '/placeholder-image.jpg'
+                      // Get the first image URL or use placeholder
+                      let imageUrl = '/placeholder-image.jpg'
+                      
+                      if (imageUrls.length > 0) {
+                        const firstImage = imageUrls[0]
+                        if (firstImage && typeof firstImage === 'string' && firstImage.trim() !== '') {
+                          // Handle different URL formats
+                          if (firstImage.startsWith('http') || firstImage.startsWith('https')) {
+                            imageUrl = firstImage
+                          } else if (firstImage.startsWith('/')) {
+                            imageUrl = firstImage
+                          } else {
+                            // Assume it's a relative path and make it absolute
+                            imageUrl = `/uploads/${firstImage}`
+                          }
+                        }
+                      }
 
                       return (
                         <div key={item.id} className="flex gap-4 p-3 bg-muted rounded-lg">
-                          <div className="relative h-16 w-16 flex-shrink-0">
+                          <div className="relative h-16 w-16 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                             <Image
-                              src={validImageUrl}
-                              alt={item.product.name}
+                              src={imageUrl}
+                              alt={item.product.name || 'Product image'}
                               fill
-                              className="object-cover rounded-md"
+                              className="object-cover"
+                              sizes="64px"
                               onError={(e) => {
+                                console.error('Image failed to load:', imageUrl)
                                 const target = e.target as HTMLImageElement
                                 target.src = '/placeholder-image.jpg'
                               }}
+                              onLoad={() => {
+                                console.log('Image loaded successfully:', imageUrl)
+                              }}
                             />
                           </div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{item.product.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            Size: {item.product.size} • Qty: {item.quantity}
-                          </p>
-                          <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
-                        </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium">{item.product.name}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Size: {item.product.size} • Qty: {item.quantity}
+                            </p>
+                            <p className="font-semibold">{formatPrice(item.price * item.quantity)}</p>
+                          </div>
                         </div>
                       )
                     })}

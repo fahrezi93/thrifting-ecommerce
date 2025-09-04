@@ -20,6 +20,7 @@ interface User {
   email: string
   name: string | null
   role: string
+  emailVerified?: boolean
   getIdToken?: () => Promise<string>
 }
 
@@ -72,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: userData.email,
               name: userData.name,
               role: userData.role,
+              emailVerified: firebaseUser.emailVerified,
               getIdToken: () => firebaseUser.getIdToken()
             })
           } else {
@@ -81,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: firebaseUser.email || '',
               name: firebaseUser.displayName,
               role: 'USER',
+              emailVerified: firebaseUser.emailVerified,
               getIdToken: () => firebaseUser.getIdToken()
             })
           }
@@ -92,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: firebaseUser.email || '',
             name: firebaseUser.displayName,
             role: 'USER',
+            emailVerified: firebaseUser.emailVerified,
             getIdToken: () => firebaseUser.getIdToken()
           })
         }

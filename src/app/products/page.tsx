@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { Search, Filter, SlidersHorizontal } from 'lucide-react'
 import { useCart } from '@/store/cart'
+import { useAuth } from '@/contexts/AuthContext'
 import { CartSheet } from '@/components/cart/cart-sheet'
 
 interface Product {
@@ -53,6 +54,7 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false)
   
   const { addItem } = useCart()
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchProducts()
@@ -108,6 +110,11 @@ export default function ProductsPage() {
   }
 
   const handleAddToCart = (product: Product) => {
+    if (!user) {
+      // Redirect to login page
+      window.location.href = '/auth/signin'
+      return
+    }
     addItem({
       id: product.id,
       name: product.name,
@@ -335,9 +342,10 @@ export default function ProductsPage() {
                         <Button
                           className="w-full"
                           onClick={() => handleAddToCart(product)}
-                          disabled={product.stock === 0}
+                          disabled={product.stock === 0 || !user}
+                          title={!user ? 'Please sign in to add items to cart' : ''}
                         >
-                          {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                          {product.stock === 0 ? 'Out of Stock' : !user ? 'Sign In to Add to Cart' : 'Add to Cart'}
                         </Button>
                       </CardContent>
                     </Card>

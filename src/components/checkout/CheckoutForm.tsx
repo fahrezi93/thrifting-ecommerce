@@ -29,6 +29,7 @@ export default function CheckoutForm({ shippingAddress, shippingCost, totalAmoun
 
     try {
       // Step 1: Create order first
+      if (!user || !user.getIdToken) return
       const token = await user.getIdToken()
       
       const orderItems = items.map((item: any) => ({

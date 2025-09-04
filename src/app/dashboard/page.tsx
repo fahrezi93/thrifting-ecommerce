@@ -19,7 +19,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user) {
-      setName(user.displayName || '')
+      setName(user.name || '')
       setEmail(user.email || '')
       // Load additional user data
       fetchUserData()
@@ -42,7 +42,11 @@ export default function DashboardPage() {
     setMessage('')
 
     try {
-      const token = await user?.getIdToken()
+      if (!user?.getIdToken) {
+        setMessage('Authentication error')
+        return
+      }
+      const token = await user.getIdToken()
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {

@@ -56,7 +56,7 @@ export default function CheckoutPage() {
 
   const fetchAddresses = async () => {
     try {
-      if (!user) return
+      if (!user || !user.getIdToken) return
       
       const token = await user.getIdToken()
       const response = await fetch('/api/user/addresses', {
@@ -98,7 +98,7 @@ export default function CheckoutPage() {
     setError('')
 
     try {
-      if (!user) return
+      if (!user || !user.getIdToken) return
       
       const token = await user.getIdToken()
       const response = await fetch('/api/payment/create-transaction', {
@@ -125,32 +125,6 @@ export default function CheckoutPage() {
         
         // Redirect to payment method selection
         router.push(`/payment?token=${transactionToken}&amount=${totalAmount}`)
-        return
-        
-        // Load Midtrans Snap for real transactions
-        const script = document.createElement('script')
-        script.src = 'https://app.sandbox.midtrans.com/snap/snap.js'
-        script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || 'SB-Mid-client-dummy-key-for-dev')
-        document.head.appendChild(script)
-
-        script.onload = () => {
-          // @ts-ignore
-          window.snap.pay(transactionToken, {
-            onSuccess: (result: any) => {
-              clearCart()
-              router.push(`/dashboard/orders?success=true`)
-            },
-            onPending: (result: any) => {
-              router.push(`/dashboard/orders?pending=true`)
-            },
-            onError: (result: any) => {
-              setError('Payment failed. Please try again.')
-            },
-            onClose: () => {
-              console.log('Payment popup closed')
-            }
-          })
-        }
       } else {
         const data = await response.json()
         setError(data.error || 'Failed to create payment')

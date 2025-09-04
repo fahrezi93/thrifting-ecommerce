@@ -34,7 +34,12 @@ export async function getStoreSettings(): Promise<StoreSettings> {
 
 // Client-side function to fetch store settings
 export async function fetchStoreSettings(): Promise<StoreSettings> {
-  const response = await fetch('/api/store/settings')
+  const response = await fetch('/api/store/settings', {
+    cache: 'no-store', // Prevent caching to ensure fresh data
+    headers: {
+      'Cache-Control': 'no-cache'
+    }
+  })
   if (!response.ok) {
     throw new Error('Failed to fetch store settings')
   }

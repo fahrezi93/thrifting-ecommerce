@@ -35,7 +35,7 @@ export default function PaymentSuccessPage() {
 
   const fetchPaymentData = async () => {
     try {
-      if (!user) return
+      if (!user || !user.getIdToken) return
       
       const token = await user.getIdToken()
       const response = await fetch(`/api/payment/status?orderId=${orderId}`, {

@@ -50,7 +50,7 @@ export default function AdminProductsPage() {
   const [alertModal, setAlertModal] = useState<{isOpen: boolean, title: string, description: string, variant?: 'default' | 'success' | 'error' | 'warning'}>({isOpen: false, title: '', description: ''})
   const { addToast } = useToast()
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     name: '',
@@ -72,6 +72,7 @@ export default function AdminProductsPage() {
   }, [])
 
   const fetchProducts = async () => {
+    setLoading(true)
     try {
       const data = await apiClient.get('/api/admin/products')
       setProducts(data)
@@ -402,7 +403,25 @@ export default function AdminProductsPage() {
   )
 
   if (loading) {
-    return <div>Loading products...</div>
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Products</h1>
+            <p className="text-muted-foreground">
+              Manage your product inventory
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading products...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (error) {

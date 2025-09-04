@@ -123,7 +123,7 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label>Display Name</Label>
               <div className="flex items-center gap-2">
-                <span className="text-sm">{user?.displayName || 'Not set'}</span>
+                <span className="text-sm">{user?.name || 'Not set'}</span>
                 <Badge variant="secondary">Verified</Badge>
               </div>
             </div>
