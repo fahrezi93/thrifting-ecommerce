@@ -17,7 +17,13 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    return NextResponse.json(settings)
+    return NextResponse.json(settings, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    })
   } catch (error) {
     console.error('Error fetching store settings:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

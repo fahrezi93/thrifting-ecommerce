@@ -75,6 +75,22 @@ export default function AdminSettingsPage() {
       
       setSaving(true)
       const response = await apiClient.put('/api/admin/settings', settings)
+      console.log('Settings saved:', response.data)
+      
+      // Broadcast store status change to all connected devices via SSE
+      await fetch('/api/store/status-updates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'STORE_STATUS_CHANGED',
+          data: {
+            isStoreActive: settings.isStoreActive,
+            maintenanceMode: settings.maintenanceMode
+          }
+        })
+      })
+      
+      console.log('Store status updated, broadcasting to all connected devices')
       
       // Refresh the store context to update all components
       await refreshSettings()

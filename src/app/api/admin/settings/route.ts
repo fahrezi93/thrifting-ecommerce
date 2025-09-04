@@ -65,7 +65,15 @@ export async function PUT(request: NextRequest) {
       }
     })
     
-    return NextResponse.json(settings)
+    console.log('Settings updated in database:', settings)
+    
+    return NextResponse.json(settings, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    })
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
