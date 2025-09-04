@@ -218,7 +218,7 @@ export default function AdminProductsPage() {
     setGeneratingDescription(true)
     
     try {
-      if (!user) {
+      if (!user || !user.getIdToken) {
         addToast({
           title: 'Authentication Required',
           description: 'Please login to use AI features.',
@@ -227,7 +227,7 @@ export default function AdminProductsPage() {
         return
       }
 
-      const token = await user.getIdToken()
+      const token = await user.getIdToken?.()
       const response = await fetch('/api/admin/generate-description', {
         method: 'POST',
         headers: {
