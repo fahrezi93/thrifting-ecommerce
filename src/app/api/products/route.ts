@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (categories && categories.length > 0) {
-      whereConditions.category = { in: categories }
+      whereConditions.category = {
+        name: { in: categories }
+      }
     }
 
     if (sizes && sizes.length > 0) {
@@ -36,9 +38,9 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       whereConditions.OR = [
-        { name: { contains: search } },
-        { description: { contains: search } },
-        { brand: { contains: search } }
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { brand: { contains: search, mode: 'insensitive' } }
       ]
     }
 
@@ -61,6 +63,9 @@ export async function GET(request: NextRequest) {
 
     const products = await prisma.product.findMany({
       where: whereConditions,
+      include: {
+        category: true
+      },
       orderBy
     })
 

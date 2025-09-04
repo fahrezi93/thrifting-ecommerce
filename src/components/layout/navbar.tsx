@@ -19,6 +19,7 @@ import { useCart } from '@/store/cart'
 import { useRouter } from 'next/navigation'
 import { ClientOnly } from '@/components/client-only'
 import { apiClient } from '@/lib/api-client'
+import { useStore } from '@/contexts/StoreContext'
 
 // Component to check and display admin menu
 function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobile?: boolean, onClose?: () => void }) {
@@ -80,6 +81,7 @@ function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobi
 export function Navbar() {
   const { user, logout } = useAuth()
   const { getTotalItems, toggleCart } = useCart()
+  const { settings } = useStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -96,7 +98,9 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-primary">Thrift Haven</span>
+            <span className="text-2xl font-bold text-primary">
+              {settings?.storeName || 'Thrift Haven'}
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

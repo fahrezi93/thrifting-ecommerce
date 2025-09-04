@@ -1,16 +1,20 @@
+'use client'
+
 import Link from 'next/link'
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react'
+import { useStore } from '@/contexts/StoreContext'
 
 export function Footer() {
+  const { settings } = useStore()
   return (
     <footer className="bg-muted/50 border-t">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Thrift Haven</h3>
+            <h3 className="text-lg font-semibold">{settings?.storeName || 'Thrift Haven'}</h3>
             <p className="text-sm text-muted-foreground">
-              Sustainable fashion for the conscious shopper. Discover unique, quality pre-loved clothing.
+              {settings?.storeDescription || 'Sustainable fashion for the conscious shopper. Discover unique, quality pre-loved clothing.'}
             </p>
             <div className="flex space-x-4">
               <Link href="#" className="text-muted-foreground hover:text-primary">
@@ -69,15 +73,15 @@ export function Footer() {
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <span>hello@thrifthaven.com</span>
+                <span>{settings?.storeEmail || 'hello@thrifthaven.com'}</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4" />
-                <span>+62 123 456 7890</span>
+                <span>{settings?.storePhone || '+62 123 456 7890'}</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
-                <span>Jakarta, Indonesia</span>
+                <span>{settings?.storeAddress || 'Jakarta, Indonesia'}</span>
               </div>
             </div>
           </div>
@@ -85,7 +89,7 @@ export function Footer() {
 
         <div className="border-t mt-8 pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 Thrift Haven. All rights reserved.
+            © 2024 {settings?.storeName || 'Thrift Haven'}. All rights reserved.
           </p>
         </div>
       </div>

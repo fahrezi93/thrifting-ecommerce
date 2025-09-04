@@ -47,22 +47,55 @@ export async function PUT(
       isFeatured
     })
 
+    // Handle category - if empty string, don't update it
+    const updateData: any = {
+      name,
+      description,
+      price: numericPrice,
+      imageUrls: JSON.stringify(imageUrls),
+      size,
+      condition,
+      brand,
+      color,
+      stock: numericStock,
+      isActive,
+      isFeatured,
+    }
+
+    // Only update category if it's not empty
+    if (category && category.trim() !== '') {
+      // Try to find existing category first
+      let categoryRecord = await prisma.category.findFirst({
+        where: { name: category }
+      })
+      
+      if (!categoryRecord) {
+        // Generate unique slug
+        const baseSlug = category.toLowerCase().replace(/\s+/g, '-')
+        let slug = baseSlug
+        let counter = 1
+        
+        // Check if slug exists and increment if needed
+        while (await prisma.category.findUnique({ where: { slug } })) {
+          slug = `${baseSlug}-${counter}`
+          counter++
+        }
+        
+        categoryRecord = await prisma.category.create({
+          data: {
+            name: category,
+            slug: slug,
+            isActive: true
+          }
+        })
+      }
+      
+      updateData.categoryId = categoryRecord.id
+    }
+
     const product = await prisma.product.update({
       where: { id: params.id },
-      data: {
-        name,
-        description,
-        price: numericPrice,
-        imageUrls: JSON.stringify(imageUrls),
-        category,
-        size,
-        condition,
-        brand,
-        color,
-        stock: numericStock,
-        isActive,
-        isFeatured,
-      }
+      data: updateData
     })
 
     // Parse imageUrls from JSON string to array for response
@@ -99,6 +132,12 @@ export async function DELETE(
   try {
     await requireAdmin(request)
 
+    // First, delete all related OrderItems
+    await prisma.orderItem.deleteMany({
+      where: { productId: params.id }
+    })
+
+    // Then delete the product
     await prisma.product.delete({
       where: { id: params.id }
     })

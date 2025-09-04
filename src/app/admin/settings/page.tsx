@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast'
 import { AlertModal } from '@/components/ui/modal'
 import { Save, Store, Globe, Mail, Phone } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useStore } from '@/contexts/StoreContext'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
 
@@ -39,8 +40,9 @@ export default function AdminSettingsPage() {
     allowRegistration: true,
     maintenanceMode: false,
   })
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const { user } = useAuth()
+  const { refreshSettings } = useStore()
 
   useEffect(() => {
     if (user) {
@@ -52,6 +54,7 @@ export default function AdminSettingsPage() {
     try {
       if (!user) return
       
+      setLoading(true)
       const data = await apiClient.get('/api/admin/settings')
       setSettings(data)
     } catch (error) {
@@ -67,7 +70,11 @@ export default function AdminSettingsPage() {
       if (!user) return
       
       setSaving(true)
-      await apiClient.put('/api/admin/settings', settings)
+      const response = await apiClient.put('/api/admin/settings', settings)
+      
+      // Refresh the store context to update all components
+      await refreshSettings()
+      
       toast.success('Settings saved successfully!')
     } catch (error) {
       console.error('Error saving settings:', error)
@@ -85,7 +92,14 @@ export default function AdminSettingsPage() {
   }
 
   if (loading) {
-    return <div>Loading settings...</div>
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading settings...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

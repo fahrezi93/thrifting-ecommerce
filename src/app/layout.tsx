@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Providers } from '@/components/providers'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { StoreProvider } from '@/contexts/StoreContext'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { ToastViewport } from '@/components/ui/toast'
@@ -33,16 +34,18 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <AuthProvider>
-          <Providers>
-            <div className="min-h-screen flex flex-col">
-              <Navbar />
-              <main className="flex-1">
-                {children}
-              </main>
-              <Footer />
-            </div>
-            <ToastViewport />
-          </Providers>
+          <StoreProvider>
+            <Providers>
+              <div className="min-h-screen flex flex-col">
+                <Navbar />
+                <main className="flex-1">
+                  {children}
+                </main>
+                <Footer />
+              </div>
+              <ToastViewport />
+            </Providers>
+          </StoreProvider>
         </AuthProvider>
       </body>
     </html>

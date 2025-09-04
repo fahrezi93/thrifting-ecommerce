@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // Enums for better type safety
@@ -179,4 +179,18 @@ model Payment {
   @@index([orderId])
   @@index([transactionId])
   @@index([status])
+}
+
+model StoreSettings {
+  id                String   @id @default("store") // Single row table
+  storeName         String   @default("Thrift Haven")
+  storeDescription  String   @default("Sustainable fashion for the conscious shopper. Discover unique, quality pre-loved clothing.")
+  storeEmail        String   @default("hello@thrifthaven.com")
+  storePhone        String   @default("+62 123 456 7890")
+  storeAddress      String   @default("Jakarta, Indonesia")
+  isStoreActive     Boolean  @default(true)
+  allowRegistration Boolean  @default(true)
+  maintenanceMode   Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
