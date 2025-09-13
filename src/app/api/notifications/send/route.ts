@@ -44,6 +44,15 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log('Found push subscriptions:', {
+      total: subscriptions.length,
+      subscriptions: subscriptions.map(sub => ({
+        id: sub.id,
+        endpoint: sub.endpoint.substring(0, 50) + '...',
+        isActive: sub.isActive
+      }))
+    })
+
     const payload = JSON.stringify({
       title: title || 'Thrift Haven',
       body: body || 'Check out our latest deals!',

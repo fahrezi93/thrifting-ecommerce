@@ -37,15 +37,23 @@ export function NotificationBell() {
 
     // Setup Pusher hanya jika environment variables ada
     if (process.env.NEXT_PUBLIC_PUSHER_KEY && process.env.NEXT_PUBLIC_PUSHER_CLUSTER) {
+      console.log('Pusher client environment variables check:', {
+        key: process.env.NEXT_PUBLIC_PUSHER_KEY ? 'Present' : 'Missing',
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER ? 'Present' : 'Missing'
+      })
+
       const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
         cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
       });
+
+      console.log('Pusher client initialized, subscribing to channel:', `user-${user.id}`)
 
       // Subscribe ke channel khusus user
       const channel = pusher.subscribe(`user-${user.id}`);
 
       // Listen untuk notifikasi baru
       channel.bind('new-notification', (newNotification: Notification) => {
+        console.log('Received Pusher notification:', newNotification)
         setNotifications(prev => [newNotification, ...prev]);
         setUnreadCount(prev => prev + 1);
         
@@ -53,8 +61,18 @@ export function NotificationBell() {
         // toast.success('New notification received!');
       });
 
+      // Listen for connection events
+      pusher.connection.bind('connected', () => {
+        console.log('Pusher connected successfully')
+      });
+
+      pusher.connection.bind('error', (error: any) => {
+        console.error('Pusher connection error:', error)
+      });
+
       // Cleanup
       return () => {
+        console.log('Cleaning up Pusher connection')
         pusher.unsubscribe(`user-${user.id}`);
         pusher.disconnect();
       };
@@ -89,16 +107,41 @@ export function NotificationBell() {
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
+  const markAllAsRead = async () => {
+    try {
+      const unreadIds = notifications.filter(n => !n.isRead).map(n => n.id);
+      
+      for (const id of unreadIds) {
+        await apiClient.patch('/api/notifications', {
+          notificationId: id,
+          isRead: true
+        });
+      }
+      
+      setNotifications(prev => 
+        prev.map(n => ({ ...n, isRead: true }))
+      );
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const handleNotificationClick = async (notification: Notification) => {
+    // Always mark as read when clicked, regardless of current status
     if (!notification.isRead) {
-      markAsRead(notification.id);
+      await markAsRead(notification.id);
     }
     
-    if (notification.url) {
-      window.location.href = notification.url;
-    }
-    
+    // Close dropdown first for better UX
     setIsOpen(false);
+    
+    // Navigate after a short delay to ensure dropdown closes
+    if (notification.url && notification.url.trim() !== '') {
+      setTimeout(() => {
+        window.location.href = notification.url!;
+      }, 100);
+    }
   };
 
   const formatTime = (dateString: string) => {
@@ -132,12 +175,26 @@ export function NotificationBell() {
       
       <DropdownMenuContent align="end" className="w-80">
         <div className="p-3 border-b">
-          <h3 className="font-semibold">Notifications</h3>
-          {unreadCount > 0 && (
-            <p className="text-sm text-muted-foreground">
-              {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
-            </p>
-          )}
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold">Notifications</h3>
+              {unreadCount > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                className="text-xs h-7 px-2"
+              >
+                Mark all read
+              </Button>
+            )}
+          </div>
         </div>
         
         <div className="max-h-80 overflow-y-auto">

@@ -159,6 +159,23 @@ export default function PaymentPage() {
     }).format(price)
   }
 
+  const mapPaymentMethodToDoku = (method: string) => {
+    const mapping: { [key: string]: string } = {
+      'qris': 'QRIS',
+      'ovo': 'EMONEY_OVO',
+      'dana': 'EMONEY_DANA',
+      'linkaja': 'EMONEY_LINKAJA',
+      'gopay': 'EMONEY_GOPAY',
+      'bca': 'VIRTUAL_ACCOUNT_BCA',
+      'bni': 'VIRTUAL_ACCOUNT_BNI',
+      'bri': 'VIRTUAL_ACCOUNT_BRI',
+      'mandiri': 'VIRTUAL_ACCOUNT_BANK_MANDIRI',
+      'alfamart': 'ONLINE_TO_OFFLINE_ALFA',
+      'indomaret': 'ONLINE_TO_OFFLINE_INDOMARET'
+    }
+    return mapping[method] || method
+  }
+
   const getMethodIcon = (type: string) => {
     switch (type) {
       case 'ewallet':
@@ -173,37 +190,43 @@ export default function PaymentPage() {
   }
 
   const handlePayment = async () => {
-    if (!selectedMethod || !token) return
+    if (!selectedMethod || !token || !user || !user.getIdToken) return
 
     setProcessing(true)
     try {
-      // Load Midtrans Snap
-      const script = document.createElement('script')
-      script.src = 'https://app.sandbox.midtrans.com/snap/snap.js'
-      script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || 'SB-Mid-client-dummy-key-for-dev')
-      document.head.appendChild(script)
+      // Get Firebase token for authentication
+      const authToken = await user.getIdToken()
+      
+      // Map payment method to DOKU format
+      const dokuPaymentMethod = mapPaymentMethodToDoku(selectedMethod)
+      
+      // Call DOKU Direct payment API
+      const response = await fetch('/api/payment/doku/direct', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          orderId: token, // Using token as orderId for now
+          paymentMethod: dokuPaymentMethod,
+        }),
+      })
 
-      script.onload = () => {
-        // @ts-ignore
-        window.snap.pay(token, {
-          onSuccess: (result: any) => {
-            router.push(`/dashboard/orders?success=true`)
-          },
-          onPending: (result: any) => {
-            router.push(`/dashboard/orders?pending=true`)
-          },
-          onError: (result: any) => {
-            console.error('Payment failed:', result)
-            setProcessing(false)
-          },
-          onClose: () => {
-            console.log('Payment popup closed')
-            setProcessing(false)
-          }
-        })
+      if (response.ok) {
+        const { paymentUrl } = await response.json()
+        
+        // Redirect to DOKU payment page
+        window.location.href = paymentUrl
+      } else {
+        const errorData = await response.json()
+        console.error('DOKU payment creation failed:', errorData)
+        alert(errorData.error || 'Gagal membuat pembayaran. Silakan coba lagi.')
+        setProcessing(false)
       }
     } catch (error) {
       console.error('Payment error:', error)
+      alert('Terjadi kesalahan. Silakan coba lagi.')
       setProcessing(false)
     }
   }

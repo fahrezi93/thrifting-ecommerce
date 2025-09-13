@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ShoppingBag, Recycle, Heart, Star } from 'lucide-react'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
+import { PushNotificationSetup } from '@/components/push-notification-setup'
 import { useStore } from '@/contexts/StoreContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useState, useEffect } from 'react'
@@ -66,6 +67,9 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/85 to-background/90"></div>
           
           <div className="container mx-auto px-4 relative z-20">
+            {/* Push Notification Setup */}
+            {user && <PushNotificationSetup />}
+            
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
               <div className="lg:col-span-2 space-y-6">
                 <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">

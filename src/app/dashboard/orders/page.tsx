@@ -43,11 +43,13 @@ interface Order {
 }
 
 const statusConfig = {
-  PENDING: { label: 'Pending Payment', icon: Clock, color: 'bg-yellow-100 text-yellow-800' },
-  PAID: { label: 'Paid', icon: CheckCircle, color: 'bg-green-100 text-green-800' },
-  SHIPPED: { label: 'Shipped', icon: Truck, color: 'bg-blue-100 text-blue-800' },
-  COMPLETED: { label: 'Completed', icon: Package, color: 'bg-purple-100 text-purple-800' },
-  CANCELLED: { label: 'Cancelled', icon: XCircle, color: 'bg-red-100 text-red-800' },
+  PENDING: { label: 'Pending Payment', icon: Clock, color: 'bg-yellow-100 text-yellow-800', description: 'Waiting for payment' },
+  PAID: { label: 'Payment Confirmed', icon: CheckCircle, color: 'bg-green-100 text-green-800', description: 'Payment received, preparing order' },
+  PROCESSING: { label: 'Processing', icon: Package, color: 'bg-blue-100 text-blue-800', description: 'Order is being prepared' },
+  SHIPPED: { label: 'Shipped', icon: Truck, color: 'bg-indigo-100 text-indigo-800', description: 'Order is on the way' },
+  DELIVERED: { label: 'Delivered', icon: CheckCircle, color: 'bg-green-100 text-green-800', description: 'Order has been delivered' },
+  COMPLETED: { label: 'Completed', icon: Package, color: 'bg-purple-100 text-purple-800', description: 'Order completed successfully' },
+  CANCELLED: { label: 'Cancelled', icon: XCircle, color: 'bg-red-100 text-red-800', description: 'Order was cancelled' },
 }
 
 export default function OrdersPage() {
@@ -67,6 +69,15 @@ export default function OrdersPage() {
       setMessage('Payment is being processed. You will receive a confirmation once completed.')
     }
   }, [searchParams])
+
+  useEffect(() => {
+    // Auto-refresh every 30 seconds to check for status updates
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchOrders = async () => {
     try {
@@ -96,6 +107,74 @@ export default function OrdersPage() {
       style: 'currency',
       currency: 'IDR',
     }).format(price)
+  }
+
+  const checkPaymentStatus = async (orderNumber: string) => {
+    try {
+      console.log('Checking payment status for order:', orderNumber);
+      
+      const response = await fetch(`/api/orders/${orderNumber}/poll-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: orderNumber
+        }),
+      });
+
+      const responseData = await response.json();
+      console.log('Payment status check response:', responseData);
+
+      if (response.ok) {
+        if (responseData.statusUpdated) {
+          // Refresh orders list
+          fetchOrders();
+          alert(`Status order berhasil diupdate dari ${responseData.oldStatus} ke ${responseData.newStatus}!`);
+        } else {
+          alert(`Status order masih ${responseData.currentStatus}. DOKU status: ${responseData.dokuStatus || 'Unknown'}`);
+        }
+      } else {
+        console.error('Failed to check payment status:', responseData);
+        alert(`Gagal check status: ${responseData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  const updateOrderStatus = async (orderNumber: string, status: string) => {
+    try {
+      console.log('Updating order status:', { orderNumber, status });
+      
+      const response = await fetch(`/api/orders/${orderNumber}/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: orderNumber,
+          status: status
+        }),
+      });
+
+      const responseData = await response.json();
+      console.log('Response:', responseData);
+
+      if (response.ok) {
+        // Refresh orders list
+        fetchOrders();
+        console.log(`Order ${orderNumber} status updated to ${status}`);
+        alert(`Order status berhasil diupdate ke ${status}!`);
+      } else {
+        console.error('Failed to update order status:', responseData);
+        alert(`Gagal update status: ${responseData.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -158,10 +237,13 @@ export default function OrdersPage() {
                         Placed on {formatDate(order.createdAt)}
                       </CardDescription>
                     </div>
-                    <Badge className={statusInfo.color}>
-                      <StatusIcon className="w-3 h-3 mr-1" />
-                      {statusInfo.label}
-                    </Badge>
+                    <div className="text-right">
+                      <Badge className={`${statusInfo.color} mb-2`}>
+                        <StatusIcon className="w-3 h-3 mr-1" />
+                        {statusInfo.label}
+                      </Badge>
+                      <p className="text-xs text-muted-foreground">{statusInfo.description}</p>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -263,16 +345,84 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     
-                    {/* Pay Now Button for All Orders (for testing) */}
-                    <div className="mt-4 pt-4 border-t">
-                      <Button 
-                        className="w-full"
-                        onClick={() => window.location.href = `/payment?orderId=${order.id}`}
-                      >
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Bayar Sekarang
-                      </Button>
-                    </div>
+                    {/* Pay Now Button - Only show for pending orders */}
+                    {order.status === 'PENDING' && (
+                      <div className="mt-4 pt-4 border-t">
+                        <Button 
+                          className="w-full"
+                          onClick={() => window.location.href = `/payment/custom?orderId=${order.orderNumber}`}
+                        >
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          Pay Now
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Order Status Timeline */}
+                    {(order.status === 'PAID' || order.status === 'PROCESSING' || order.status === 'SHIPPED' || order.status === 'DELIVERED') && (
+                      <div className="mt-4 pt-4 border-t">
+                        <h4 className="font-semibold mb-3">Order Status</h4>
+                        <div className="space-y-3">
+                          <div className={`flex items-center space-x-3 ${['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-green-600' : 'text-gray-400'}`}>
+                            <div className={`w-3 h-3 rounded-full ${['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                            <div>
+                              <p className="font-medium">Payment Confirmed</p>
+                              <p className="text-xs text-muted-foreground">Your payment has been received</p>
+                            </div>
+                          </div>
+                          <div className={`flex items-center space-x-3 ${['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-blue-600' : 'text-gray-400'}`}>
+                            <div className={`w-3 h-3 rounded-full ${['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                            <div>
+                              <p className="font-medium">Processing</p>
+                              <p className="text-xs text-muted-foreground">Order is being prepared</p>
+                            </div>
+                          </div>
+                          <div className={`flex items-center space-x-3 ${['SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-indigo-600' : 'text-gray-400'}`}>
+                            <div className={`w-3 h-3 rounded-full ${['SHIPPED', 'DELIVERED'].includes(order.status) ? 'bg-indigo-500' : 'bg-gray-300'}`}></div>
+                            <div>
+                              <p className="font-medium">Shipped</p>
+                              <p className="text-xs text-muted-foreground">Order is on the way</p>
+                            </div>
+                          </div>
+                          <div className={`flex items-center space-x-3 ${order.status === 'DELIVERED' ? 'text-green-600' : 'text-gray-400'}`}>
+                            <div className={`w-3 h-3 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                            <div>
+                              <p className="font-medium">Delivered</p>
+                              <p className="text-xs text-muted-foreground">Order has been delivered</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Check Payment Status Button */}
+                    {order.status === 'PENDING' && (
+                      <div className="mt-4 pt-4 border-t">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600 mb-2">If you have paid but status hasn't updated:</p>
+                          <div className="space-y-2">
+                            <Button 
+                              variant="outline"
+                              size="sm"
+                              onClick={() => checkPaymentStatus(order.orderNumber)}
+                              className="w-full"
+                            >
+                              <Clock className="w-4 h-4 mr-2" />
+                              Check Payment Status
+                            </Button>
+                            <Button 
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateOrderStatus(order.orderNumber, 'PAID')}
+                              className="w-full"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Mark as Paid (Manual)
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

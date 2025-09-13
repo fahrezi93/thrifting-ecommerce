@@ -1,62 +1,90 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { orderId: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: { orderId: string } }) {
   try {
-    const user = await requireAuth(request)
-    const { orderId } = params
-
-    const order = await prisma.order.findFirst({
-      where: {
-        id: orderId,
-        userId: user.id
-      },
+    const user = await requireAuth(req);
+    const orderId = params.orderId;
+    
+    console.log('API: Getting order data for:', orderId);
+    console.log('API: User authenticated:', user.id);
+    
+    // Get order details - try both id and orderNumber
+    let order = await prisma.order.findUnique({
+      where: { id: orderId },
       include: {
+        user: true,
+        shippingAddress: true,
         orderItems: {
           include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                imageUrls: true,
-                size: true,
-              }
+            product: true
+          }
+        }
+      }
+    });
+
+    // If not found by id, try by orderNumber
+    if (!order) {
+      order = await prisma.order.findUnique({
+        where: { orderNumber: orderId },
+        include: {
+          user: true,
+          shippingAddress: true,
+          orderItems: {
+            include: {
+              product: true
             }
           }
-        },
-        shippingAddress: true,
-      }
-    })
+        }
+      });
+    }
+
+    console.log('API: Searching for order with id/orderNumber:', orderId);
+    console.log('API: Order found:', order ? 'Yes' : 'No');
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+      console.log('API: Order not found');
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // Transform to match the expected format
-    const orderSummary = {
-      orderId: order.id,
+    // Validate order belongs to user
+    if (order.userId !== user.id) {
+      console.log('API: Order does not belong to user');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Format order data for frontend
+    const orderData = {
       orderNumber: order.orderNumber,
-      items: order.orderItems.map(item => ({
-        name: item.product.name,
+      totalAmount: order.totalAmount,
+      customerName: order.user.name || 'Unknown',
+      customerEmail: order.user.email || '',
+      orderItems: order.orderItems.map(item => ({
+        id: item.id,
+        productName: item.product.name,
         quantity: item.quantity,
         price: item.price,
-        size: item.product.size
+        total: item.price * item.quantity
       })),
-      subtotal: order.totalAmount - order.shippingCost,
-      shipping: order.shippingCost,
-      total: order.totalAmount
-    }
+      status: order.status,
+      createdAt: order.createdAt,
+      paidAt: order.paidAt,
+      shippingAddress: order.shippingAddress,
+      paymentMethod: order.paymentMethod
+    };
 
-    return NextResponse.json(orderSummary)
+    console.log('API: Order data formatted successfully');
+    return NextResponse.json(orderData);
+
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    console.error('Error fetching order:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('[GET_ORDER_DETAILS]', error);
+    return NextResponse.json(
+      { 
+        error: 'Internal Server Error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
   }
 }

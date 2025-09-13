@@ -101,7 +101,9 @@ export default function CheckoutPage() {
       if (!user || !user.getIdToken) return
       
       const token = await user.getIdToken()
-      const response = await fetch('/api/payment/create-transaction', {
+      
+      // Step 1: Create order first
+      const createOrderResponse = await fetch('/api/payment/create-transaction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,15 +122,15 @@ export default function CheckoutPage() {
         }),
       })
 
-      if (response.ok) {
-        const { transactionToken } = await response.json()
-        
-        // Redirect to payment method selection
-        router.push(`/payment?token=${transactionToken}&amount=${totalAmount}`)
-      } else {
-        const data = await response.json()
-        setError(data.error || 'Failed to create payment')
+      if (!createOrderResponse.ok) {
+        const errorData = await createOrderResponse.json()
+        throw new Error(errorData.error || 'Failed to create order')
       }
+
+      const { orderId } = await createOrderResponse.json()
+      
+      // Redirect to custom payment page instead of DOKU checkout
+      router.push(`/payment/custom?orderId=${orderId}`)
     } catch (error) {
       setError('An error occurred. Please try again.')
     } finally {

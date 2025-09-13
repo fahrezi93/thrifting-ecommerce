@@ -42,15 +42,23 @@ export function usePushNotifications() {
 
     setLoading(true)
     try {
+      // Check if already subscribed
+      const registration = await navigator.serviceWorker.ready
+      const existingSubscription = await registration.pushManager.getSubscription()
+      
+      if (existingSubscription) {
+        setSubscription(existingSubscription)
+        setIsSubscribed(true)
+        setLoading(false)
+        return true
+      }
+
       const hasPermission = await requestPermission()
       if (!hasPermission) {
         setLoading(false)
         return false
       }
-
-      const registration = await navigator.serviceWorker.ready
       
-      // Generate VAPID keys - in production, use your own keys
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 
         'BEl62iUYgUivxIkv69yViEuiBIa40HI80NM9f4uOWoFzQhkTF7A3PBJXfXWPFkXfRBNjMWcbJsxUhcVLRlBOQwU'
 
@@ -59,27 +67,34 @@ export function usePushNotifications() {
         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
       })
 
-      // Send subscription to server
+      // Send subscription to server with timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
       const response = await fetch('/api/notifications/subscribe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(subscription)
+        body: JSON.stringify(subscription),
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
 
       if (response.ok) {
         setSubscription(subscription)
         setIsSubscribed(true)
         setLoading(false)
         return true
+      } else {
+        throw new Error(`Server responded with ${response.status}`)
       }
     } catch (error) {
       console.error('Error subscribing to push notifications:', error)
+      setLoading(false)
+      return false
     }
-    
-    setLoading(false)
-    return false
   }
 
   const unsubscribe = async () => {

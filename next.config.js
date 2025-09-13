@@ -41,6 +41,20 @@ const nextConfig = {
       },
     ],
   },
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
+  experimental: {
+    logging: {
+      level: 'error',
+    },
+  },
 };
 
 module.exports = withPWA(nextConfig);

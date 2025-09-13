@@ -51,6 +51,7 @@ model User {
   orders    Order[]
   wishlistItems WishlistItem[]
   notifications Notification[]
+  reviews   Review[]
 }
 
 
@@ -121,6 +122,7 @@ model Product {
   category   Category    @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
   wishlistItems WishlistItem[]
+  reviews    Review[]
 
   @@index([categoryId])
   @@index([price])
@@ -135,7 +137,7 @@ model Order {
   shippingCost          Float       @default(0)
   status                OrderStatus @default(PENDING)
   paymentMethod         String?
-  midtransTransactionId String?     @unique
+  dokuTransactionId     String?     @unique
   userId                String
   shippingAddressId     String
   notes                 String?
@@ -161,8 +163,29 @@ model OrderItem {
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
+  reviews Review[]
 
   @@unique([orderId, productId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int      // 1-5 stars
+  comment     String?
+  userId      String
+  productId   String
+  orderItemId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orderItemId]) // One review per user per order item
+  @@index([productId])
+  @@index([rating])
+  @@index([createdAt])
 }
 
 model Payment {
@@ -172,7 +195,7 @@ model Payment {
   paymentMethod    String
   amount           Float
   status           PaymentStatus @default(PENDING)
-  midtransResponse String?       // JSON string
+  dokuResponse     String?       // JSON string
   expiresAt        DateTime
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt

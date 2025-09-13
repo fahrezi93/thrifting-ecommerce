@@ -13,6 +13,7 @@ import { ArrowLeft, Heart, Share2, ShoppingCart, Check } from 'lucide-react'
 import Link from 'next/link'
 import { CartSheet } from '@/components/cart/cart-sheet'
 import { useToast } from '@/hooks/use-toast'
+import ReviewDisplay from '@/components/reviews/review-display'
 
 interface Product {
   id: string
@@ -399,6 +400,15 @@ export default function ProductDetailPage() {
             </Card>
           </div>
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card>
+          <CardContent className="p-6">
+            <ReviewDisplay productId={product.id} />
+          </CardContent>
+        </Card>
       </div>
       
       <CartSheet />

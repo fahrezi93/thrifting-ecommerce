@@ -1,6 +1,6 @@
 import React from 'react'
 import './globals.css'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Providers } from '@/components/providers'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -17,8 +17,6 @@ export const metadata: Metadata = {
   title: 'Thrift Haven - Sustainable Fashion Marketplace',
   description: 'Discover unique pre-loved fashion items and contribute to sustainable shopping',
   manifest: '/manifest.json',
-  themeColor: '#000000',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -31,6 +29,15 @@ export const metadata: Metadata = {
     ],
     apple: '/Logo-App-Mobile.svg',
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#000000',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
