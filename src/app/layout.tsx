@@ -8,7 +8,7 @@ import { StoreProvider } from '@/contexts/StoreContext'
 import { StoreStatusWrapper } from '@/middleware/store-status'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
-import { ToastViewport } from '@/components/ui/toast'
+import { ToastProvider, ToastViewport } from '@/components/ui/toast'
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -57,15 +57,17 @@ export default function RootLayout({
           <StoreProvider>
             <StoreStatusWrapper>
               <Providers>
-                <div className="min-h-screen flex flex-col">
-                  <Navbar />
-                  <main className="flex-1">
-                    {children}
-                  </main>
-                  <Footer />
-                </div>
-                <ToastViewport />
-                <PWAInstallPrompt />
+                <ToastProvider>
+                  <div className="min-h-screen flex flex-col">
+                    <Navbar />
+                    <main className="flex-1">
+                      {children}
+                    </main>
+                    <Footer />
+                  </div>
+                  <ToastViewport />
+                  <PWAInstallPrompt />
+                </ToastProvider>
               </Providers>
             </StoreStatusWrapper>
           </StoreProvider>
