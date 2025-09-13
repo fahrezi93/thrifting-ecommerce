@@ -30,27 +30,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshSettings()
     
-    // Connect to Server-Sent Events for real-time updates across devices
-    const eventSource = new EventSource('/api/store/status-updates')
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        if (data.type === 'STORE_STATUS_CHANGED') {
-          console.log('Store status changed via SSE, refreshing settings...')
-          refreshSettings()
+    // Only use SSE in development (localhost)
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      // Connect to Server-Sent Events for real-time updates across devices
+      const eventSource = new EventSource('/api/store/status-updates')
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.type === 'STORE_STATUS_CHANGED') {
+            console.log('Store status changed via SSE, refreshing settings...')
+            refreshSettings()
+          }
+        } catch (error) {
+          console.error('Error parsing SSE message:', error)
         }
-      } catch (error) {
-        console.error('Error parsing SSE message:', error)
       }
-    }
-    
-    eventSource.onerror = (error) => {
-      console.error('SSE connection error:', error)
-    }
-    
-    return () => {
-      eventSource.close()
+      
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error)
+      }
+      
+      return () => {
+        eventSource.close()
+      }
     }
   }, [])
 
