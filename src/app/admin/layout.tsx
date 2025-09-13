@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Package, ShoppingCart, Users, BarChart3, Settings } from 'lucide-react'
+import { Package, ShoppingCart, Users, BarChart3, Settings, Bell } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const sidebarItems = [
@@ -33,6 +33,11 @@ const sidebarItems = [
     title: 'Users',
     href: '/admin/users',
     icon: Users,
+  },
+  {
+    title: 'Notifications',
+    href: '/admin/notifications',
+    icon: Bell,
   },
   {
     title: 'Settings',

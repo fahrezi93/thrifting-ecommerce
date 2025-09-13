@@ -67,6 +67,21 @@ class ApiClient {
     return response.json()
   }
 
+  async patch(url: string, data?: any) {
+    const headers = await this.getAuthHeaders()
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers,
+      body: data ? JSON.stringify(data) : undefined,
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+
   async delete(url: string) {
     const headers = await this.getAuthHeaders()
     const response = await fetch(url, {

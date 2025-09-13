@@ -9,15 +9,27 @@ import { StoreStatusWrapper } from '@/middleware/store-status'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { ToastViewport } from '@/components/ui/toast'
+import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Thrift Haven - Sustainable Fashion Marketplace',
   description: 'Discover unique pre-loved fashion items and contribute to sustainable shopping',
+  manifest: '/manifest.json',
+  themeColor: '#000000',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Thrift Haven',
+  },
   icons: {
-    icon: '/logo-baju.svg',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/Icon-Web.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '64x64 32x32 24x24 16x16', type: 'image/x-icon' },
+    ],
+    apple: '/Logo-App-Mobile.svg',
   },
 }
 
@@ -29,8 +41,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/logo-baju.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/Icon-Web.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/Logo-App-Mobile.svg" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Thrift Haven" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-tap-highlight" content="no" />
       </head>
       <body className={inter.className}>
         <AuthProvider>
@@ -45,6 +65,7 @@ export default function RootLayout({
                   <Footer />
                 </div>
                 <ToastViewport />
+                <PWAInstallPrompt />
               </Providers>
             </StoreStatusWrapper>
           </StoreProvider>

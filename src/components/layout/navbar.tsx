@@ -20,6 +20,9 @@ import { useRouter } from 'next/navigation'
 import { ClientOnly } from '@/components/client-only'
 import { apiClient } from '@/lib/api-client'
 import { useStore } from '@/contexts/StoreContext'
+import { PWAInstallButton } from '@/components/pwa-install-button'
+import { useDisplayMode } from '@/hooks/use-display-mode'
+import { NotificationBell } from '@/components/layout/notification-bell'
 
 // Component to check and display admin menu
 function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobile?: boolean, onClose?: () => void }) {
@@ -80,6 +83,7 @@ export function Navbar() {
   const { user, logout, loading } = useAuth()
   const { getTotalItems, toggleCart } = useCart()
   const { settings } = useStore()
+  const { isInstalled, displayMode } = useDisplayMode()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -130,6 +134,14 @@ export function Navbar() {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
+            {/* PWA Install Button */}
+            <PWAInstallButton />
+            
+            {/* Notifications - Desktop Only */}
+            <div className="hidden md:block">
+              <NotificationBell />
+            </div>
+            
             {/* Cart */}
             <ClientOnly fallback={
               <Button
@@ -287,6 +299,11 @@ export function Navbar() {
                 >
                   About
                 </Link>
+                
+                {/* Notifications - Mobile Only */}
+                <div className="md:hidden py-2">
+                  <NotificationBell />
+                </div>
               </div>
 
               {/* Mobile Auth - Only show Sign In/Sign Up for non-authenticated users */}

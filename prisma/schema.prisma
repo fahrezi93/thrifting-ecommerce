@@ -50,6 +50,7 @@ model User {
   addresses Address[]
   orders    Order[]
   wishlistItems WishlistItem[]
+  notifications Notification[]
 }
 
 
@@ -195,4 +196,33 @@ model StoreSettings {
   maintenanceMode   Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   // ID pengguna yang akan menerima notifikasi
+  message   String   // Isi pesan, misal: "Pesanan baru #123 telah dibuat!"
+  url       String?  // URL untuk dikunjungi saat notifikasi diklik
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([endpoint])
+  @@index([isActive])
 }

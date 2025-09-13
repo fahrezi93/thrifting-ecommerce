@@ -16,7 +16,7 @@ const defaultSettings: StoreSettings = {
   storeName: 'Thrift Haven',
   storeEmail: 'hello@thrifthaven.com',
   storePhone: '+62 123 456 7890',
-  storeAddress: 'Jakarta, Indonesia',
+  storeAddress: 'Cirebon, West Java, Indonesia',
   supportEmail: 'support@thrifthaven.com',
   businessHours: 'Mon-Sun, 9 AM - 9 PM',
   isOpen: true
