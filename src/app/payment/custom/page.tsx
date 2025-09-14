@@ -327,7 +327,16 @@ export default function CustomPaymentPage() {
       console.log('Payment: Response status:', response.status);
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          console.error('Failed to parse error response as JSON:', jsonError);
+          const textResponse = await response.text();
+          console.error('Raw error response:', textResponse);
+          alert(`Payment failed: ${textResponse || 'Unknown error'}`);
+          return;
+        }
         console.error('Payment API Error Response:', errorData);
         
         // If invoice already used, check status and redirect
@@ -359,10 +368,20 @@ export default function CustomPaymentPage() {
           return;
         }
         
-        throw new Error(`HTTP error! status: ${response.status}`);
+        alert(`Payment failed: ${errorData.error || 'Unknown error'}`);
+        return;
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse success response as JSON:', jsonError);
+        const textResponse = await response.text();
+        console.error('Raw success response:', textResponse);
+        alert(`Payment response error: Invalid response format`);
+        return;
+      }
       console.log('Payment: Response data:', data);
       
       if (data.paymentUrl) {

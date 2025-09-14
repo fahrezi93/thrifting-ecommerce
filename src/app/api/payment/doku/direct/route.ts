@@ -116,9 +116,22 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       console.error('DOKU Direct API Error:', data);
+      
+      // Handle specific DOKU error messages
+      let errorMessage = 'Payment gateway error';
+      if (data && typeof data === 'object') {
+        errorMessage = data.message || data.error?.message || data.response?.message || 'Failed to create payment';
+      } else if (typeof data === 'string') {
+        errorMessage = data;
+      }
+      
       return NextResponse.json(
-        { error: data.message || data.error?.message || 'Failed to create payment' },
-        { status: response.status }
+        { 
+          error: errorMessage,
+          dokuResponse: data,
+          statusCode: response.status
+        },
+        { status: 500 } // Always return 500 for client to handle consistently
       );
     }
 
@@ -142,10 +155,15 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('[DOKU_DIRECT_API_POST]', error);
+    
+    // Ensure we always return valid JSON
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
     return NextResponse.json(
       { 
-        error: 'Internal Server Error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Payment processing failed',
+        details: errorMessage,
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );

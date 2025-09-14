@@ -67,9 +67,9 @@ export function usePushNotifications() {
         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
       })
 
-      // Send subscription to server with timeout
+      // Send subscription to server with shorter timeout
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
 
       const response = await fetch('/api/notifications/subscribe', {
         method: 'POST',

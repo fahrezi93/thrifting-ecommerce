@@ -65,20 +65,10 @@ export function PushNotificationSetup() {
     <Dialog open={showModal} onOpenChange={setShowModal}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5 text-blue-600" />
-              Enable Push Notifications
-            </DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDismiss}
-              className="h-6 w-6 p-0"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
+          <DialogTitle className="flex items-center gap-2">
+            <Bell className="w-5 h-5 text-blue-600" />
+            Enable Push Notifications
+          </DialogTitle>
           <DialogDescription>
             Get instant notifications about your orders, exclusive deals, and new arrivals directly to your device!
           </DialogDescription>
@@ -118,6 +108,7 @@ export function PushNotificationSetup() {
               onClick={handleDismiss}
               variant="outline"
             >
+              <X className="w-4 h-4 mr-2" />
               Maybe Later
             </Button>
           </div>
