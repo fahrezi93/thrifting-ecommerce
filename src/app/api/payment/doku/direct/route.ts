@@ -176,8 +176,8 @@ async function prepareRequestBody(order: any, paymentMethod: string) {
       invoice_number: order.orderNumber,
       amount: Math.floor(order.totalAmount),
       currency: "IDR",
-      callback_url: process.env.NEXT_PUBLIC_BASE_URL ? `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success` : 'http://localhost:3000/payment/success',
-      callback_url_cancel: process.env.NEXT_PUBLIC_BASE_URL ? `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel` : 'http://localhost:3000/payment/cancel',
+      callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://thrifting-haven.vercel.app'}/payment/success`,
+      callback_url_cancel: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://thrifting-haven.vercel.app'}/payment/cancel`,
     },
     customer: {
       id: order.user.id,
