@@ -17,14 +17,17 @@ export async function GET(request: NextRequest) {
     ])
     console.log('Admin dashboard: Counts fetched - Products:', totalProducts, 'Orders:', totalOrders, 'Users:', totalUsers)
 
-    // Get total revenue from paid orders
-    console.log('Admin dashboard: Fetching revenue...')
+    // Get total revenue from paid orders only (connected to DOKU payments)
+    console.log('Admin dashboard: Fetching revenue from PAID orders...')
     const revenueResult = await prisma.order.aggregate({
-      where: { status: 'PAID' },
+      where: { 
+        status: 'PAID',
+        paidAt: { not: null } // Ensure order was actually paid
+      },
       _sum: { totalAmount: true }
     })
     const totalRevenue = Number(revenueResult._sum.totalAmount) || 0
-    console.log('Admin dashboard: Revenue fetched:', totalRevenue)
+    console.log('Admin dashboard: Revenue from PAID orders:', totalRevenue)
 
     // Get recent orders
     console.log('Admin dashboard: Fetching recent orders...')

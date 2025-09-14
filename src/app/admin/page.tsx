@@ -298,11 +298,21 @@ export default function AdminDashboard() {
                   <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="relative h-10 w-10 flex-shrink-0">
-                        <img
-                          src={product.imageUrls[0]}
-                          alt={product.name}
-                          className="object-cover rounded-md w-full h-full"
-                        />
+                        {product.imageUrls && product.imageUrls.length > 0 ? (
+                          <img
+                            src={typeof product.imageUrls === 'string' ? JSON.parse(product.imageUrls)[0] : product.imageUrls[0]}
+                            alt={product.name}
+                            className="object-cover rounded-md w-full h-full"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder-product.png';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
+                            <Package className="h-4 w-4 text-gray-400" />
+                          </div>
+                        )}
                       </div>
                       <div>
                         <p className="font-medium">{product.name}</p>
