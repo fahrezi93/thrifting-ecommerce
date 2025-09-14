@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
         const { status, transactionId } = transactionStatus;
         
         // Update order status based on DOKU response
-        let newStatus = null;
+        let newStatus: 'PAID' | 'FAILED' | null = null;
         if (status === 'SUCCESS' || status === 'PAID' || status === 'COMPLETED' || status === 'SETTLED') {
           newStatus = 'PAID';
         } else if (status === 'FAILED' || status === 'CANCELLED' || status === 'EXPIRED') {
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       statusUpdated: false,
-      currentStatus: order.status
+      currentStatus: order?.status || 'UNKNOWN'
     });
 
   } catch (error) {
