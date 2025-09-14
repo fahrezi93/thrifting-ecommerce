@@ -460,10 +460,10 @@ export default function CustomPaymentPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Pilih Metode Pembayaran
+            Choose Payment Method
           </h1>
           <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-            <span>Selesaikan pembayaran dalam</span>
+            <span>Complete payment within</span>
             <Badge variant="destructive" className="font-mono">
               {formatTime(timeLeft)}
             </Badge>
