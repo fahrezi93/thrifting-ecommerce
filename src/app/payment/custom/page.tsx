@@ -306,7 +306,7 @@ export default function CustomPaymentPage() {
         console.log('Payment status check result:', statusData);
         
         if (statusData.statusUpdated && statusData.newStatus === 'PAID') {
-          alert('Pembayaran sudah berhasil! Status order sudah diupdate ke PAID.');
+          alert('Payment successful! Order status has been updated to PAID.');
           window.location.href = '/dashboard/orders';
           return;
         }
@@ -357,13 +357,13 @@ export default function CustomPaymentPage() {
           if (statusResponse.ok) {
             const statusData = await statusResponse.json();
             if (statusData.statusUpdated && statusData.newStatus === 'PAID') {
-              alert('Pembayaran sudah berhasil! Status order sudah diupdate ke PAID.');
+              alert('Payment successful! Order status has been updated to PAID.');
               window.location.href = '/dashboard/orders';
               return;
             }
           }
           
-          alert('Order ini sudah pernah dibayar. Silakan cek status order di dashboard.');
+          alert('This order has already been paid. Please check order status in your dashboard.');
           window.location.href = '/dashboard/orders';
           return;
         }
@@ -391,7 +391,7 @@ export default function CustomPaymentPage() {
       }
     } catch (error) {
       console.error('Payment error:', error);
-      alert(`Terjadi kesalahan saat memproses pembayaran: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(`Error occurred while processing payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -475,7 +475,7 @@ export default function CustomPaymentPage() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Pilih Metode Pembayaran</CardTitle>
+                <CardTitle>Choose Payment Method</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {Object.entries(groupedMethods).map(([type, methods]) => (
@@ -485,7 +485,7 @@ export default function CustomPaymentPage() {
                         {getTypeLabel(type as PaymentMethod['type'])}
                       </h3>
                       <Badge variant="outline" className={getTypeColor(type as PaymentMethod['type'])}>
-                        {methods.length} metode
+                        {methods.length} methods
                       </Badge>
                     </div>
                     
@@ -531,7 +531,7 @@ export default function CustomPaymentPage() {
           <div className="lg:col-span-1">
             <Card className="sticky top-8">
               <CardHeader>
-                <CardTitle>Ringkasan Pesanan</CardTitle>
+                <CardTitle>Order Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -540,7 +540,7 @@ export default function CustomPaymentPage() {
                     <span className="font-mono text-gray-900">{orderData.orderNumber || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Nama</span>
+                    <span className="text-gray-600">Name</span>
                     <span className="text-gray-900">{orderData.customerName || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -557,7 +557,7 @@ export default function CustomPaymentPage() {
                     <span className="text-gray-900">IDR {(orderData.totalAmount || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-lg">
-                    <span>Total Pembayaran</span>
+                    <span>Total Payment</span>
                     <span className="text-blue-600">IDR {(orderData.totalAmount || 0).toLocaleString()}</span>
                   </div>
                 </div>
@@ -571,15 +571,15 @@ export default function CustomPaymentPage() {
                   {isProcessing ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Memproses...
+                      Processing...
                     </>
                   ) : (
-                    'Lanjutkan Pembayaran'
+                    'Continue Payment'
                   )}
                 </Button>
                 
                 <p className="text-xs text-gray-500 text-center">
-                  Dengan melanjutkan, Anda menyetujui syarat dan ketentuan pembayaran
+                  By continuing, you agree to the payment terms and conditions
                 </p>
               </CardContent>
             </Card>

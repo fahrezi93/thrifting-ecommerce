@@ -290,7 +290,7 @@ export default function AdminProductsPage() {
       if (!user) {
         addToast({
           title: 'Authentication Required',
-          description: 'Otentikasi diperlukan. Silakan login kembali.',
+          description: 'Authentication required. Please login again.',
           variant: 'destructive'
         })
         setUploadingImages(false)
@@ -314,7 +314,7 @@ export default function AdminProductsPage() {
             console.error('Supabase Storage upload error:', result.error)
             addToast({
               title: 'Upload Failed',
-              description: `Gagal mengunggah ${file.name}: ${result.error}`,
+              description: `Failed to upload ${file.name}: ${result.error}`,
               variant: 'destructive'
             })
           }
@@ -323,7 +323,7 @@ export default function AdminProductsPage() {
           console.error('Upload error:', error)
           addToast({
             title: 'Upload Failed',
-            description: `Gagal mengunggah ${file.name}`,
+            description: `Failed to upload ${file.name}`,
             variant: 'destructive'
           })
         }
@@ -336,7 +336,7 @@ export default function AdminProductsPage() {
         }))
         addToast({
           title: 'Success!',
-          description: `${uploadedUrls.length} gambar berhasil diunggah!`,
+          description: `${uploadedUrls.length} images uploaded successfully!`,
           variant: 'success'
         })
       }
@@ -344,7 +344,7 @@ export default function AdminProductsPage() {
       console.error('Upload error:', error)
       addToast({
         title: 'Upload Error',
-        description: 'Terjadi kesalahan saat mengunggah gambar.',
+        description: 'An error occurred while uploading images.',
         variant: 'destructive'
       })
     } finally {

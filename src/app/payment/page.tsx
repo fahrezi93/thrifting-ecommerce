@@ -454,19 +454,19 @@ export default function PaymentPage() {
                 {processing ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Memproses...
+                    Processing...
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Bayar Sekarang
+                    Pay Now
                   </>
                 )}
               </Button>
 
               {selectedMethod && (
                 <div className="text-xs text-muted-foreground text-center">
-                  Dengan melanjutkan, Anda menyetujui syarat dan ketentuan pembayaran
+                  By continuing, you agree to the payment terms and conditions
                 </div>
               )}
             </CardContent>

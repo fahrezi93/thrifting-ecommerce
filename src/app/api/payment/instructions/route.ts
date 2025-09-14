@@ -72,10 +72,10 @@ function generatePaymentInstruction(order: any, paymentMethod: string) {
         expiresAt,
         instructions: [
           `Buka aplikasi ${paymentMethod.toUpperCase()}`,
-          'Login ke akun Anda jika diminta',
-          'Periksa detail pembayaran',
-          'Konfirmasi pembayaran dengan PIN atau biometrik',
-          'Tunggu notifikasi pembayaran berhasil'
+          'Login to your account if prompted',
+          'Check payment details',
+          'Confirm payment with PIN or biometric',
+          'Wait for successful payment notification'
         ]
       }
 

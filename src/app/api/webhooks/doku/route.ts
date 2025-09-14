@@ -147,9 +147,9 @@ export async function POST(req: NextRequest) {
         try {
           let notificationMessage = '';
           if (newStatus === 'PAID') {
-            notificationMessage = `Pembayaran berhasil! Pesanan #${existingOrder.orderNumber} sedang diproses`;
+            notificationMessage = `Payment successful! Order #${existingOrder.orderNumber} is being processed`;
           } else if (newStatus === 'FAILED') {
-            notificationMessage = `Pembayaran gagal untuk pesanan #${existingOrder.orderNumber}. Silakan coba lagi`;
+            notificationMessage = `Payment failed for order #${existingOrder.orderNumber}. Please try again`;
           }
           
           if (notificationMessage) {

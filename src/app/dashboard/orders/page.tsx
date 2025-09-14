@@ -130,13 +130,13 @@ export default function OrdersPage() {
         if (responseData.statusUpdated) {
           // Refresh orders list
           fetchOrders();
-          alert(`Status order berhasil diupdate dari ${responseData.oldStatus} ke ${responseData.newStatus}!`);
+          alert(`Order status successfully updated from ${responseData.oldStatus} to ${responseData.newStatus}!`);
         } else {
-          alert(`Status order masih ${responseData.currentStatus}. DOKU status: ${responseData.dokuStatus || 'Unknown'}`);
+          alert(`Order status is still ${responseData.currentStatus}. DOKU status: ${responseData.dokuStatus || 'Unknown'}`);
         }
       } else {
         console.error('Failed to check payment status:', responseData);
-        alert(`Gagal check status: ${responseData.error || 'Unknown error'}`);
+        alert(`Failed to check status: ${responseData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error checking payment status:', error);
@@ -166,10 +166,10 @@ export default function OrdersPage() {
         // Refresh orders list
         fetchOrders();
         console.log(`Order ${orderNumber} status updated to ${status}`);
-        alert(`Order status berhasil diupdate ke ${status}!`);
+        alert(`Order status successfully updated to ${status}!`);
       } else {
         console.error('Failed to update order status:', responseData);
-        alert(`Gagal update status: ${responseData.error || 'Unknown error'}`);
+        alert(`Failed to update status: ${responseData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error updating order status:', error);
