@@ -105,10 +105,22 @@ export default function ProfilePage() {
       
       if (response.ok) {
         const data = await response.json()
-        setOrders(data)
+        // Transform the data to match expected format
+        const transformedOrders = data.map((order: any) => ({
+          ...order,
+          items: order.orderItems?.map((orderItem: any) => ({
+            id: orderItem.product?.id || orderItem.id,
+            name: orderItem.product?.name || 'Unknown Product',
+            price: orderItem.price || 0,
+            quantity: orderItem.quantity || 1,
+            imageUrls: orderItem.product?.imageUrls || []
+          })) || []
+        }))
+        setOrders(transformedOrders)
       }
     } catch (error) {
       console.error('Error fetching orders:', error)
+      setOrders([]) // Set empty array on error
     }
   }
 
@@ -404,34 +416,34 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {orders.map((order) => (
+                    {orders && orders.length > 0 && orders.map((order) => (
                       <Card key={order.id}>
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <h4 className="font-semibold">Order #{order.id.slice(-8)}</h4>
+                              <h4 className="font-semibold">Order #{order.id?.slice(-8) || 'N/A'}</h4>
                               <p className="text-sm text-muted-foreground">
-                                {formatDate(order.createdAt)}
+                                {order.createdAt ? formatDate(order.createdAt) : 'N/A'}
                               </p>
                             </div>
                             <div className="text-right">
-                              {getStatusBadge(order.status)}
-                              <p className="font-semibold mt-1">{formatPrice(order.total)}</p>
+                              {getStatusBadge(order.status || 'UNKNOWN')}
+                              <p className="font-semibold mt-1">{formatPrice(order.total || 0)}</p>
                             </div>
                           </div>
                           
                           <div className="space-y-2">
-                            {order.items.map((item) => (
-                              <div key={item.id} className="flex items-center gap-3 p-2 bg-muted rounded">
+                            {order.items && order.items.length > 0 && order.items.map((item) => (
+                              <div key={item.id || Math.random()} className="flex items-center gap-3 p-2 bg-muted rounded">
                                 <img
-                                  src={item.imageUrls[0] || '/placeholder-image.svg'}
-                                  alt={item.name}
+                                  src={(item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls[0] : null) || '/placeholder-image.svg'}
+                                  alt={item.name || 'Product'}
                                   className="w-12 h-12 object-cover rounded"
                                 />
                                 <div className="flex-1">
-                                  <p className="font-medium text-sm">{item.name}</p>
+                                  <p className="font-medium text-sm">{item.name || 'Unknown Product'}</p>
                                   <p className="text-xs text-muted-foreground">
-                                    Qty: {item.quantity} × {formatPrice(item.price)}
+                                    Qty: {item.quantity || 1} × {formatPrice(item.price || 0)}
                                   </p>
                                 </div>
                               </div>
