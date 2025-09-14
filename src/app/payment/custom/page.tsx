@@ -40,7 +40,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'BCA Virtual Account',
     type: 'bank_transfer',
     icon: <Building2 className="h-6 w-6" />,
-    description: 'Transfer ke Virtual Account BCA',
+    description: 'Transfer to BCA Virtual Account',
     available: true
   },
   {
@@ -48,7 +48,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'Mandiri Virtual Account',
     type: 'bank_transfer',
     icon: <Building2 className="h-6 w-6" />,
-    description: 'Transfer ke Virtual Account Mandiri',
+    description: 'Transfer to Mandiri Virtual Account',
     available: true
   },
   {
@@ -56,7 +56,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'BRI Virtual Account',
     type: 'bank_transfer',
     icon: <Building2 className="h-6 w-6" />,
-    description: 'Transfer ke Virtual Account BRI',
+    description: 'Transfer to BRI Virtual Account',
     available: true
   },
   {
@@ -64,7 +64,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'BNI Virtual Account',
     type: 'bank_transfer',
     icon: <Building2 className="h-6 w-6" />,
-    description: 'Transfer ke Virtual Account BNI',
+    description: 'Transfer to BNI Virtual Account',
     available: true
   },
   
@@ -74,7 +74,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'OVO',
     type: 'ewallet',
     icon: <Smartphone className="h-6 w-6" />,
-    description: 'Bayar dengan OVO',
+    description: 'Pay with OVO',
     available: true
   },
   {
@@ -82,7 +82,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'DANA',
     type: 'ewallet',
     icon: <Smartphone className="h-6 w-6" />,
-    description: 'Bayar dengan DANA',
+    description: 'Pay with DANA',
     available: true
   },
   {
@@ -90,7 +90,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'ShopeePay',
     type: 'ewallet',
     icon: <Smartphone className="h-6 w-6" />,
-    description: 'Bayar dengan ShopeePay',
+    description: 'Pay with ShopeePay',
     available: true
   },
   {
@@ -98,14 +98,14 @@ const paymentMethods: PaymentMethod[] = [
     name: 'DOKU Wallet',
     type: 'ewallet',
     icon: <Wallet className="h-6 w-6" />,
-    description: 'Bayar dengan DOKU Wallet',
+    description: 'Pay with DOKU Wallet',
     available: true
   },
   
   // Credit Card
   {
     id: 'CREDIT_CARD',
-    name: 'Kartu Kredit',
+    name: 'Credit Card',
     type: 'card',
     icon: <CreditCard className="h-6 w-6" />,
     description: 'Visa, Mastercard, JCB, AMEX',
@@ -118,7 +118,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'Alfamart',
     type: 'convenience_store',
     icon: <Store className="h-6 w-6" />,
-    description: 'Bayar di Alfamart terdekat',
+    description: 'Pay at nearest Alfamart',
     available: true
   },
   {
@@ -126,7 +126,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'Indomaret',
     type: 'convenience_store',
     icon: <Store className="h-6 w-6" />,
-    description: 'Bayar di Indomaret terdekat',
+    description: 'Pay at nearest Indomaret',
     available: true
   },
   
@@ -136,7 +136,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'Kredivo',
     type: 'paylater',
     icon: <CreditCard className="h-6 w-6" />,
-    description: 'Cicilan dengan Kredivo',
+    description: 'Installment with Kredivo',
     available: true
   },
   {
@@ -144,7 +144,7 @@ const paymentMethods: PaymentMethod[] = [
     name: 'Indodana',
     type: 'paylater',
     icon: <CreditCard className="h-6 w-6" />,
-    description: 'Cicilan dengan Indodana',
+    description: 'Installment with Indodana',
     available: true
   }
 ];
@@ -164,10 +164,10 @@ const getTypeLabel = (type: PaymentMethod['type']) => {
   switch (type) {
     case 'bank_transfer': return 'Bank Transfer';
     case 'ewallet': return 'E-Wallet';
-    case 'card': return 'Kartu Kredit';
-    case 'convenience_store': return 'Minimarket';
+    case 'card': return 'Credit Card';
+    case 'convenience_store': return 'Convenience Store';
     case 'paylater': return 'PayLater';
-    default: return 'Lainnya';
+    default: return 'Others';
   }
 };
 
@@ -240,11 +240,11 @@ export default function CustomPaymentPage() {
         console.error('API Error Response:', errorData);
         
         if (response.status === 404) {
-          setError('Order tidak ditemukan. Silakan cek order ID atau buat order baru.');
+          setError('Order not found. Please check order ID or create a new order.');
         } else if (response.status === 403) {
-          setError('Anda tidak memiliki akses ke order ini.');
+          setError('You do not have access to this order.');
         } else {
-          setError(`Gagal memuat data order: ${errorData.error || 'Unknown error'}`);
+          setError(`Failed to load order data: ${errorData.error || 'Unknown error'}`);
         }
         setLoading(false);
         return;
@@ -255,7 +255,7 @@ export default function CustomPaymentPage() {
       
       // Check if order is already paid
       if (data.status === 'PAID') {
-        setError('Order ini sudah dibayar. Silakan cek status order di dashboard Anda.');
+        setError('This order has already been paid. Please check order status in your dashboard.');
         setLoading(false);
         return;
       }
@@ -264,7 +264,7 @@ export default function CustomPaymentPage() {
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch order data:', error);
-      setError('Gagal memuat data order. Silakan coba lagi.');
+      setError('Failed to load order data. Please try again.');
       setLoading(false);
     }
   };

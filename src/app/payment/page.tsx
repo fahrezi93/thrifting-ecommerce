@@ -35,99 +35,99 @@ const paymentMethods: PaymentMethod[] = [
     name: 'QRIS',
     type: 'ewallet',
     icon: '/payment-icons/qris.png',
-    description: 'Scan QR code dengan aplikasi e-money dan bank',
+    description: 'Scan QR code with e-money and banking apps',
     fee: 0,
-    processingTime: 'Instan'
+    processingTime: 'Instant'
   },
   {
     id: 'ovo',
     name: 'OVO',
     type: 'ewallet',
     icon: '/payment-icons/ovo.png',
-    description: 'Bayar dengan saldo OVO atau OVO PayLater',
+    description: 'Pay with OVO balance or OVO PayLater',
     fee: 0,
-    processingTime: 'Instan'
+    processingTime: 'Instant'
   },
   {
     id: 'dana',
     name: 'DANA',
     type: 'ewallet',
     icon: '/payment-icons/dana.png',
-    description: 'Bayar dengan saldo DANA',
+    description: 'Pay with DANA balance',
     fee: 0,
-    processingTime: 'Instan'
+    processingTime: 'Instant'
   },
   {
     id: 'linkaja',
     name: 'LinkAja',
     type: 'ewallet',
     icon: '/payment-icons/linkaja.png',
-    description: 'Bayar dengan saldo LinkAja',
+    description: 'Pay with LinkAja balance',
     fee: 0,
-    processingTime: 'Instan'
+    processingTime: 'Instant'
   },
   {
     id: 'gopay',
     name: 'GoPay',
     type: 'ewallet',
     icon: '/payment-icons/gopay.png',
-    description: 'Bayar dengan saldo GoPay',
+    description: 'Pay with GoPay balance',
     fee: 0,
-    processingTime: 'Instan'
+    processingTime: 'Instant'
   },
   {
     id: 'bca',
     name: 'BCA Virtual Account',
     type: 'bank',
     icon: '/payment-icons/bca.png',
-    description: 'Transfer ke Virtual Account BCA',
+    description: 'Transfer to BCA Virtual Account',
     fee: 4000,
-    processingTime: '1-10 menit'
+    processingTime: '1-10 minutes'
   },
   {
     id: 'bni',
     name: 'BNI Virtual Account',
     type: 'bank',
     icon: '/payment-icons/bni.png',
-    description: 'Transfer ke Virtual Account BNI',
+    description: 'Transfer to BNI Virtual Account',
     fee: 4000,
-    processingTime: '1-10 menit'
+    processingTime: '1-10 minutes'
   },
   {
     id: 'bri',
     name: 'BRI Virtual Account',
     type: 'bank',
     icon: '/payment-icons/bri.png',
-    description: 'Transfer ke Virtual Account BRI',
+    description: 'Transfer to BRI Virtual Account',
     fee: 4000,
-    processingTime: '1-10 menit'
+    processingTime: '1-10 minutes'
   },
   {
     id: 'mandiri',
     name: 'Mandiri Virtual Account',
     type: 'bank',
     icon: '/payment-icons/mandiri.png',
-    description: 'Transfer ke Virtual Account Mandiri',
+    description: 'Transfer to Mandiri Virtual Account',
     fee: 4000,
-    processingTime: '1-10 menit'
+    processingTime: '1-10 minutes'
   },
   {
     id: 'alfamart',
     name: 'Alfamart',
     type: 'retail',
     icon: '/payment-icons/alfamart.png',
-    description: 'Bayar di kasir Alfamart terdekat',
+    description: 'Pay at nearest Alfamart cashier',
     fee: 2500,
-    processingTime: '1-24 jam'
+    processingTime: '1-24 hours'
   },
   {
     id: 'indomaret',
     name: 'Indomaret',
     type: 'retail',
     icon: '/payment-icons/indomaret.png',
-    description: 'Bayar di kasir Indomaret terdekat',
+    description: 'Pay at nearest Indomaret cashier',
     fee: 2500,
-    processingTime: '1-24 jam'
+    processingTime: '1-24 hours'
   }
 ]
 
@@ -221,12 +221,12 @@ export default function PaymentPage() {
       } else {
         const errorData = await response.json()
         console.error('DOKU payment creation failed:', errorData)
-        alert(errorData.error || 'Gagal membuat pembayaran. Silakan coba lagi.')
+        alert(errorData.error || 'Failed to create payment. Please try again.')
         setProcessing(false)
       }
     } catch (error) {
       console.error('Payment error:', error)
-      alert('Terjadi kesalahan. Silakan coba lagi.')
+      alert('An error occurred. Please try again.')
       setProcessing(false)
     }
   }
@@ -276,10 +276,10 @@ export default function PaymentPage() {
           onClick={() => router.back()}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali
+          Back
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Pilih Metode Pembayaran</h1>
+          <h1 className="text-2xl font-bold">Choose Payment Method</h1>
           <p className="text-muted-foreground">
             Total: {amount ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(parseInt(amount)) : ''}
           </p>
@@ -297,7 +297,7 @@ export default function PaymentPage() {
                 E-Wallet
               </CardTitle>
               <CardDescription>
-                Pembayaran instan dengan dompet digital
+                Instant payment with digital wallet
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -339,7 +339,7 @@ export default function PaymentPage() {
                 Transfer Bank
               </CardTitle>
               <CardDescription>
-                Transfer ke Virtual Account bank
+                Transfer to Bank Virtual Account
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -381,7 +381,7 @@ export default function PaymentPage() {
                 Retail Store
               </CardTitle>
               <CardDescription>
-                Bayar di toko retail terdekat
+                Pay at nearest retail store
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
