@@ -23,6 +23,7 @@ import { useStore } from '@/contexts/StoreContext'
 import { PWAInstallButton } from '@/components/pwa-install-button'
 import { useDisplayMode } from '@/hooks/use-display-mode'
 import { NotificationBell } from '@/components/layout/notification-bell'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // Component to check and display admin menu
 function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobile?: boolean, onClose?: () => void }) {
@@ -247,97 +248,159 @@ export function Navbar() {
             </ClientOnly>
 
             {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            <motion.div
+              whileTap={{ scale: 0.95 }}
             >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                <motion.div
+                  initial={false}
+                  animate={{ rotate: isMenuOpen ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </motion.div>
+              </Button>
+            </motion.div>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden border-t py-4">
-            <div className="space-y-4">
-              {/* Mobile Search */}
-              <form onSubmit={handleSearch} className="flex items-center space-x-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search products..."
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </form>
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div 
+              className="md:hidden border-t overflow-hidden"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ 
+                duration: 0.3,
+                ease: "easeInOut"
+              }}
+            >
+              <motion.div 
+                className="py-4"
+                initial={{ y: -20 }}
+                animate={{ y: 0 }}
+                exit={{ y: -20 }}
+                transition={{ 
+                  duration: 0.3,
+                  delay: 0.1
+                }}
+              >
+                <div className="space-y-4">
+                  {/* Mobile Search */}
+                  <motion.form 
+                    onSubmit={handleSearch} 
+                    className="flex items-center space-x-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2, duration: 0.3 }}
+                  >
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        placeholder="Search products..."
+                        className="pl-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                  </motion.form>
 
-              {/* Mobile Navigation Links */}
-              <div className="space-y-2">
-                <Link
-                  href="/products"
-                  className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Shop
-                </Link>
-                <Link
-                  href="/categories"
-                  className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Categories
-                </Link>
-                <Link
-                  href="/about"
-                  className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  About
-                </Link>
-                
-                {/* Notifications - Mobile Only */}
-                <div className="md:hidden py-2">
-                  <NotificationBell />
-                </div>
-              </div>
+                  {/* Mobile Navigation Links */}
+                  <div className="space-y-2">
+                    {[
+                      { href: "/products", label: "Shop" },
+                      { href: "/categories", label: "Categories" },
+                      { href: "/about", label: "About" }
+                    ].map((item, index) => (
+                      <motion.div
+                        key={item.href}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 + (index * 0.1), duration: 0.3 }}
+                      >
+                        <Link
+                          href={item.href}
+                          className="block py-2 text-sm font-medium hover:text-primary transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      </motion.div>
+                    ))}
+                    
+                    {/* Notifications - Mobile Only */}
+                    <motion.div 
+                      className="md:hidden py-2"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6, duration: 0.3 }}
+                    >
+                      <NotificationBell />
+                    </motion.div>
+                  </div>
 
-              {/* Mobile Auth - Only show Sign In/Sign Up for non-authenticated users */}
-              <ClientOnly fallback={
-                <div className="space-y-2 pt-4 border-t">
-                  <div className="py-2 text-sm text-muted-foreground">Loading...</div>
+                  {/* Mobile Auth - Only show Sign In/Sign Up for non-authenticated users */}
+                  <ClientOnly fallback={
+                    <motion.div 
+                      className="space-y-2 pt-4 border-t"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.7, duration: 0.3 }}
+                    >
+                      <div className="py-2 text-sm text-muted-foreground">Loading...</div>
+                    </motion.div>
+                  }>
+                    {loading ? (
+                      <motion.div 
+                        className="space-y-2 pt-4 border-t"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7, duration: 0.3 }}
+                      >
+                        <div className="py-2 text-sm text-muted-foreground">Loading...</div>
+                      </motion.div>
+                    ) : !user && (
+                      <motion.div 
+                        className="space-y-2 pt-4 border-t"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7, duration: 0.3 }}
+                      >
+                        {[
+                          { href: "/auth/signin", label: "Sign In" },
+                          { href: "/auth/signup", label: "Sign Up" }
+                        ].map((item, index) => (
+                          <motion.div
+                            key={item.href}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.8 + (index * 0.1), duration: 0.3 }}
+                          >
+                            <Link
+                              href={item.href}
+                              className="block py-2 text-sm font-medium hover:text-primary transition-colors"
+                              onClick={() => setIsMenuOpen(false)}
+                            >
+                              {item.label}
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </ClientOnly>
                 </div>
-              }>
-                {loading ? (
-                  <div className="space-y-2 pt-4 border-t">
-                    <div className="py-2 text-sm text-muted-foreground">Loading...</div>
-                  </div>
-                ) : !user && (
-                  <div className="space-y-2 pt-4 border-t">
-                    <Link
-                      href="/auth/signin"
-                      className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/auth/signup"
-                      className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Sign Up
-                    </Link>
-                  </div>
-                )}
-              </ClientOnly>
-            </div>
-          </div>
-        )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   )

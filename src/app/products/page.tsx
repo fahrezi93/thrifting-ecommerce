@@ -14,6 +14,8 @@ import { Search, Filter, SlidersHorizontal } from 'lucide-react'
 import { useCart } from '@/store/cart'
 import { useAuth } from '@/contexts/AuthContext'
 import { CartSheet } from '@/components/cart/cart-sheet'
+import { motion } from 'framer-motion'
+import ScrollReveal from '@/components/ui/scroll-reveal'
 
 interface Product {
   id: string
@@ -144,11 +146,21 @@ export default function ProductsPage() {
     <>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           <h1 className="text-3xl font-bold mb-4">Shop All Products</h1>
           
           {/* Search and Sort */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <motion.div 
+            className="flex flex-col md:flex-row gap-4 mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -183,12 +195,17 @@ export default function ProductsPage() {
                 Filters
               </Button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
-          <div className={`lg:block ${showFilters ? 'block' : 'hidden'} space-y-6`}>
+          <motion.div 
+            className={`lg:block ${showFilters ? 'block' : 'hidden'} space-y-6`}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold flex items-center gap-2">
@@ -271,10 +288,15 @@ export default function ProductsPage() {
                 </div>
               </div>
             </Card>
-          </div>
+          </motion.div>
 
           {/* Products Grid */}
-          <div className="lg:col-span-3">
+          <motion.div 
+            className="lg:col-span-3"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
@@ -302,58 +324,70 @@ export default function ProductsPage() {
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {products.map((product) => (
-                    <Card key={product.id} className="group cursor-pointer hover:shadow-lg transition-shadow">
-                      <Link href={`/products/${product.id}`}>
-                        <div className="aspect-square overflow-hidden rounded-t-lg">
-                          <Image
-                            src={product.imageUrls[0]}
-                            alt={product.name}
-                            width={400}
-                            height={400}
-                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
-                      </Link>
-                      <CardContent className="p-4">
-                        <Link href={`/products/${product.id}`}>
-                          <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                            {product.name}
-                          </h3>
-                        </Link>
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-lg font-bold text-primary">
-                            {formatPrice(product.price)}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            Size {product.size}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-xs bg-muted px-2 py-1 rounded">
-                            {product.condition}
-                          </span>
-                          {product.brand && (
-                            <span className="text-xs text-muted-foreground">
-                              {product.brand}
-                            </span>
-                          )}
-                        </div>
-                        <Button
-                          className="w-full"
-                          onClick={() => handleAddToCart(product)}
-                          disabled={product.stock === 0 || !user}
-                          title={!user ? 'Please sign in to add items to cart' : ''}
-                        >
-                          {product.stock === 0 ? 'Out of Stock' : !user ? 'Sign In to Add to Cart' : 'Add to Cart'}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                  {products.map((product, index) => (
+                    <ScrollReveal key={product.id} direction="up" delay={index * 0.1}>
+                      <motion.div
+                        whileHover={{ y: -5 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Card className="group cursor-pointer hover:shadow-lg transition-shadow">
+                          <Link href={`/products/${product.id}`}>
+                            <div className="aspect-square overflow-hidden rounded-t-lg">
+                              <Image
+                                src={product.imageUrls[0]}
+                                alt={product.name}
+                                width={400}
+                                height={400}
+                                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          </Link>
+                          <CardContent className="p-4">
+                            <Link href={`/products/${product.id}`}>
+                              <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                                {product.name}
+                              </h3>
+                            </Link>
+                            <div className="flex justify-between items-center mb-3">
+                              <span className="text-lg font-bold text-primary">
+                                {formatPrice(product.price)}
+                              </span>
+                              <span className="text-sm text-muted-foreground">
+                                Size {product.size}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center mb-3">
+                              <span className="text-xs bg-muted px-2 py-1 rounded">
+                                {product.condition}
+                              </span>
+                              {product.brand && (
+                                <span className="text-xs text-muted-foreground">
+                                  {product.brand}
+                                </span>
+                              )}
+                            </div>
+                            <motion.div
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <Button
+                                className="w-full"
+                                onClick={() => handleAddToCart(product)}
+                                disabled={product.stock === 0 || !user}
+                                title={!user ? 'Please sign in to add items to cart' : ''}
+                              >
+                                {product.stock === 0 ? 'Out of Stock' : !user ? 'Sign In to Add to Cart' : 'Add to Cart'}
+                              </Button>
+                            </motion.div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    </ScrollReveal>
                   ))}
                 </div>
               </>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
       

@@ -37,44 +37,44 @@ export function NotificationBell() {
 
     // Setup Pusher hanya jika environment variables ada
     if (process.env.NEXT_PUBLIC_PUSHER_KEY && process.env.NEXT_PUBLIC_PUSHER_CLUSTER) {
-      console.log('Pusher client environment variables check:', {
-        key: process.env.NEXT_PUBLIC_PUSHER_KEY ? 'Present' : 'Missing',
-        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER ? 'Present' : 'Missing'
-      })
+      let pusher: Pusher | null = null;
+      let channel: any = null;
 
-      const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
-        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
-      });
+      try {
+        pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+          cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+        });
 
-      console.log('Pusher client initialized, subscribing to channel:', `user-${user.id}`)
+        // Subscribe ke channel khusus user
+        channel = pusher.subscribe(`user-${user.id}`);
 
-      // Subscribe ke channel khusus user
-      const channel = pusher.subscribe(`user-${user.id}`);
-
-      // Listen untuk notifikasi baru
-      channel.bind('new-notification', (newNotification: Notification) => {
-        console.log('Received Pusher notification:', newNotification)
-        setNotifications(prev => [newNotification, ...prev]);
-        setUnreadCount(prev => prev + 1);
-        
-        // Optional: Show toast notification
-        // toast.success('New notification received!');
-      });
-
-      // Listen for connection events
-      pusher.connection.bind('connected', () => {
-        console.log('Pusher connected successfully')
-      });
-
-      pusher.connection.bind('error', (error: any) => {
-        console.error('Pusher connection error:', error)
-      });
+        // Listen untuk notifikasi baru
+        channel.bind('new-notification', (newNotification: Notification) => {
+          setNotifications(prev => [newNotification, ...prev]);
+          setUnreadCount(prev => prev + 1);
+        });
+      } catch (error) {
+        // Silently handle Pusher initialization errors
+      }
 
       // Cleanup
       return () => {
-        console.log('Cleaning up Pusher connection')
-        pusher.unsubscribe(`user-${user.id}`);
-        pusher.disconnect();
+        if (pusher && channel) {
+          try {
+            // Check connection state before attempting cleanup
+            if (pusher.connection.state !== 'disconnected' && pusher.connection.state !== 'disconnecting') {
+              channel.unbind_all();
+              pusher.unsubscribe(`user-${user.id}`);
+            }
+            
+            // Only disconnect if not already disconnecting/disconnected
+            if (pusher.connection.state === 'connected' || pusher.connection.state === 'connecting') {
+              pusher.disconnect();
+            }
+          } catch (error) {
+            // Silently handle cleanup errors
+          }
+        }
       };
     }
   }, [user]);
