@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { pusher } from '@/lib/pusher'
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +38,41 @@ export async function POST(request: NextRequest) {
         user: true
       }
     })
+
+    // Create notification for admin users
+    try {
+      // Find all admin users
+      const adminUsers = await prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { id: true, name: true, email: true }
+      })
+
+      // Create notifications for each admin
+      for (const admin of adminUsers) {
+        await prisma.notification.create({
+          data: {
+            userId: admin.id,
+            message: `🛒 New Order #${order.orderNumber} from ${user.name || user.email} - Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(totalAmount)}`,
+            url: `/admin/orders/${order.id}`,
+            isRead: false
+          }
+        })
+
+        // Send real-time notification via Pusher
+        await pusher.trigger(`user-${admin.id}`, 'notification', {
+          title: 'New Order Received',
+          message: `New order #${order.orderNumber} from ${user.name || user.email}`,
+          type: 'ORDER',
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          totalAmount: totalAmount,
+          url: `/admin/orders/${order.id}`
+        })
+      }
+    } catch (notificationError) {
+      console.error('Error creating admin notifications:', notificationError)
+      // Don't fail the order creation if notification fails
+    }
 
     // Return transaction token (order ID) for payment processing
     return NextResponse.json({

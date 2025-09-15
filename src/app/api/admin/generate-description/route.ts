@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create prompt for Gemini AI
-    const prompt = `Generate a compelling product description for an e-commerce thrift store item with the following details:
+    const prompt = `Write a single, clean product description in English for this thrift store item:
 
 Product Name: ${productName}
 Category: ${category || 'Not specified'}
@@ -31,15 +31,15 @@ Color: ${color || 'Not specified'}
 Size: ${size || 'Not specified'}
 Condition: ${condition || 'Not specified'}
 
-Please create a description that:
-- Is 2-3 sentences long
-- Highlights the product's unique features and style
-- Mentions the condition and quality
-- Appeals to thrift shoppers looking for sustainable fashion
-- Uses engaging, friendly language
-- Focuses on the value and style of the item
+Requirements:
+- Write ONLY the description text, no options or alternatives
+- Use plain text without any markdown formatting (no ** or ## symbols)
+- Keep it 2-3 sentences maximum
+- Mention the condition and key features
+- Use engaging language for thrift shoppers
+- Focus on style, quality, and value
 
-Write in Indonesian language and keep it concise but appealing.`
+Return only the description text, nothing else.`
 
     // Call Gemini AI API
     console.log('Calling Gemini API with key:', apiKey ? 'Key present' : 'Key missing')

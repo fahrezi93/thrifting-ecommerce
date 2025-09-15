@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { useCart } from '@/store/cart'
-import { ChevronLeft, ChevronRight, MapPin, CreditCard } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin, CreditCard, Truck, Zap } from 'lucide-react'
 import Image from 'next/image'
 
 interface Address {
@@ -24,6 +24,15 @@ interface Address {
   isDefault: boolean
 }
 
+interface ShippingOption {
+  id: string
+  name: string
+  description: string
+  price: number
+  estimatedDays: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
 export default function CheckoutPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -32,11 +41,33 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [addresses, setAddresses] = useState<Address[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState('')
+  const [selectedShippingId, setSelectedShippingId] = useState('regular')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const shippingCost = 15000 // Fixed shipping cost
-  const totalAmount = getTotalPrice() + shippingCost
+  const shippingOptions: ShippingOption[] = [
+    {
+      id: 'regular',
+      name: 'Regular Shipping',
+      description: 'Standard delivery',
+      price: 15000,
+      estimatedDays: '3-5 business days',
+      icon: Truck
+    },
+    {
+      id: 'express',
+      name: 'Express Shipping',
+      description: 'Fast delivery',
+      price: 25000,
+      estimatedDays: '1-2 business days',
+      icon: Zap
+    }
+  ]
+
+  const subtotal = getTotalPrice()
+  const selectedShipping = shippingOptions.find(option => option.id === selectedShippingId)
+  const shippingCost = subtotal >= 500000 ? 0 : (selectedShipping?.price || 15000)
+  const totalAmount = subtotal + shippingCost
 
   useEffect(() => {
     if (loading) return // Wait for auth to load
@@ -84,6 +115,10 @@ export default function CheckoutPage() {
       setError('Please select a shipping address')
       return
     }
+    if (currentStep === 2 && !selectedShippingId) {
+      setError('Please select a shipping option')
+      return
+    }
     
     setError('')
     setCurrentStep(currentStep + 1)
@@ -117,6 +152,7 @@ export default function CheckoutPage() {
             quantity: item.quantity,
           })),
           shippingAddressId: selectedAddressId,
+          shippingOption: selectedShippingId,
           totalAmount,
           shippingCost,
         }),
@@ -169,6 +205,12 @@ export default function CheckoutPage() {
               currentStep >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted'
             }`}>
               2
+            </div>
+            <div className={`h-0.5 w-16 ${currentStep >= 3 ? 'bg-primary' : 'bg-muted'}`} />
+            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
+              currentStep >= 3 ? 'bg-primary text-primary-foreground' : 'bg-muted'
+            }`}>
+              3
             </div>
           </div>
         </div>
@@ -240,6 +282,70 @@ export default function CheckoutPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
+                    <Truck className="h-5 w-5" />
+                    Shipping Options
+                  </CardTitle>
+                  <CardDescription>
+                    Choose your preferred shipping method
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RadioGroup value={selectedShippingId} onValueChange={setSelectedShippingId}>
+                    <div className="space-y-4">
+                      {shippingOptions.map((option) => {
+                        const IconComponent = option.icon
+                        const finalPrice = subtotal >= 500000 ? 0 : option.price
+                        return (
+                          <div key={option.id} className="flex items-start space-x-3 p-4 border rounded-lg">
+                            <RadioGroupItem value={option.id} id={option.id} className="mt-1" />
+                            <div className="flex-1">
+                              <Label htmlFor={option.id} className="cursor-pointer">
+                                <div className="flex items-center justify-between mb-1">
+                                  <div className="flex items-center gap-2">
+                                    <IconComponent className="h-4 w-4" />
+                                    <span className="font-semibold">{option.name}</span>
+                                  </div>
+                                  <span className="font-semibold">
+                                    {finalPrice === 0 ? (
+                                      <span className="text-green-600">FREE</span>
+                                    ) : (
+                                      formatPrice(finalPrice)
+                                    )}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  <p>{option.description} • {option.estimatedDays}</p>
+                                </div>
+                              </Label>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </RadioGroup>
+                  
+                  {subtotal >= 500000 && (
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-700">
+                        <Truck className="h-4 w-4" />
+                        <span className="text-sm font-medium">🎉 Free shipping on orders over Rp 500,000!</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {error && (
+                    <div className="text-sm text-destructive mt-4">
+                      {error}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {currentStep === 3 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
                     Order Review
                   </CardTitle>
@@ -263,6 +369,31 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Shipping Information */}
+                  <div>
+                    <h4 className="font-semibold mb-2">Shipping Information</h4>
+                    <div className="bg-muted p-4 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {selectedShipping && (
+                            <selectedShipping.icon className="h-4 w-4" />
+                          )}
+                          <span className="font-medium">{selectedShipping?.name}</span>
+                        </div>
+                        <span className="font-semibold">
+                          {shippingCost === 0 ? (
+                            <span className="text-green-600">FREE</span>
+                          ) : (
+                            formatPrice(shippingCost)
+                          )}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {selectedShipping?.description} • {selectedShipping?.estimatedDays}
+                      </p>
+                    </div>
+                  </div>
 
                   {/* Order Items */}
                   <div>
@@ -311,12 +442,19 @@ export default function CheckoutPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal ({items.length} items)</span>
-                    <span>{formatPrice(getTotalPrice())}</span>
+                    <span>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Shipping</span>
-                    <span>{formatPrice(shippingCost)}</span>
+                    <span>Shipping{shippingCost === 0 ? ' (FREE)' : ''}</span>
+                    <span className={shippingCost === 0 ? 'text-green-600 font-medium' : ''}>
+                      {shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}
+                    </span>
                   </div>
+                  {subtotal >= 500000 && shippingCost === 0 && (
+                    <div className="text-xs text-green-600">
+                      🎉 Free shipping applied!
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex justify-between font-semibold">
                     <span>Total</span>
@@ -325,11 +463,19 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="pt-4 space-y-2">
-                  {currentStep === 1 ? (
-                    <Button onClick={handleNextStep} className="w-full">
-                      Continue
-                      <ChevronRight className="h-4 w-4 ml-2" />
-                    </Button>
+                  {currentStep < 3 ? (
+                    <>
+                      {currentStep > 1 && (
+                        <Button variant="outline" onClick={handlePrevStep} className="w-full">
+                          <ChevronLeft className="h-4 w-4 mr-2" />
+                          Back
+                        </Button>
+                      )}
+                      <Button onClick={handleNextStep} className="w-full">
+                        Continue
+                        <ChevronRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </>
                   ) : (
                     <>
                       <Button variant="outline" onClick={handlePrevStep} className="w-full">
