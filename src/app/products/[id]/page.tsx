@@ -11,7 +11,6 @@ import { useCart } from '@/store/cart'
 import { useAuth } from '@/contexts/AuthContext'
 import { ArrowLeft, Heart, Share2, ShoppingCart, Check } from 'lucide-react'
 import Link from 'next/link'
-import { CartSheet } from '@/components/cart/cart-sheet'
 import { useToast } from '@/hooks/use-toast'
 import ReviewDisplay from '@/components/reviews/review-display'
 
@@ -411,7 +410,6 @@ export default function ProductDetailPage() {
         </Card>
       </div>
       
-      <CartSheet />
     </>
   )
 }

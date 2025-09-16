@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import Head from 'next/head'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ShoppingBag, Recycle, Heart, Star } from 'lucide-react'
@@ -13,6 +14,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import AnimatedProductCard from '@/components/ui/animated-product-card'
 import ScrollReveal from '@/components/ui/scroll-reveal'
+import HeroSlideshow from '@/components/ui/hero-slideshow'
 
 interface Product {
   id: string
@@ -59,6 +61,21 @@ export default function HomePage() {
 
   return (
     <>
+      <Head>
+        <link
+          rel="preload"
+          as="image"
+          href="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=75"
+          imageSizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 400px"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=75"
+        />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+      </Head>
       <MaintenanceBanner />
       <div className="min-h-screen">
         {/* Hero Section */}
@@ -84,7 +101,7 @@ export default function HomePage() {
                   className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.6 }}
+                  transition={{ delay: 0.1, duration: 0.6 }}
                 >
                   <Recycle className="h-4 w-4" />
                   Sustainable Fashion
@@ -93,7 +110,7 @@ export default function HomePage() {
                   className="text-4xl md:text-6xl font-bold leading-tight"
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.8 }}
+                  transition={{ delay: 0.2, duration: 0.8 }}
                 >
                   Sustainable Fashion
                   <span className="block text-primary bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
@@ -104,7 +121,7 @@ export default function HomePage() {
                   className="text-lg md:text-xl text-muted-foreground max-w-2xl"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.6 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
                 >
                   Discover unique, quality pre-loved clothing that tells a story. 
                   Shop consciously, dress beautifully, and make a positive impact on our planet.
@@ -115,13 +132,13 @@ export default function HomePage() {
                   className="flex flex-wrap gap-6 py-4"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8, duration: 0.6 }}
+                  transition={{ delay: 0.4, duration: 0.6 }}
                 >
                   <motion.div 
                     className="text-center"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.0, duration: 0.5 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
                   >
                     <div className="text-2xl font-bold text-primary">1000+</div>
                     <div className="text-sm text-muted-foreground">Happy Customers</div>
@@ -130,7 +147,7 @@ export default function HomePage() {
                     className="text-center"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.1, duration: 0.5 }}
+                    transition={{ delay: 0.6, duration: 0.5 }}
                   >
                     <div className="text-2xl font-bold text-primary">5000+</div>
                     <div className="text-sm text-muted-foreground">Items Sold</div>
@@ -139,7 +156,7 @@ export default function HomePage() {
                     className="text-center"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.2, duration: 0.5 }}
+                    transition={{ delay: 0.7, duration: 0.5 }}
                   >
                     <div className="text-2xl font-bold text-primary">95%</div>
                     <div className="text-sm text-muted-foreground">Satisfaction Rate</div>
@@ -150,7 +167,7 @@ export default function HomePage() {
                   className="flex flex-col sm:flex-row gap-4"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.0, duration: 0.6 }}
+                  transition={{ delay: 0.5, duration: 0.6 }}
                 >
                   <motion.div
                     whileHover={{ scale: 1.05 }}
@@ -178,43 +195,16 @@ export default function HomePage() {
                 className="relative lg:col-span-1"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
               >
-                {/* Decorative rings */}
-                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-primary/10 rounded-full blur-2xl animate-pulse"></div>
-                <div className="absolute -inset-2 border border-primary/20 rounded-full animate-spin-slow"></div>
+                {/* Decorative rings - simplified */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-primary/10 rounded-full blur-2xl"></div>
                 
                 <motion.div 
-                  className="relative aspect-square max-w-sm mx-auto rounded-2xl overflow-hidden bg-muted shadow-2xl"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.3 }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <Image
-                    src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=400&fit=crop"
-                    alt="Thrift fashion collection"
-                    width={400}
-                    height={400}
-                    priority
-                    className="object-cover w-full h-full hover:scale-105 transition-transform duration-700"
-                  />
-                  
-                  {/* Floating badges */}
-                  <motion.div 
-                    className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-primary shadow-lg"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.0, duration: 0.5 }}
-                  >
-                    ✨ Curated
-                  </motion.div>
-                  <motion.div 
-                    className="absolute bottom-4 right-4 bg-primary text-primary-foreground rounded-full px-3 py-1 text-xs font-medium shadow-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1.2, duration: 0.5 }}
-                  >
-                    Eco-Friendly
-                  </motion.div>
+                  <HeroSlideshow />
                 </motion.div>
               </motion.div>
             </div>

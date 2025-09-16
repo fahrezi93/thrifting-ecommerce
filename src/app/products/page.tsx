@@ -13,7 +13,6 @@ import { Slider } from '@/components/ui/slider'
 import { Search, Filter, SlidersHorizontal } from 'lucide-react'
 import { useCart } from '@/store/cart'
 import { useAuth } from '@/contexts/AuthContext'
-import { CartSheet } from '@/components/cart/cart-sheet'
 import { motion } from 'framer-motion'
 import ScrollReveal from '@/components/ui/scroll-reveal'
 
@@ -391,7 +390,6 @@ export default function ProductsPage() {
         </div>
       </div>
       
-      <CartSheet />
     </>
   )
 }

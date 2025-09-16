@@ -10,6 +10,7 @@ import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { ToastProvider, ToastViewport } from '@/components/ui/toast'
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
+import { CartSheet } from '@/components/cart/cart-sheet'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -74,6 +75,7 @@ export default function RootLayout({
                   </div>
                   <ToastViewport />
                   <PWAInstallPrompt />
+                  <CartSheet />
                 </ToastProvider>
               </Providers>
             </StoreStatusWrapper>
