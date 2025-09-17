@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ShoppingBag, Search, User, Menu, X, Settings, LogOut, UserCircle, Shield } from 'lucide-react'
+import { ShoppingBag, Search, User, Menu, X, Settings, LogOut, UserCircle, Shield, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { 
@@ -23,6 +23,7 @@ import { useStore } from '@/contexts/StoreContext'
 import { PWAInstallButton } from '@/components/pwa-install-button'
 import { useDisplayMode } from '@/hooks/use-display-mode'
 import { NotificationBell } from '@/components/layout/notification-bell'
+import { WishlistButton } from '@/components/layout/wishlist-button'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // Component to check and display admin menu
@@ -143,6 +144,11 @@ export function Navbar() {
               <NotificationBell />
             </div>
             
+            {/* Wishlist */}
+            {user && (
+              <WishlistButton />
+            )}
+            
             {/* Cart */}
             <ClientOnly fallback={
               <Button
@@ -212,6 +218,12 @@ export function Navbar() {
                       <Link href="/profile" className="cursor-pointer">
                         <UserCircle className="mr-2 h-4 w-4" />
                         <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/wishlist" className="cursor-pointer">
+                        <Heart className="mr-2 h-4 w-4" />
+                        <span>Wishlist</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -318,6 +330,7 @@ export function Navbar() {
                     {[
                       { href: "/products", label: "Shop" },
                       { href: "/categories", label: "Categories" },
+                      ...(user ? [{ href: "/wishlist", label: "Wishlist" }] : []),
                       { href: "/about", label: "About" }
                     ].map((item, index) => (
                       <motion.div
