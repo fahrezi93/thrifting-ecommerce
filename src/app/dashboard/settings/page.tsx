@@ -12,58 +12,230 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge'
 import { Bell, Shield, User, Moon, Sun, Trash2, LogOut, Mail } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/hooks/use-toast'
+
+interface UserPreferences {
+  id: string
+  userId: string
+  emailNotifications: boolean
+  orderUpdates: boolean
+  promotions: boolean
+  darkMode: boolean
+  profileVisibility: boolean
+  dataSharing: boolean
+  createdAt: string
+  updatedAt: string
+}
 
 export default function SettingsPage() {
   const { user, logout } = useAuth()
   const router = useRouter()
+  const { addToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   
-  // Notification settings
+  // Individual state for each preference
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [orderUpdates, setOrderUpdates] = useState(true)
   const [promotions, setPromotions] = useState(false)
-  
-  // Theme settings
   const [darkMode, setDarkMode] = useState(false)
-  
-  // Privacy settings
   const [profileVisibility, setProfileVisibility] = useState(true)
   const [dataSharing, setDataSharing] = useState(false)
 
   useEffect(() => {
-    // Load user preferences from localStorage or API
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark') {
-      setDarkMode(true)
+    if (user) {
+      fetchUserPreferences()
     }
-  }, [])
+  }, [user])
+
+  const fetchUserPreferences = async () => {
+    try {
+      if (!user) return
+      
+      const token = await user.getIdToken?.()
+      if (!token) return
+      
+      const response = await fetch('/api/user/preferences', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      if (response.ok) {
+        const prefs = await response.json()
+        setPreferences(prefs)
+        
+        // Update individual state variables
+        setEmailNotifications(prefs.emailNotifications)
+        setOrderUpdates(prefs.orderUpdates)
+        setPromotions(prefs.promotions)
+        setDarkMode(prefs.darkMode)
+        setProfileVisibility(prefs.profileVisibility)
+        setDataSharing(prefs.dataSharing)
+        
+        // Apply dark mode to document
+        if (prefs.darkMode) {
+          document.documentElement.classList.add('dark')
+          localStorage.setItem('theme', 'dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+          localStorage.setItem('theme', 'light')
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user preferences:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to load preferences',
+        variant: 'destructive'
+      })
+    }
+  }
 
   const handleSaveNotifications = async () => {
     setIsLoading(true)
     setMessage('')
     
     try {
-      // Simulate API call to save notification preferences
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setMessage('Notification preferences updated successfully!')
+      if (!user) return
+      
+      const token = await user.getIdToken?.()
+      if (!token) return
+      
+      const response = await fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          emailNotifications,
+          orderUpdates,
+          promotions
+        })
+      })
+      
+      if (response.ok) {
+        const updatedPrefs = await response.json()
+        setPreferences(updatedPrefs)
+        addToast({
+          title: 'Success!',
+          description: 'Notification preferences updated successfully!',
+          variant: 'success'
+        })
+      } else {
+        throw new Error('Failed to update preferences')
+      }
     } catch (error) {
-      setMessage('Failed to update notification preferences')
+      console.error('Error updating notification preferences:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to update notification preferences',
+        variant: 'destructive'
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleThemeToggle = (enabled: boolean) => {
+  const handleThemeToggle = async (enabled: boolean) => {
     setDarkMode(enabled)
     localStorage.setItem('theme', enabled ? 'dark' : 'light')
-    // Apply theme to document
+    
+    // Apply theme to document immediately
     if (enabled) {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
     }
-    setMessage('Theme updated successfully!')
+    
+    // Save to API
+    try {
+      if (!user) return
+      
+      const token = await user.getIdToken?.()
+      if (!token) return
+      
+      const response = await fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          darkMode: enabled
+        })
+      })
+      
+      if (response.ok) {
+        const updatedPrefs = await response.json()
+        setPreferences(updatedPrefs)
+        addToast({
+          title: 'Success!',
+          description: 'Theme updated successfully!',
+          variant: 'success'
+        })
+      }
+    } catch (error) {
+      console.error('Error updating theme preference:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to save theme preference',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const handlePrivacySettingChange = async (setting: 'profileVisibility' | 'dataSharing', value: boolean) => {
+    try {
+      if (!user) return
+      
+      const token = await user.getIdToken?.()
+      if (!token) return
+      
+      // Update local state immediately
+      if (setting === 'profileVisibility') {
+        setProfileVisibility(value)
+      } else {
+        setDataSharing(value)
+      }
+      
+      const response = await fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          [setting]: value
+        })
+      })
+      
+      if (response.ok) {
+        const updatedPrefs = await response.json()
+        setPreferences(updatedPrefs)
+        addToast({
+          title: 'Success!',
+          description: 'Privacy setting updated successfully!',
+          variant: 'success'
+        })
+      }
+    } catch (error) {
+      console.error('Error updating privacy setting:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to update privacy setting',
+        variant: 'destructive'
+      })
+      
+      // Revert local state on error
+      if (setting === 'profileVisibility') {
+        setProfileVisibility(!value)
+      } else {
+        setDataSharing(!value)
+      }
+    }
   }
 
   const handleDeleteAccount = async () => {
@@ -249,7 +421,7 @@ export default function SettingsPage() {
               </div>
               <Switch
                 checked={profileVisibility}
-                onCheckedChange={setProfileVisibility}
+                onCheckedChange={(value) => handlePrivacySettingChange('profileVisibility', value)}
               />
             </div>
             
@@ -262,7 +434,7 @@ export default function SettingsPage() {
               </div>
               <Switch
                 checked={dataSharing}
-                onCheckedChange={setDataSharing}
+                onCheckedChange={(value) => handlePrivacySettingChange('dataSharing', value)}
               />
             </div>
           </div>
