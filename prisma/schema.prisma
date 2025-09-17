@@ -42,6 +42,7 @@ model User {
   image         String?
   role          UserRole  @default(USER)
   phone         String?
+  address       String?
   password      String?
   cartData      String?   // JSON string for cart items
   createdAt     DateTime  @default(now())
@@ -53,6 +54,7 @@ model User {
   notifications Notification[]
   reviews   Review[]
   preferences UserPreferences?
+  contactMessages ContactMessage[]
 }
 
 
@@ -252,18 +254,44 @@ model PushSubscription {
 }
 
 model UserPreferences {
-  id                  String   @id @default(cuid())
-  userId              String   @unique
-  emailNotifications  Boolean  @default(true)
-  orderUpdates        Boolean  @default(true)
-  promotions          Boolean  @default(false)
-  darkMode            Boolean  @default(false)
-  profileVisibility   Boolean  @default(true)
-  dataSharing         Boolean  @default(false)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Notification preferences
+  emailNotifications Boolean  @default(true)
+  orderUpdates      Boolean  @default(true)
+  promotions        Boolean  @default(false)
+  
+  // Privacy preferences
+  profileVisibility Boolean  @default(true)
+  dataSharing       Boolean  @default(false)
+  
+  // Theme preferences
+  theme             String   @default("light") // "light", "dark", "system"
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    ContactStatus @default(PENDING)
+  userId    String?  // Optional - if user is logged in
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ContactStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+

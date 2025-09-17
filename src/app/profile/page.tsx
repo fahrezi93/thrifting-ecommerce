@@ -24,7 +24,8 @@ interface UserProfile {
 
 interface Order {
   id: string
-  total: number
+  orderNumber?: string
+  totalAmount: number
   status: string
   createdAt: string
   items: {
@@ -105,17 +106,32 @@ export default function ProfilePage() {
       
       if (response.ok) {
         const data = await response.json()
+        console.log('Orders data received:', data)
         // Transform the data to match expected format
         const transformedOrders = data.map((order: any) => ({
           ...order,
-          items: order.orderItems?.map((orderItem: any) => ({
-            id: orderItem.product?.id || orderItem.id,
-            name: orderItem.product?.name || 'Unknown Product',
-            price: orderItem.price || 0,
-            quantity: orderItem.quantity || 1,
-            imageUrls: orderItem.product?.imageUrls || []
-          })) || []
+          items: order.orderItems?.map((orderItem: any) => {
+            // Parse imageUrls from JSON string
+            let imageUrls = []
+            try {
+              if (orderItem.product?.imageUrls) {
+                imageUrls = JSON.parse(orderItem.product.imageUrls)
+              }
+            } catch (error) {
+              console.error('Error parsing imageUrls:', error)
+              imageUrls = []
+            }
+            
+            return {
+              id: orderItem.product?.id || orderItem.id,
+              name: orderItem.product?.name || 'Unknown Product',
+              price: orderItem.price || 0,
+              quantity: orderItem.quantity || 1,
+              imageUrls: imageUrls
+            }
+          }) || []
         }))
+        console.log('Transformed orders:', transformedOrders)
         setOrders(transformedOrders)
       }
     } catch (error) {
@@ -421,14 +437,14 @@ export default function ProfilePage() {
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <h4 className="font-semibold">Order #{order.id?.slice(-8) || 'N/A'}</h4>
+                              <h4 className="font-semibold">Order #{order.orderNumber?.slice(-8) || order.id?.slice(-8) || 'N/A'}</h4>
                               <p className="text-sm text-muted-foreground">
                                 {order.createdAt ? formatDate(order.createdAt) : 'N/A'}
                               </p>
                             </div>
                             <div className="text-right">
                               {getStatusBadge(order.status || 'UNKNOWN')}
-                              <p className="font-semibold mt-1">{formatPrice(order.total || 0)}</p>
+                              <p className="font-semibold mt-1">{formatPrice(order.totalAmount || 0)}</p>
                             </div>
                           </div>
                           

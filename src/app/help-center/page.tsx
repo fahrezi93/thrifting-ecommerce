@@ -1,11 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, MessageCircle, Phone, Mail, Clock } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ChevronDown, ChevronUp, Search, MessageCircle, Phone, Mail, MapPin, Clock } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/hooks/use-toast'
 import { useStoreSettings } from '@/hooks/use-store-settings'
 
 const faqs = [
@@ -45,6 +48,7 @@ const faqs = [
 
 export default function HelpCenter() {
   const { settings, loading } = useStoreSettings()
+  const { addToast } = useToast()
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [contactForm, setContactForm] = useState({
     name: '',
@@ -52,17 +56,51 @@ export default function HelpCenter() {
     subject: '',
     message: ''
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index)
   }
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle contact form submission
-    console.log('Contact form submitted:', contactForm)
-    alert('Thank you for your message! We\'ll get back to you within 24 hours.')
-    setContactForm({ name: '', email: '', subject: '', message: '' })
+    setIsSubmitting(true)
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactForm)
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        addToast({
+          title: '✅ Message Sent Successfully!',
+          description: 'Thank you for contacting us! We\'ll get back to you within 24 hours.',
+          variant: 'success'
+        })
+        setContactForm({ name: '', email: '', subject: '', message: '' })
+      } else {
+        addToast({
+          title: '❌ Failed to Send Message',
+          description: data.error || 'Please try again or contact us directly.',
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      console.error('Error sending contact message:', error)
+      addToast({
+        title: '🌐 Network Error',
+        description: 'Please check your internet connection and try again.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (loading) {
@@ -251,8 +289,19 @@ export default function HelpCenter() {
                 />
               </div>
               <div className="md:col-span-2">
-                <Button type="submit" className="w-full md:w-auto">
-                  Send Message
+                <Button 
+                  type="submit" 
+                  className="w-full md:w-auto"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Message'
+                  )}
                 </Button>
               </div>
             </form>

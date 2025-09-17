@@ -23,7 +23,6 @@ import { useStore } from '@/contexts/StoreContext'
 import { PWAInstallButton } from '@/components/pwa-install-button'
 import { useDisplayMode } from '@/hooks/use-display-mode'
 import { NotificationBell } from '@/components/layout/notification-bell'
-import { WishlistButton } from '@/components/layout/wishlist-button'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // Component to check and display admin menu
@@ -144,10 +143,6 @@ export function Navbar() {
               <NotificationBell />
             </div>
             
-            {/* Wishlist */}
-            {user && (
-              <WishlistButton />
-            )}
             
             {/* Cart */}
             <ClientOnly fallback={
@@ -221,9 +216,11 @@ export function Navbar() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/wishlist" className="cursor-pointer">
-                        <Heart className="mr-2 h-4 w-4" />
-                        <span>Wishlist</span>
+                      <Link href="/wishlist" className="cursor-pointer flex items-center justify-between w-full">
+                        <div className="flex items-center">
+                          <Heart className="mr-2 h-4 w-4" />
+                          <span>Wishlist</span>
+                        </div>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -330,7 +327,6 @@ export function Navbar() {
                     {[
                       { href: "/products", label: "Shop" },
                       { href: "/categories", label: "Categories" },
-                      ...(user ? [{ href: "/wishlist", label: "Wishlist" }] : []),
                       { href: "/about", label: "About" }
                     ].map((item, index) => (
                       <motion.div

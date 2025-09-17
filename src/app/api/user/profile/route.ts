@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
         name: true,
         email: true,
         phone: true,
+        address: true,
         role: true,
         createdAt: true,
       }
@@ -48,12 +49,14 @@ export async function PUT(request: NextRequest) {
       data: {
         name,
         phone,
+        address,
       },
       select: {
         id: true,
         name: true,
         email: true,
         phone: true,
+        address: true,
         role: true,
         createdAt: true,
       }

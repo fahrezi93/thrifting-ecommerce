@@ -245,32 +245,41 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Recent Orders */}
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg md:text-xl">Recent Orders</CardTitle>
             <CardDescription>Latest orders from customers</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {stats.recentOrders.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No recent orders</p>
               ) : (
                 stats.recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">#{order.orderNumber}</p>
-                      <p className="text-sm text-muted-foreground">{order.user.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
+                  <div key={order.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg space-y-2 sm:space-y-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm md:text-base truncate">
+                        #{order.orderNumber.slice(-8)}
+                      </p>
+                      <p className="text-xs md:text-sm text-muted-foreground truncate">
+                        {order.user.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(order.createdAt)}
+                      </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{formatPrice(order.totalAmount)}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
+                    <div className="flex items-center justify-between sm:flex-col sm:items-end sm:justify-center gap-2">
+                      <p className="font-semibold text-sm md:text-base">
+                        {formatPrice(order.totalAmount)}
+                      </p>
+                      <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
                         order.status === 'PAID' ? 'bg-green-100 text-green-800' :
                         order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                         order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'COMPLETED' ? 'bg-purple-100 text-purple-800' :
+                        order.status === 'COMPLETED' || order.status === 'DELIVERED' ? 'bg-purple-100 text-purple-800' :
+                        order.status === 'PROCESSING' ? 'bg-orange-100 text-orange-800' :
                         'bg-red-100 text-red-800'
                       }`}>
                         {order.status}
@@ -285,19 +294,19 @@ export default function AdminDashboard() {
 
         {/* Low Stock Products */}
         <Card>
-          <CardHeader>
-            <CardTitle>Low Stock Alert</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg md:text-xl">Low Stock Alert</CardTitle>
             <CardDescription>Products running low on inventory</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {stats.lowStockProducts.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">All products well stocked</p>
               ) : (
                 stats.lowStockProducts.map((product) => (
                   <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="relative h-10 w-10 flex-shrink-0">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="relative h-8 w-8 md:h-10 md:w-10 flex-shrink-0">
                         {product.imageUrls && product.imageUrls.length > 0 ? (
                           <img
                             src={typeof product.imageUrls === 'string' ? JSON.parse(product.imageUrls)[0] : product.imageUrls[0]}
@@ -310,18 +319,18 @@ export default function AdminDashboard() {
                           />
                         ) : (
                           <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
-                            <Package className="h-4 w-4 text-gray-400" />
+                            <Package className="h-3 w-3 md:h-4 md:w-4 text-gray-400" />
                           </div>
                         )}
                       </div>
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">Stock: {product.stock}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm md:text-base truncate">{product.name}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Stock: {product.stock}</p>
                       </div>
                     </div>
-                    <div className="flex items-center text-orange-600">
-                      <TrendingDown className="h-4 w-4 mr-1" />
-                      <span className="text-sm font-medium">Low</span>
+                    <div className="flex items-center text-orange-600 flex-shrink-0">
+                      <TrendingDown className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                      <span className="text-xs md:text-sm font-medium">Low</span>
                     </div>
                   </div>
                 ))

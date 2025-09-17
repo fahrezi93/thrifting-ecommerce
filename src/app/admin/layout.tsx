@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Package, ShoppingCart, Users, BarChart3, Settings, Bell } from 'lucide-react'
+import { Package, ShoppingCart, Users, BarChart3, Settings, Bell, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const sidebarItems = [
@@ -33,6 +33,11 @@ const sidebarItems = [
     title: 'Users',
     href: '/admin/users',
     icon: Users,
+  },
+  {
+    title: 'Contact Messages',
+    href: '/admin/contact-messages',
+    icon: MessageSquare,
   },
   {
     title: 'Notifications',
@@ -103,44 +108,58 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* Sidebar */}
-        <div className="md:col-span-1">
-          <div className="bg-card rounded-lg border p-6">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold">Admin Panel</h2>
-              <p className="text-sm text-muted-foreground">Manage your store</p>
-            </div>
-            
-            <nav className="space-y-2">
-              {sidebarItems.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.href
-                
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                )
-              })}
-            </nav>
+    <div className="min-h-screen bg-background">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-card border-b px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold">Admin Panel</h1>
+            <p className="text-sm text-muted-foreground">Manage your store</p>
           </div>
         </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="md:col-span-3">
-          {children}
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="flex flex-col md:grid md:grid-cols-4 gap-4 md:gap-8">
+          {/* Mobile Sidebar - Horizontal scroll */}
+          <div className="md:col-span-1 md:sticky md:top-4 md:h-fit">
+            <div className="bg-card rounded-lg border p-3 md:p-6">
+              {/* Desktop Header */}
+              <div className="hidden md:block mb-6">
+                <h2 className="text-lg font-semibold">Admin Panel</h2>
+                <p className="text-sm text-muted-foreground">Manage your store</p>
+              </div>
+              
+              {/* Mobile: Horizontal scroll navigation */}
+              <nav className="flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
+                {sidebarItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href
+                  
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'flex items-center space-x-2 md:space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap min-w-fit',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      )}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="hidden sm:inline md:inline">{item.title}</span>
+                    </Link>
+                  )
+                })}
+              </nav>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="md:col-span-3 min-w-0">
+            {children}
+          </div>
         </div>
       </div>
     </div>

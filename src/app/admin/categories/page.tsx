@@ -158,15 +158,16 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="space-y-4 md:space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Categories</h1>
           <p className="text-gray-600">Manage product categories</p>
         </div>
-        <Button
-          onClick={() => setShowForm(true)}
-          className="bg-green-600 hover:bg-green-700"
+        <Button 
+          onClick={() => setShowForm(!showForm)}
+          className="w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Category
@@ -274,68 +275,78 @@ export default function CategoriesPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {categories.map((category) => (
-          <Card key={category.id} className="relative">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {category.name}
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-2">
-                    Slug: {category.slug}
-                  </p>
-                  {category.description && (
-                    <p className="text-sm text-gray-600 mb-3">
-                      {category.description}
-                    </p>
+          <Card key={category.id} className="overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              {/* Mobile: Stack layout */}
+              <div className="space-y-3 md:space-y-4">
+                {/* Image and Title */}
+                <div className="flex items-start space-x-3 md:space-x-4">
+                  {category.imageUrl ? (
+                    <img
+                      src={category.imageUrl}
+                      alt={category.name}
+                      className="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Package className="w-6 h-6 md:w-8 md:h-8 text-gray-400" />
+                    </div>
                   )}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900 truncate">
+                      {category.name}
+                    </h3>
+                    <p className="text-xs md:text-sm text-gray-500 truncate">
+                      Slug: {category.slug}
+                    </p>
+                    {category.description && (
+                      <p className="text-xs md:text-sm text-gray-600 mt-1 line-clamp-2">
+                        {category.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                {category.imageUrl && (
-                  <img
-                    src={category.imageUrl}
-                    alt={category.name}
-                    className="w-16 h-16 object-cover rounded-lg ml-4"
-                  />
-                )}
-              </div>
 
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Package className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">
-                    {category._count.products} products
-                  </span>
+                {/* Stats and Status */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1 md:space-x-2">
+                    <Package className="w-3 h-3 md:w-4 md:h-4 text-gray-500" />
+                    <span className="text-xs md:text-sm text-gray-600">
+                      {category._count.products} products
+                    </span>
+                  </div>
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    category.isActive 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {category.isActive ? 'Active' : 'Inactive'}
+                  </div>
                 </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  category.isActive 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {category.isActive ? 'Active' : 'Inactive'}
-                </div>
-              </div>
 
-              <div className="flex space-x-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleEdit(category)}
-                  className="flex-1"
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDelete(category)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  disabled={category._count.products > 0}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                {/* Actions */}
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(category)}
+                    className="flex-1"
+                  >
+                    <Edit className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                    <span className="hidden sm:inline">Edit</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDelete(category)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    disabled={category._count.products > 0}
+                  >
+                    <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
