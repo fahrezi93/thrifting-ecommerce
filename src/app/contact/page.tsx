@@ -342,7 +342,7 @@ export default function Contact() {
           <CardHeader>
             <CardTitle>Find Us</CardTitle>
             <CardDescription>
-              Visit our physical store in Jakarta for the full thrift shopping experience
+              Visit our physical store in Cirebon for the full thrift shopping experience
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -350,7 +350,7 @@ export default function Contact() {
               <div className="text-center text-gray-500">
                 <MapPin className="h-12 w-12 mx-auto mb-2" />
                 <p className="text-sm">Interactive map would be displayed here</p>
-                <p className="text-xs">Jl. Sudirman No. 123, Jakarta Pusat</p>
+                <p className="text-xs">Jl. Samadikun Gg. Empang 1 No. 43, Cirebon City</p>
               </div>
             </div>
           </CardContent>

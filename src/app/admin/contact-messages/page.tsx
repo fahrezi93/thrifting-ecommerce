@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Mail, User, Calendar, MessageSquare, Reply, CheckCircle, X, Loader2 } from 'lucide-react'
+import { Mail, User, Calendar, MessageSquare, Reply, CheckCircle, X, Loader2, Phone } from 'lucide-react'
 import { ReplyModal } from '@/components/admin/reply-modal'
 import { EmailStatusIndicator } from '@/components/admin/email-status-indicator'
 
@@ -14,10 +14,10 @@ interface ContactMessage {
   id: string
   name: string
   email: string
+  phone?: string
   subject: string
   message: string
   status: 'PENDING' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'
-  userId?: string
   user?: {
     id: string
     name: string
@@ -263,6 +263,12 @@ export default function ContactMessagesPage() {
                         <Mail className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
                         <span className="truncate text-xs md:text-sm">{message.email}</span>
                       </span>
+                      {message.phone && (
+                        <span className="flex items-center gap-1">
+                          <Phone className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                          <span className="text-xs md:text-sm">{message.phone}</span>
+                        </span>
+                      )}
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
                         <span className="text-xs md:text-sm">{formatDate(message.createdAt)}</span>

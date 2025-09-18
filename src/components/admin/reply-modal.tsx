@@ -12,6 +12,7 @@ interface ContactMessage {
   id: string
   name: string
   email: string
+  phone?: string
   subject: string
   message: string
   status: string
@@ -100,6 +101,12 @@ export function ReplyModal({ isOpen, onClose, contactMessage, onSuccess }: Reply
                 <Label className="font-medium">Email:</Label>
                 <p className="text-muted-foreground">{contactMessage.email}</p>
               </div>
+              {contactMessage.phone && (
+                <div>
+                  <Label className="font-medium">Phone:</Label>
+                  <p className="text-muted-foreground">{contactMessage.phone}</p>
+                </div>
+              )}
             </div>
             <div>
               <Label className="font-medium">Subject:</Label>
