@@ -6,7 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Mail, User, Calendar, MessageSquare } from 'lucide-react'
+import { Mail, User, Calendar, MessageSquare, Reply, CheckCircle, X, Loader2 } from 'lucide-react'
+import { ReplyModal } from '@/components/admin/reply-modal'
+import { EmailStatusIndicator } from '@/components/admin/email-status-indicator'
 
 interface ContactMessage {
   id: string
@@ -42,6 +44,20 @@ export default function ContactMessagesPage() {
     limit: 10,
     total: 0,
     pages: 0
+  })
+  const [replyModal, setReplyModal] = useState<{
+    isOpen: boolean
+    message: ContactMessage | null
+  }>({
+    isOpen: false,
+    message: null
+  })
+  const [actionLoading, setActionLoading] = useState<{
+    messageId: string
+    action: 'resolve' | 'close' | null
+  }>({
+    messageId: '',
+    action: null
   })
 
   useEffect(() => {
@@ -105,6 +121,77 @@ export default function ContactMessagesPage() {
     })
   }
 
+  const handleReply = (message: ContactMessage) => {
+    setReplyModal({
+      isOpen: true,
+      message
+    })
+  }
+
+  const handleMarkAsResolved = async (messageId: string) => {
+    if (!user) return
+
+    setActionLoading({ messageId, action: 'resolve' })
+
+    try {
+      const token = await user.getIdToken?.()
+      if (!token) return
+
+      const response = await fetch(`/api/admin/contact-messages/${messageId}/resolve`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        await fetchMessages() // Refresh the list
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error || 'Failed to mark as resolved'}`)
+      }
+    } catch (error) {
+      console.error('Error marking as resolved:', error)
+      alert('Failed to mark as resolved. Please try again.')
+    } finally {
+      setActionLoading({ messageId: '', action: null })
+    }
+  }
+
+  const handleClose = async (messageId: string) => {
+    if (!user) return
+
+    setActionLoading({ messageId, action: 'close' })
+
+    try {
+      const token = await user.getIdToken?.()
+      if (!token) return
+
+      const response = await fetch(`/api/admin/contact-messages/${messageId}/close`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        await fetchMessages() // Refresh the list
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error || 'Failed to close message'}`)
+      }
+    } catch (error) {
+      console.error('Error closing message:', error)
+      alert('Failed to close message. Please try again.')
+    } finally {
+      setActionLoading({ messageId: '', action: null })
+    }
+  }
+
+  const handleReplySuccess = () => {
+    fetchMessages() // Refresh the list after successful reply
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -122,6 +209,9 @@ export default function ContactMessagesPage() {
           Manage customer inquiries and support requests
         </p>
       </div>
+
+      {/* Email Status Indicator */}
+      <EmailStatusIndicator />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
@@ -199,13 +289,44 @@ export default function ContactMessagesPage() {
                 )}
                 
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 sm:flex-none"
+                    onClick={() => handleReply(message)}
+                    disabled={message.status === 'CLOSED'}
+                  >
+                    <Reply className="h-4 w-4 mr-2" />
                     Reply
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 sm:flex-none"
+                    onClick={() => handleMarkAsResolved(message.id)}
+                    disabled={message.status === 'RESOLVED' || message.status === 'CLOSED' || 
+                             (actionLoading.messageId === message.id && actionLoading.action === 'resolve')}
+                  >
+                    {actionLoading.messageId === message.id && actionLoading.action === 'resolve' ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                    )}
                     Mark as Resolved
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 sm:flex-none"
+                    onClick={() => handleClose(message.id)}
+                    disabled={message.status === 'CLOSED' || 
+                             (actionLoading.messageId === message.id && actionLoading.action === 'close')}
+                  >
+                    {actionLoading.messageId === message.id && actionLoading.action === 'close' ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <X className="h-4 w-4 mr-2" />
+                    )}
                     Close
                   </Button>
                 </div>
@@ -270,6 +391,14 @@ export default function ContactMessagesPage() {
           </div>
         </div>
       )}
+
+      {/* Reply Modal */}
+      <ReplyModal
+        isOpen={replyModal.isOpen}
+        onClose={() => setReplyModal({ isOpen: false, message: null })}
+        contactMessage={replyModal.message}
+        onSuccess={handleReplySuccess}
+      />
     </div>
   )
 }

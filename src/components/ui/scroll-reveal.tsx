@@ -46,7 +46,8 @@ const ScrollReveal = ({
       }}
       viewport={{ 
         once: true, 
-        amount: 0.3 
+        amount: 0.1,
+        margin: "0px 0px -100px 0px"
       }}
     >
       {children}

@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Package, ShoppingCart, Users, BarChart3, Settings, Bell, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ContactNotificationListener } from '@/components/admin/contact-notification-listener'
+import { ContactMessageBadge } from '@/components/admin/contact-message-badge'
 
 const sidebarItems = [
   {
@@ -149,6 +151,7 @@ export default function AdminLayout({
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
                       <span className="hidden sm:inline md:inline">{item.title}</span>
+                      {item.href === '/admin/contact-messages' && <ContactMessageBadge />}
                     </Link>
                   )
                 })}
@@ -162,6 +165,9 @@ export default function AdminLayout({
           </div>
         </div>
       </div>
+
+      {/* Notification Components */}
+      <ContactNotificationListener />
     </div>
   )
 }

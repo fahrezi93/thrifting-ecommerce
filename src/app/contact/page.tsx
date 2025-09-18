@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin, Phone, Mail, Clock, Send, MessageCircle } from 'lucide-react'
+import { MapPin, Phone, Mail, Clock, Send, MessageCircle, Loader2 } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 
 export default function Contact() {
+  const { user } = useAuth()
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
@@ -16,13 +18,47 @@ export default function Contact() {
     subject: '',
     message: ''
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log('Contact form submitted:', contactForm)
-    alert('Thank you for your message! We\'ll get back to you within 24 hours.')
-    setContactForm({ name: '', email: '', phone: '', subject: '', message: '' })
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: contactForm.name,
+          email: contactForm.email,
+          phone: contactForm.phone,
+          subject: contactForm.subject,
+          message: contactForm.message,
+          userId: user?.id || null
+        })
+      })
+
+      if (response.ok) {
+        setSubmitStatus('success')
+        setContactForm({ name: '', email: '', phone: '', subject: '', message: '' })
+        
+        // Trigger notification to admin (we'll implement this)
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          // This will be for admin notifications
+        }
+      } else {
+        setSubmitStatus('error')
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error)
+      setSubmitStatus('error')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -213,10 +249,42 @@ export default function Contact() {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full md:w-auto flex items-center">
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Message
-                  </Button>
+                  <div className="space-y-4">
+                    <Button 
+                      type="submit" 
+                      className="w-full md:w-auto flex items-center" 
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Send Message
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Status Messages */}
+                    {submitStatus === 'success' && (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-green-800 text-sm">
+                          ✅ Thank you for your message! We'll get back to you within 24 hours.
+                        </p>
+                      </div>
+                    )}
+
+                    {submitStatus === 'error' && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-red-800 text-sm">
+                          ❌ Sorry, there was an error sending your message. Please try again.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </form>
               </CardContent>
             </Card>

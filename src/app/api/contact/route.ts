@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from '@/lib/auth'
+import { pusher } from '@/lib/pusher'
 
 // POST - Submit contact message
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, subject, message } = await request.json()
+    const { name, email, subject, message, phone, userId } = await request.json()
 
     // Validate required fields
     if (!name || !email || !subject || !message) {
@@ -15,15 +16,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user session if available (optional)
-    let userId = null
-    try {
-      const user = await getServerSession(request)
-      if (user) {
-        userId = user.id
+    // Use userId from request or try to get from session
+    let finalUserId = userId
+    if (!finalUserId) {
+      try {
+        const user = await getServerSession(request)
+        if (user) {
+          finalUserId = user.id
+        }
+      } catch (error) {
+        // User not logged in, that's fine for contact form
       }
-    } catch (error) {
-      // User not logged in, that's fine for contact form
     }
 
     // Create contact message
@@ -31,27 +34,58 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
+        phone,
         subject,
         message,
-        userId,
+        userId: finalUserId,
         status: 'PENDING'
       }
     })
 
-    // TODO: Send email notification to admin
-    // You can integrate with email services like:
-    // - Nodemailer
-    // - SendGrid
-    // - AWS SES
-    // - Resend
-    
-    console.log('New contact message received:', {
-      id: contactMessage.id,
-      name,
-      email,
-      subject,
-      message: message.substring(0, 100) + '...'
-    })
+    // Send real-time notification to all admin users
+    try {
+      // Get all admin users
+      const adminUsers = await (prisma as any).user.findMany({
+        where: { role: 'ADMIN' },
+        select: { id: true, name: true }
+      })
+
+      // Create notifications for all admin users
+      for (const admin of adminUsers) {
+        await (prisma as any).notification.create({
+          data: {
+            userId: admin.id,
+            title: 'New Contact Message',
+            message: `${name} sent a message: "${subject}"`,
+            type: 'CONTACT_MESSAGE',
+            relatedId: contactMessage.id,
+            isRead: false
+          }
+        })
+      }
+
+      // Send real-time notification via Pusher
+      await pusher.trigger('admin-notifications', 'new-contact-message', {
+        id: contactMessage.id,
+        name,
+        email,
+        subject,
+        message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+        createdAt: contactMessage.createdAt,
+        status: 'PENDING'
+      })
+
+      console.log('New contact message received and notifications sent:', {
+        id: contactMessage.id,
+        name,
+        email,
+        subject,
+        adminNotified: adminUsers.length
+      })
+    } catch (notificationError) {
+      console.error('Error sending notifications:', notificationError)
+      // Don't fail the main request if notifications fail
+    }
 
     return NextResponse.json({
       success: true,

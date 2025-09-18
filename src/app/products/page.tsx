@@ -324,7 +324,12 @@ export default function ProductsPage() {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {products.map((product, index) => (
-                    <ScrollReveal key={product.id} direction="up" delay={index * 0.1}>
+                    <ScrollReveal 
+                      key={product.id} 
+                      direction="up" 
+                      delay={Math.min(index * 0.05, 0.3)}
+                      duration={0.4}
+                    >
                       <motion.div
                         whileHover={{ y: -5 }}
                         transition={{ duration: 0.2 }}
@@ -338,6 +343,8 @@ export default function ProductsPage() {
                                 width={400}
                                 height={400}
                                 className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                                priority={index < 6}
+                                loading={index < 6 ? "eager" : "lazy"}
                               />
                             </div>
                           </Link>
