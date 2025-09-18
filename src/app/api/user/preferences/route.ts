@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
           emailNotifications: true,
           orderUpdates: true,
           promotions: false,
-          darkMode: false,
+          theme: "light",
           profileVisibility: true,
           dataSharing: false
         }
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest) {
       emailNotifications,
       orderUpdates,
       promotions,
-      darkMode,
+      theme,
       profileVisibility,
       dataSharing
     } = body
@@ -79,7 +79,7 @@ export async function PUT(request: NextRequest) {
         emailNotifications: emailNotifications ?? undefined,
         orderUpdates: orderUpdates ?? undefined,
         promotions: promotions ?? undefined,
-        darkMode: darkMode ?? undefined,
+        theme: theme ?? undefined,
         profileVisibility: profileVisibility ?? undefined,
         dataSharing: dataSharing ?? undefined,
         updatedAt: new Date()
@@ -89,7 +89,7 @@ export async function PUT(request: NextRequest) {
         emailNotifications: emailNotifications ?? true,
         orderUpdates: orderUpdates ?? true,
         promotions: promotions ?? false,
-        darkMode: darkMode ?? false,
+        theme: theme ?? "light",
         profileVisibility: profileVisibility ?? true,
         dataSharing: dataSharing ?? false
       }
