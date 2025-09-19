@@ -178,6 +178,9 @@ model Review {
   userId      String
   productId   String
   orderItemId String
+  adminReply  String?  // Admin response to review
+  repliedBy   String?  // Admin user ID who replied
+  repliedAt   DateTime? // When admin replied
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

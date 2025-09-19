@@ -201,11 +201,11 @@ export default function ContactMessagesPage() {
   }
 
   return (
-    <div className="space-y-4 md:space-y-8">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl md:text-3xl font-bold">Contact Messages</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Contact Messages</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Manage customer inquiries and support requests
         </p>
       </div>
@@ -214,7 +214,7 @@ export default function ContactMessagesPage() {
       <EmailStatusIndicator />
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by status" />
@@ -227,19 +227,19 @@ export default function ContactMessagesPage() {
             <SelectItem value="CLOSED">Closed</SelectItem>
           </SelectContent>
         </Select>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-xs sm:text-sm text-muted-foreground">
           {pagination.total} total messages
         </div>
       </div>
 
       {/* Messages List */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {messages.length === 0 ? (
           <Card>
-            <CardContent className="text-center py-8">
-              <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No messages found</h3>
-              <p className="text-muted-foreground">
+            <CardContent className="text-center py-6 sm:py-8">
+              <MessageSquare className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-semibold mb-2">No messages found</h3>
+              <p className="text-sm text-muted-foreground">
                 {statusFilter === 'all' 
                   ? 'No contact messages have been received yet.'
                   : `No messages with status "${statusFilter}" found.`
@@ -249,89 +249,102 @@ export default function ContactMessagesPage() {
           </Card>
         ) : (
           messages.map((message) => (
-            <Card key={message.id}>
-              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-base md:text-lg line-clamp-2">{message.subject}</CardTitle>
-                    <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
-                      <span className="flex items-center gap-1">
-                        <User className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-                        <span className="truncate">{message.name}</span>
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Mail className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-                        <span className="truncate text-xs md:text-sm">{message.email}</span>
-                      </span>
-                      {message.phone && (
-                        <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-                          <span className="text-xs md:text-sm">{message.phone}</span>
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-                        <span className="text-xs md:text-sm">{formatDate(message.createdAt)}</span>
-                      </span>
-                    </CardDescription>
-                  </div>
-                  <div className="flex flex-row sm:flex-col items-start gap-2">
-                    {getStatusBadge(message.status)}
+            <Card key={message.id} className="overflow-hidden">
+              <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-3">
+                <div className="space-y-3">
+                  {/* Title and Status Row */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-sm sm:text-base md:text-lg line-clamp-2 flex-1 min-w-0 leading-tight">
+                        {message.subject}
+                      </CardTitle>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {getStatusBadge(message.status)}
+                      </div>
+                    </div>
                     {message.user && (
-                      <Badge variant="outline" className="text-xs">Registered</Badge>
+                      <Badge variant="outline" className="text-xs w-fit">Registered User</Badge>
                     )}
+                  </div>
+                  
+                  {/* Contact Info - Mobile Optimized */}
+                  <div className="text-muted-foreground space-y-2">
+                    <div className="grid grid-cols-1 gap-1">
+                      <div className="flex items-center gap-2">
+                        <User className="h-3 w-3 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm truncate">{message.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3 w-3 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm truncate">{message.email}</span>
+                      </div>
+                      {message.phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-3 w-3 flex-shrink-0" />
+                          <span className="text-xs sm:text-sm">{message.phone}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-3 w-3 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm">{formatDate(message.createdAt)}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="bg-muted p-3 md:p-4 rounded-lg mb-4">
-                  <p className="whitespace-pre-wrap text-sm md:text-base line-clamp-4 md:line-clamp-none">{message.message}</p>
+              <CardContent className="p-3 sm:p-6 pt-0">
+                {/* Message Content */}
+                <div className="bg-muted p-3 rounded-lg mb-3 sm:mb-4">
+                  <p className="whitespace-pre-wrap text-xs sm:text-sm leading-relaxed line-clamp-3 sm:line-clamp-none">
+                    {message.message}
+                  </p>
                 </div>
                 
                 {message.user && (
-                  <div className="text-xs md:text-sm text-muted-foreground mb-4 p-2 bg-blue-50 rounded">
-                    <strong>User Account:</strong> {message.user.name} ({message.user.email})
+                  <div className="text-xs text-muted-foreground mb-3 sm:mb-4 p-2 bg-blue-50 rounded text-center sm:text-left">
+                    <strong>User:</strong> {message.user.name} ({message.user.email})
                   </div>
                 )}
                 
-                <div className="flex flex-col sm:flex-row gap-2">
+                {/* Action Buttons - Mobile First */}
+                <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 sm:flex-none"
+                    className="w-full h-9 text-xs sm:text-sm"
                     onClick={() => handleReply(message)}
                     disabled={message.status === 'CLOSED'}
                   >
-                    <Reply className="h-4 w-4 mr-2" />
+                    <Reply className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     Reply
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 sm:flex-none"
+                    className="w-full h-9 text-xs sm:text-sm"
                     onClick={() => handleMarkAsResolved(message.id)}
                     disabled={message.status === 'RESOLVED' || message.status === 'CLOSED' || 
                              (actionLoading.messageId === message.id && actionLoading.action === 'resolve')}
                   >
                     {actionLoading.messageId === message.id && actionLoading.action === 'resolve' ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
                     ) : (
-                      <CheckCircle className="h-4 w-4 mr-2" />
+                      <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     )}
-                    Mark as Resolved
+                    Resolve
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 sm:flex-none"
+                    className="w-full h-9 text-xs sm:text-sm"
                     onClick={() => handleClose(message.id)}
                     disabled={message.status === 'CLOSED' || 
                              (actionLoading.messageId === message.id && actionLoading.action === 'close')}
                   >
                     {actionLoading.messageId === message.id && actionLoading.action === 'close' ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
                     ) : (
-                      <X className="h-4 w-4 mr-2" />
+                      <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     )}
                     Close
                   </Button>
@@ -344,28 +357,29 @@ export default function ContactMessagesPage() {
 
       {/* Pagination */}
       {pagination.pages > 1 && (
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center gap-3 mt-6 sm:mt-8">
+          <div className="flex items-center justify-center gap-1 sm:gap-2 w-full">
             <Button
               variant="outline"
               size="sm"
               disabled={pagination.page === 1}
               onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+              className="px-2 sm:px-3 text-xs sm:text-sm h-8 sm:h-9"
             >
-              Previous
+              Prev
             </Button>
             
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(pagination.pages, 5) }, (_, i) => {
+            <div className="flex items-center gap-1 overflow-x-auto max-w-[150px] sm:max-w-none">
+              {Array.from({ length: Math.min(pagination.pages, 3) }, (_, i) => {
                 let page;
-                if (pagination.pages <= 5) {
+                if (pagination.pages <= 3) {
                   page = i + 1;
-                } else if (pagination.page <= 3) {
+                } else if (pagination.page <= 2) {
                   page = i + 1;
-                } else if (pagination.page >= pagination.pages - 2) {
-                  page = pagination.pages - 4 + i;
+                } else if (pagination.page >= pagination.pages - 1) {
+                  page = pagination.pages - 2 + i;
                 } else {
-                  page = pagination.page - 2 + i;
+                  page = pagination.page - 1 + i;
                 }
                 
                 return (
@@ -373,7 +387,7 @@ export default function ContactMessagesPage() {
                     key={page}
                     variant={page === pagination.page ? "default" : "outline"}
                     size="sm"
-                    className="w-8 h-8 p-0"
+                    className="w-7 h-8 sm:w-8 sm:h-9 p-0 flex-shrink-0 text-xs sm:text-sm"
                     onClick={() => setPagination(prev => ({ ...prev, page }))}
                   >
                     {page}
@@ -387,12 +401,13 @@ export default function ContactMessagesPage() {
               size="sm"
               disabled={pagination.page === pagination.pages}
               onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+              className="px-2 sm:px-3 text-xs sm:text-sm h-8 sm:h-9"
             >
               Next
             </Button>
           </div>
           
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs text-muted-foreground text-center">
             Page {pagination.page} of {pagination.pages}
           </div>
         </div>

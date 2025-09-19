@@ -7,8 +7,14 @@ export type DisplayMode = 'browser' | 'standalone' | 'minimal-ui' | 'fullscreen'
 export function useDisplayMode() {
   const [displayMode, setDisplayMode] = useState<DisplayMode>('browser')
   const [isInstalled, setIsInstalled] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    setIsClient(true)
+    
+    // Only run on client side
+    if (typeof window === 'undefined') return
+
     // Check if running as installed PWA
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
     const isInWebAppiOS = (window.navigator as any).standalone === true
@@ -67,6 +73,7 @@ export function useDisplayMode() {
     isBrowser: displayMode === 'browser',
     isStandalone: displayMode === 'standalone',
     isMinimalUI: displayMode === 'minimal-ui',
-    isFullscreen: displayMode === 'fullscreen'
+    isFullscreen: displayMode === 'fullscreen',
+    isClient
   }
 }

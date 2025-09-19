@@ -1,36 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyIdToken } from '@/lib/firebase-admin'
+import { verifyIdToken, getFirebaseAdminStatus } from '@/lib/firebase-admin'
 
 // GET - Fetch user statistics
 export async function GET(request: NextRequest) {
   try {
+    console.log('Starting user statistics fetch...')
+    
+    // Check Firebase Admin status first
+    const firebaseStatus = getFirebaseAdminStatus()
+    console.log('Firebase Admin Status:', {
+      adminAuth: !!firebaseStatus.adminAuth,
+      adminDb: !!firebaseStatus.adminDb,
+      hasEnvVar: firebaseStatus.hasEnvVar,
+      error: firebaseStatus.initializationError
+    })
+    
+    if (!firebaseStatus.adminAuth) {
+      console.error('Firebase Admin not initialized:', firebaseStatus.initializationError)
+      return NextResponse.json({ 
+        error: 'Firebase Admin not initialized', 
+        details: firebaseStatus.initializationError 
+      }, { status: 500 })
+    }
+    
     const authHeader = request.headers.get('authorization')
     if (!authHeader?.startsWith('Bearer ')) {
+      console.log('No authorization header found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const token = authHeader.substring(7)
-    const decodedToken = await verifyIdToken(token)
+    console.log('Token received, verifying...')
+    
+    let decodedToken
+    try {
+      decodedToken = await verifyIdToken(token)
+    } catch (verifyError) {
+      console.error('Token verification failed:', verifyError)
+      return NextResponse.json({ error: 'Invalid token', details: verifyError instanceof Error ? verifyError.message : 'Unknown error' }, { status: 401 })
+    }
     
     if (!decodedToken) {
+      console.log('Decoded token is null')
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    console.log('Token verified for user:', decodedToken.uid)
+
     // Get user statistics
-    const [orders, wishlistCount] = await Promise.all([
-      // Get all orders for the user
-      prisma.order.findMany({
-        where: { userId: decodedToken.uid },
-        include: {
-          orderItems: true
-        }
-      }),
-      // Get wishlist items count
-      prisma.wishlistItem.count({
-        where: { userId: decodedToken.uid }
-      })
-    ])
+    console.log('Fetching user data from database...')
+    let orders, wishlistCount
+    
+    try {
+      [orders, wishlistCount] = await Promise.all([
+        // Get all orders for the user
+        prisma.order.findMany({
+          where: { userId: decodedToken.uid },
+          include: {
+            orderItems: true
+          }
+        }),
+        // Get wishlist items count
+        prisma.wishlistItem.count({
+          where: { userId: decodedToken.uid }
+        })
+      ])
+      console.log(`Found ${orders.length} orders and ${wishlistCount} wishlist items`)
+    } catch (dbError) {
+      console.error('Database query failed:', dbError)
+      return NextResponse.json({ 
+        error: 'Database error', 
+        details: dbError instanceof Error ? dbError.message : 'Unknown database error' 
+      }, { status: 500 })
+    }
 
     // Calculate statistics
     const totalOrders = orders.length
@@ -61,11 +104,16 @@ export async function GET(request: NextRequest) {
       pendingOrders: orders.filter(order => ['PENDING', 'PROCESSING', 'PAID', 'SHIPPED'].includes(order.status)).length
     }
 
+    console.log('Statistics calculated successfully')
     return NextResponse.json(statistics)
   } catch (error) {
     console.error('Error fetching user statistics:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch statistics' },
+      { 
+        error: 'Failed to fetch statistics',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     )
   }

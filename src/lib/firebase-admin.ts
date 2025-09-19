@@ -18,15 +18,32 @@ function initializeFirebaseAdmin() {
     let serviceAccount;
     
     // Try to get credentials from environment variable first (for production/Vercel)
-    if (process.env.FIREBASE_ADMIN_SDK_JSON) {
+    if (process.env.FIREBASE_ADMIN_SDK_JSON && process.env.FIREBASE_ADMIN_SDK_JSON.length > 50) {
       console.log('Found FIREBASE_ADMIN_SDK_JSON environment variable')
+      const envValue = process.env.FIREBASE_ADMIN_SDK_JSON
+      console.log('Environment variable length:', envValue.length)
+      console.log('Environment starts with:', envValue.substring(0, 50))
+      
       try {
-        serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SDK_JSON);
-        console.log('Successfully parsed Firebase Admin SDK from environment variable')
+        // Clean the environment variable value
+        let cleanValue = envValue.trim()
+        
+        // Remove any quotes that might wrap the entire JSON
+        if ((cleanValue.startsWith('"') && cleanValue.endsWith('"')) || 
+            (cleanValue.startsWith("'") && cleanValue.endsWith("'"))) {
+          cleanValue = cleanValue.slice(1, -1)
+        }
+        
+        // Replace escaped quotes and newlines
+        cleanValue = cleanValue.replace(/\\"/g, '"').replace(/\\n/g, '\n')
+        
+        serviceAccount = JSON.parse(cleanValue);
+        console.log('✅ Successfully parsed Firebase Admin SDK from environment variable')
         console.log('Project ID:', serviceAccount.project_id)
-        console.log('Client email:', serviceAccount.client_email)
+        console.log('Client email:', serviceAccount.client_email?.substring(0, 20) + '...')
       } catch (parseError) {
-        console.error('Failed to parse FIREBASE_ADMIN_SDK_JSON:', parseError)
+        console.error('❌ Failed to parse FIREBASE_ADMIN_SDK_JSON:', parseError)
+        console.log('Environment variable preview:', envValue.substring(0, 200) + '...')
         throw new Error(`Invalid JSON in FIREBASE_ADMIN_SDK_JSON: ${parseError}`)
       }
     } else {
@@ -38,16 +55,32 @@ function initializeFirebaseAdmin() {
         const path = require('path')
         const filePath = path.join(process.cwd(), 'thrifting-ecommerce-firebase-adminsdk-fbsvc-d9f4bfdff5.json')
         
+        console.log('Looking for Firebase Admin SDK file at:', filePath)
+        
         if (fs.existsSync(filePath)) {
-          const fileContent = fs.readFileSync(filePath, 'utf8')
-          serviceAccount = JSON.parse(fileContent)
-          console.log('Using Firebase Admin SDK from local file')
+          console.log('Firebase Admin SDK file found, reading...')
+          try {
+            const fileContent = fs.readFileSync(filePath, 'utf8')
+            console.log('File content length:', fileContent.length)
+            console.log('First 50 characters:', fileContent.substring(0, 50))
+            
+            // Check for BOM and remove if present
+            const cleanContent = fileContent.replace(/^\uFEFF/, '')
+            serviceAccount = JSON.parse(cleanContent)
+            console.log('Successfully loaded Firebase Admin SDK from local file')
+            console.log('Project ID from file:', serviceAccount.project_id)
+            console.log('Client email from file:', serviceAccount.client_email)
+          } catch (parseError) {
+            console.error('Failed to parse Firebase Admin SDK JSON file:', parseError)
+            throw new Error(`Invalid JSON in Firebase Admin SDK file: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`)
+          }
         } else {
-          throw new Error('Local Firebase Admin SDK file not found')
+          console.error('Firebase Admin SDK file does not exist at:', filePath)
+          throw new Error(`Local Firebase Admin SDK file not found at: ${filePath}`)
         }
       } catch (fileError) {
-        console.error('Local Firebase Admin SDK file not found:', fileError)
-        throw new Error('Firebase Admin SDK credentials not available - no environment variable or local file')
+        console.error('Error reading local Firebase Admin SDK file:', fileError)
+        throw new Error(`Firebase Admin SDK file error: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`)
       }
     }
     
@@ -95,8 +128,11 @@ export function getFirebaseAdminStatus() {
 
 // Export function to retry initialization
 export function retryFirebaseAdminInit() {
+  console.log('Retrying Firebase Admin initialization...')
   initializationAttempted = false
   initializationError = null
+  adminAuth = null
+  adminDb = null
   return initializeFirebaseAdmin()
 }
 

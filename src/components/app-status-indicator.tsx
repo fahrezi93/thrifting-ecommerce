@@ -5,9 +5,9 @@ import { Badge } from '@/components/ui/badge'
 import { Smartphone, Globe } from 'lucide-react'
 
 export function AppStatusIndicator() {
-  const { isInstalled, displayMode } = useDisplayMode()
+  const { isInstalled, displayMode, isClient } = useDisplayMode()
 
-  if (!isInstalled) return null
+  if (!isClient || !isInstalled) return null
 
   return (
     <div className="fixed top-4 right-4 z-40">
@@ -20,9 +20,9 @@ export function AppStatusIndicator() {
 }
 
 export function AppModeStyles() {
-  const { isInstalled } = useDisplayMode()
+  const { isInstalled, isClient } = useDisplayMode()
 
-  if (!isInstalled) return null
+  if (!isClient || !isInstalled) return null
 
   return (
     <style jsx global>{`

@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Star, User } from 'lucide-react'
+import { Star, User, Reply } from 'lucide-react'
 
 interface Review {
   id: string
   rating: number
   comment: string | null
+  adminReply: string | null
+  repliedBy: string | null
+  repliedAt: string | null
   createdAt: string
   user: {
     id: string
@@ -182,6 +185,22 @@ export default function ReviewDisplay({ productId }: ReviewDisplayProps) {
                 </div>
                 {review.comment && (
                   <p className="text-gray-700 mt-2">{review.comment}</p>
+                )}
+                
+                {/* Admin Reply */}
+                {review.adminReply && (
+                  <div className="mt-4 bg-blue-50 border-l-4 border-blue-500 p-3 rounded-r-md">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Reply className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-600">Store Response</span>
+                      {review.repliedAt && (
+                        <span className="text-xs text-gray-500">
+                          {formatDate(review.repliedAt)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-700 text-sm">{review.adminReply}</p>
+                  </div>
                 )}
               </div>
             </div>

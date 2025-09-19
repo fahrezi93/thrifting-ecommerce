@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Package, ShoppingCart, Users, BarChart3, Settings, Bell, MessageSquare } from 'lucide-react'
+import { Package, ShoppingCart, Users, BarChart3, Settings, Bell, MessageSquare, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ContactNotificationListener } from '@/components/admin/contact-notification-listener'
 import { ContactMessageBadge } from '@/components/admin/contact-message-badge'
@@ -35,6 +35,11 @@ const sidebarItems = [
     title: 'Users',
     href: '/admin/users',
     icon: Users,
+  },
+  {
+    title: 'Reviews',
+    href: '/admin/reviews',
+    icon: Star,
   },
   {
     title: 'Contact Messages',

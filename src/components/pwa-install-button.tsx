@@ -18,8 +18,14 @@ export function PWAInstallButton() {
   const [isInstallable, setIsInstallable] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    setIsClient(true)
+    
+    // Only run on client side
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return
+
     // Detect mobile
     const userAgent = navigator.userAgent.toLowerCase()
     const mobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)
@@ -78,6 +84,11 @@ export function PWAInstallButton() {
         console.error('Error during app installation:', error)
       }
     }
+  }
+
+  // Don't show if not on client side
+  if (!isClient) {
+    return null
   }
 
   // Don't show if already installed
