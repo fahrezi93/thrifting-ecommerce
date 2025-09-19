@@ -214,23 +214,25 @@ export default function OrderDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <Button
             variant="ghost"
             onClick={() => router.push('/dashboard/orders')}
+            className="self-start"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Orders
+            <span className="hidden sm:inline">Back to Orders</span>
+            <span className="sm:hidden">Back</span>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Order #{order.orderNumber}</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold">Order #{order.orderNumber}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Placed on {formatDate(order.createdAt)}
             </p>
           </div>
         </div>
-        <Badge className={`${statusInfo.color} px-4 py-2`}>
+        <Badge className={`${statusInfo.color} px-3 py-2 self-start sm:self-auto`}>
           <StatusIcon className="w-4 h-4 mr-2" />
           {statusInfo.label}
         </Badge>
@@ -247,40 +249,44 @@ export default function OrderDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className={`flex items-center space-x-4 ${['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-green-600' : 'text-gray-400'}`}>
-                <div className={`w-4 h-4 rounded-full ${['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                <div className="flex-1">
-                  <p className="font-semibold">Payment Confirmed</p>
-                  <p className="text-sm text-muted-foreground">Your payment has been received and confirmed</p>
+              <div className={`flex items-start space-x-4 ${['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full mt-1 ${['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm sm:text-base">Payment Confirmed</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Your payment has been received and confirmed</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:hidden">{formatDate(order.createdAt)}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{formatDate(order.createdAt)}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{formatDate(order.createdAt)}</p>
               </div>
               
-              <div className={`flex items-center space-x-4 ${['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-blue-600' : 'text-gray-400'}`}>
-                <div className={`w-4 h-4 rounded-full ${['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                <div className="flex-1">
-                  <p className="font-semibold">Processing</p>
-                  <p className="text-sm text-muted-foreground">Your order is being prepared for shipment</p>
+              <div className={`flex items-start space-x-4 ${['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full mt-1 ${['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm sm:text-base">Processing</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Your order is being prepared for shipment</p>
+                  {order.status === 'PROCESSING' && <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:hidden">{formatDate(order.updatedAt)}</p>}
                 </div>
-                {order.status === 'PROCESSING' && <p className="text-sm text-muted-foreground">{formatDate(order.updatedAt)}</p>}
+                {order.status === 'PROCESSING' && <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{formatDate(order.updatedAt)}</p>}
               </div>
               
-              <div className={`flex items-center space-x-4 ${['SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-indigo-600' : 'text-gray-400'}`}>
-                <div className={`w-4 h-4 rounded-full ${['SHIPPED', 'DELIVERED'].includes(order.status) ? 'bg-indigo-500' : 'bg-gray-300'}`}></div>
-                <div className="flex-1">
-                  <p className="font-semibold">Shipped</p>
-                  <p className="text-sm text-muted-foreground">Your order is on the way to you</p>
+              <div className={`flex items-start space-x-4 ${['SHIPPED', 'DELIVERED'].includes(order.status) ? 'text-indigo-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full mt-1 ${['SHIPPED', 'DELIVERED'].includes(order.status) ? 'bg-indigo-500' : 'bg-gray-300'}`}></div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm sm:text-base">Shipped</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Your order is on the way to you</p>
+                  {order.status === 'SHIPPED' && <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:hidden">{formatDate(order.updatedAt)}</p>}
                 </div>
-                {order.status === 'SHIPPED' && <p className="text-sm text-muted-foreground">{formatDate(order.updatedAt)}</p>}
+                {order.status === 'SHIPPED' && <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{formatDate(order.updatedAt)}</p>}
               </div>
               
-              <div className={`flex items-center space-x-4 ${order.status === 'DELIVERED' ? 'text-green-600' : 'text-gray-400'}`}>
-                <div className={`w-4 h-4 rounded-full ${order.status === 'DELIVERED' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                <div className="flex-1">
-                  <p className="font-semibold">Delivered</p>
-                  <p className="text-sm text-muted-foreground">Your order has been successfully delivered</p>
+              <div className={`flex items-start space-x-4 ${order.status === 'DELIVERED' ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`w-4 h-4 rounded-full mt-1 ${order.status === 'DELIVERED' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm sm:text-base">Delivered</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Your order has been successfully delivered</p>
+                  {order.status === 'DELIVERED' && <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:hidden">{formatDate(order.updatedAt)}</p>}
                 </div>
-                {order.status === 'DELIVERED' && <p className="text-sm text-muted-foreground">{formatDate(order.updatedAt)}</p>}
+                {order.status === 'DELIVERED' && <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">{formatDate(order.updatedAt)}</p>}
               </div>
             </div>
           </CardContent>
@@ -330,26 +336,26 @@ export default function OrderDetailPage() {
               }
 
               return (
-                <div key={item.id} className="flex gap-4 p-4 bg-muted rounded-lg">
-                  <div className="relative h-20 w-20 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
+                <div key={item.id} className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-muted rounded-lg">
+                  <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                     <Image
                       src={imageUrl}
                       alt={item.product.name || 'Product image'}
                       fill
                       className="object-cover"
-                      sizes="80px"
+                      sizes="(max-width: 640px) 64px, 80px"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement
                         target.src = '/placeholder-image.jpg'
                       }}
                     />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-lg">{item.product.name}</h4>
-                    <p className="text-muted-foreground">
-                      Size: {item.product.size} • Quantity: {item.quantity}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-base sm:text-lg truncate">{item.product.name}</h4>
+                    <p className="text-sm sm:text-base text-muted-foreground">
+                      Size: {item.product.size} • Qty: {item.quantity}
                     </p>
-                    <p className="font-semibold text-lg mt-2">{formatPrice(item.price * item.quantity)}</p>
+                    <p className="font-semibold text-base sm:text-lg mt-1 sm:mt-2">{formatPrice(item.price * item.quantity)}</p>
                   </div>
                 </div>
               )

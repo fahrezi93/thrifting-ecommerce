@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
             title: 'New Order Received',
             message: `🛒 New Order #${order.orderNumber} from ${user.name || user.email} - Total: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(totalAmount)}`,
             type: 'order',
-            url: `/admin/orders/${order.id}`,
+            url: `/admin/orders`,
             isRead: false
           }
         })

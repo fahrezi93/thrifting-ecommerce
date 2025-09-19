@@ -6,6 +6,7 @@ import { Bell } from 'lucide-react';
 import Pusher from 'pusher-js';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,7 @@ interface Notification {
 
 export function NotificationBell() {
   const { user } = useAuth();
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -138,10 +140,11 @@ export function NotificationBell() {
     // Close dropdown first for better UX
     setIsOpen(false);
     
-    // Navigate after a short delay to ensure dropdown closes
+    // Navigate using Next.js router for proper client-side navigation
     if (notification.url && notification.url.trim() !== '') {
       setTimeout(() => {
-        window.location.href = notification.url!;
+        // Use router.push for client-side navigation
+        router.push(notification.url!);
       }, 100);
     }
   };
