@@ -55,6 +55,7 @@ model User {
   reviews   Review[]
   preferences UserPreferences?
   contactMessages ContactMessage[]
+  pushSubscriptions PushSubscription[]
 }
 
 
@@ -250,7 +251,9 @@ model StoreSettings {
 model Notification {
   id        String   @id @default(cuid())
   userId    String   // ID pengguna yang akan menerima notifikasi
+  title     String   // Judul notifikasi
   message   String   // Isi pesan, misal: "Pesanan baru #123 telah dibuat!"
+  type      String   @default("info") // Tipe notifikasi: info, promo, order, etc.
   url       String?  // URL untuk dikunjungi saat notifikasi diklik
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -260,10 +263,12 @@ model Notification {
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+  @@index([type])
 }
 
 model PushSubscription {
   id        String   @id @default(cuid())
+  userId    String   // ID pengguna yang memiliki subscription
   endpoint  String   @unique
   p256dh    String
   auth      String
@@ -272,6 +277,9 @@ model PushSubscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@index([endpoint])
   @@index([isActive])
 }

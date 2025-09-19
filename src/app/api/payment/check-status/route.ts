@@ -89,7 +89,9 @@ export async function POST(req: NextRequest) {
             const notification = await prisma.notification.create({
               data: {
                 userId: order.userId,
+                title: 'Payment Successful',
                 message: `Payment successful! Order #${order.orderNumber} is being processed`,
+                type: 'payment',
                 url: `/dashboard/orders/${order.id}`
               }
             });
@@ -129,7 +131,9 @@ export async function POST(req: NextRequest) {
     const notification = await prisma.notification.create({
       data: {
         userId: order.userId,
+        title: 'Payment Confirmed',
         message: `Payment confirmed! Order #${order.orderNumber} is being processed`,
+        type: 'payment',
         url: `/dashboard/orders/${order.id}`
       }
     });

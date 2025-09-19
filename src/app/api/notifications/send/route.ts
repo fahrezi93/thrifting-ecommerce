@@ -1,133 +1,97 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import webpush from 'web-push'
+import { pusher } from '@/lib/pusher'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Push notification API called')
-    console.log('Environment check:', {
-      vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ? 'Present' : 'Missing',
-      vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ? 'Present' : 'Missing'
-    })
-
-    // Check if VAPID keys are configured
-    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-      console.error('VAPID keys not configured')
-      return NextResponse.json(
-        { error: 'VAPID keys not configured' },
-        { status: 500 }
-      )
-    }
-
-    // Configure web-push with VAPID keys at runtime
-    try {
-      webpush.setVapidDetails(
-        'mailto:admin@thrifthaven.com',
-        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-        process.env.VAPID_PRIVATE_KEY
-      )
-      console.log('VAPID details set successfully')
-    } catch (vapidError) {
-      console.error('Error setting VAPID details:', vapidError)
-      return NextResponse.json(
-        { error: 'Invalid VAPID configuration', details: vapidError instanceof Error ? vapidError.message : String(vapidError) },
-        { status: 500 }
-      )
-    }
-
+    console.log('🔔 Notification API called')
+    
     const { title, body, icon, url, tag } = await request.json()
 
-    // Get all active subscriptions
-    const subscriptions = await prisma.pushSubscription.findMany({
+    if (!title || !body) {
+      return NextResponse.json(
+        { error: 'Title and body are required' },
+        { status: 400 }
+      )
+    }
+
+    console.log('📝 Notification data:', { title, body, url, tag })
+
+    // Get all active users to send notifications to
+    const users = await prisma.user.findMany({
       where: {
-        isActive: true
+        role: 'USER' // Only send to regular users, not admins
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true
       }
     })
 
-    console.log('Found push subscriptions:', {
-      total: subscriptions.length,
-      subscriptions: subscriptions.map(sub => ({
-        id: sub.id,
-        endpoint: sub.endpoint.substring(0, 50) + '...',
-        isActive: sub.isActive
-      }))
-    })
+    console.log(`👥 Found ${users.length} users to notify`)
 
-    const payload = JSON.stringify({
-      title: title || 'Thrift Haven',
-      body: body || 'Check out our latest deals!',
-      icon: icon || '/Logo-App-Mobile.svg',
-      badge: '/Logo-App-Mobile.svg',
-      url: url || '/',
-      tag: tag || 'promo',
-      data: {
-        url: url || '/',
-        timestamp: Date.now()
-      },
-      actions: [
-        {
-          action: 'view',
-          title: 'View Deal',
-          icon: '/Logo-App-Mobile.svg'
-        },
-        {
-          action: 'dismiss',
-          title: 'Dismiss'
-        }
-      ]
-    })
+    let sentCount = 0
+    let failedCount = 0
 
-    const results = await Promise.allSettled(
-      subscriptions.map(async (sub) => {
-        try {
-          await webpush.sendNotification(
-            {
-              endpoint: sub.endpoint,
-              keys: {
-                p256dh: sub.p256dh,
-                auth: sub.auth
-              }
-            },
-            payload
-          )
-          return { success: true, endpoint: sub.endpoint }
-        } catch (error) {
-          console.error('Failed to send notification:', error)
-          
-          // If subscription is invalid, mark as inactive
-          if (error instanceof Error && error.message.includes('410')) {
-            await prisma.pushSubscription.update({
-              where: { id: sub.id },
-              data: { isActive: false }
-            })
+    // Send real-time notifications via Pusher and save to database
+    const notificationPromises = users.map(async (user) => {
+      try {
+        // Create notification in database
+        const notification = await prisma.notification.create({
+          data: {
+            userId: user.id,
+            title: title,
+            message: body,
+            type: tag || 'promo',
+            url: url || '/',
+            isRead: false
           }
-          
-          return { success: false, endpoint: sub.endpoint, error: error instanceof Error ? error.message : String(error) }
-        }
-      })
-    )
+        })
 
-    const successful = results.filter(result => 
-      result.status === 'fulfilled' && result.value.success
-    ).length
+        // Send real-time notification via Pusher
+        await pusher.trigger(`user-${user.id}`, 'notification', {
+          id: notification.id,
+          title: title,
+          message: body,
+          type: tag || 'promo',
+          url: url || '/',
+          icon: icon || '/Logo-App-Mobile.svg',
+          timestamp: notification.createdAt.toISOString(),
+          isRead: false
+        })
 
-    const failed = results.length - successful
+        console.log(`✅ Notification sent to user ${user.id} (${user.email})`)
+        return { success: true, userId: user.id }
+      } catch (error) {
+        console.error(`❌ Failed to send notification to user ${user.id}:`, error)
+        return { success: false, userId: user.id, error: error instanceof Error ? error.message : String(error) }
+      }
+    })
+
+    // Wait for all notifications to be processed
+    const results = await Promise.allSettled(notificationPromises)
+    
+    results.forEach((result) => {
+      if (result.status === 'fulfilled' && result.value.success) {
+        sentCount++
+      } else {
+        failedCount++
+      }
+    })
+
+    console.log(`📊 Notification results: ${sentCount} sent, ${failedCount} failed`)
 
     return NextResponse.json({
       success: true,
-      sent: successful,
-      failed: failed,
-      total: subscriptions.length
+      sent: sentCount,
+      failed: failedCount,
+      total: users.length,
+      message: `Successfully sent ${sentCount} notifications to users`
     })
 
   } catch (error) {
-    console.error('Error sending notifications:', error)
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ? 'Present' : 'Missing',
-      vapidPrivateKey: process.env.VAPID_PRIVATE_KEY ? 'Present' : 'Missing'
-    })
+    console.error('❌ Error sending notifications:', error)
     return NextResponse.json(
       { 
         error: 'Failed to send notifications',

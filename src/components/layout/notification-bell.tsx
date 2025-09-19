@@ -17,7 +17,9 @@ import { Badge } from '@/components/ui/badge';
 
 interface Notification {
   id: string;
+  title: string;
   message: string;
+  type: string;
   url?: string;
   isRead: boolean;
   createdAt: string;
@@ -49,7 +51,7 @@ export function NotificationBell() {
         channel = pusher.subscribe(`user-${user.id}`);
 
         // Listen untuk notifikasi baru
-        channel.bind('new-notification', (newNotification: Notification) => {
+        channel.bind('notification', (newNotification: Notification) => {
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
         });
@@ -213,18 +215,35 @@ export function NotificationBell() {
               >
                 <div className="flex flex-col gap-1 w-full">
                   <div className="flex items-start justify-between">
-                    <p className={`text-sm ${
-                      !notification.isRead ? 'font-medium' : 'font-normal'
-                    }`}>
-                      {notification.message}
-                    </p>
+                    <div className="flex-1">
+                      <p className={`text-sm ${
+                        !notification.isRead ? 'font-semibold' : 'font-medium'
+                      }`}>
+                        {notification.title}
+                      </p>
+                      <p className={`text-xs text-muted-foreground ${
+                        !notification.isRead ? 'font-medium' : 'font-normal'
+                      }`}>
+                        {notification.message}
+                      </p>
+                    </div>
                     {!notification.isRead && (
                       <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1" />
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {formatTime(notification.createdAt)}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      notification.type === 'promo' ? 'bg-green-100 text-green-700' :
+                      notification.type === 'order' ? 'bg-blue-100 text-blue-700' :
+                      notification.type === 'info' ? 'bg-gray-100 text-gray-700' :
+                      'bg-purple-100 text-purple-700'
+                    }`}>
+                      {notification.type}
+                    </span>
+                    <p className="text-xs text-muted-foreground">
+                      {formatTime(notification.createdAt)}
+                    </p>
+                  </div>
                 </div>
               </DropdownMenuItem>
             ))

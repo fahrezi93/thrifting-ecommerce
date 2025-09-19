@@ -51,7 +51,9 @@ export async function PUT(
           const notification = await prisma.notification.create({
             data: {
               userId: existingOrder.userId,
+              title: 'Order Status Update',
               message: message,
+              type: 'order',
               url: `/dashboard/orders/${existingOrder.id}`
             }
           })

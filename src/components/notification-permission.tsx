@@ -1,27 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Bell, BellOff, X } from 'lucide-react'
-import { usePushNotifications } from '@/hooks/use-push-notifications'
+import { useNotificationPermission } from '@/hooks/use-notification-permission'
 import { useDisplayMode } from '@/hooks/use-display-mode'
 
 export function NotificationPermission() {
-  const { isSupported, isSubscribed, loading, subscribe, unsubscribe } = usePushNotifications()
+  const { isSupported, isEnabled, loading, requestPermission } = useNotificationPermission()
   const { isInstalled } = useDisplayMode()
   const [dismissed, setDismissed] = useState(false)
 
-  // Only show for installed PWA and if notifications are supported
-  if (!isInstalled || !isSupported || dismissed || isSubscribed) {
+  useEffect(() => {
+    // Check if user previously dismissed this
+    const wasDismissed = localStorage.getItem('notification-permission-dismissed')
+    if (wasDismissed === 'true') {
+      setDismissed(true)
+    }
+  }, [])
+
+  // Only show for installed PWA and if notifications are supported and not enabled
+  if (!isInstalled || !isSupported || dismissed || isEnabled) {
     return null
   }
 
-  const handleSubscribe = async () => {
-    const success = await subscribe()
+  const handleEnable = async () => {
+    const success = await requestPermission()
     if (success) {
-      // Show success message or toast
-      console.log('Successfully subscribed to notifications!')
+      console.log('Successfully enabled notifications!')
+      // Auto-dismiss after successful enable
+      setDismissed(true)
     }
   }
 
@@ -56,7 +65,7 @@ export function NotificationPermission() {
           </p>
           <div className="flex gap-2">
             <Button 
-              onClick={handleSubscribe}
+              onClick={handleEnable}
               disabled={loading}
               size="sm"
               className="flex-1"
@@ -78,32 +87,32 @@ export function NotificationPermission() {
 }
 
 export function NotificationToggle() {
-  const { isSupported, isSubscribed, loading, subscribe, unsubscribe } = usePushNotifications()
+  const { isSupported, isEnabled, loading, requestPermission, disableNotifications } = useNotificationPermission()
 
   if (!isSupported) return null
 
   return (
     <div className="flex items-center justify-between p-4 border rounded-lg">
       <div className="flex items-center gap-3">
-        {isSubscribed ? (
+        {isEnabled ? (
           <Bell className="w-5 h-5 text-primary" />
         ) : (
           <BellOff className="w-5 h-5 text-muted-foreground" />
         )}
         <div>
-          <h3 className="font-medium">Push Notifications</h3>
+          <h3 className="font-medium">Browser Notifications</h3>
           <p className="text-sm text-muted-foreground">
-            {isSubscribed ? 'You\'ll receive promo notifications' : 'Enable to get promo alerts'}
+            {isEnabled ? 'You\'ll receive order and promo notifications' : 'Enable to get instant alerts'}
           </p>
         </div>
       </div>
       <Button
-        onClick={isSubscribed ? unsubscribe : subscribe}
+        onClick={isEnabled ? disableNotifications : requestPermission}
         disabled={loading}
-        variant={isSubscribed ? "outline" : "default"}
+        variant={isEnabled ? "outline" : "default"}
         size="sm"
       >
-        {loading ? 'Loading...' : isSubscribed ? 'Disable' : 'Enable'}
+        {loading ? 'Loading...' : isEnabled ? 'Disable' : 'Enable'}
       </Button>
     </div>
   )

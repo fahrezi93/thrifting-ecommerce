@@ -11,6 +11,7 @@ import { Footer } from '@/components/layout/footer'
 import { ToastProvider, ToastViewport } from '@/components/ui/toast'
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
 import { CartSheet } from '@/components/cart/cart-sheet'
+import { WebPushNotificationPermission } from '@/components/web-push-notification'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -75,6 +76,7 @@ export default function RootLayout({
                   </div>
                   <ToastViewport />
                   <PWAInstallPrompt />
+                  <WebPushNotificationPermission />
                   <CartSheet />
                 </ToastProvider>
               </Providers>
