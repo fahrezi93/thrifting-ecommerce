@@ -5,8 +5,10 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     console.log('Admin dashboard: Starting request')
+    console.log('Admin dashboard: Headers:', Object.fromEntries(request.headers.entries()))
+    
     const user = await requireAdmin(request)
-    console.log('Admin dashboard: User authenticated:', user.email)
+    console.log('Admin dashboard: User authenticated:', user.email, 'Role:', user.role)
 
     // Get total counts
     console.log('Admin dashboard: Fetching counts...')
@@ -17,17 +19,26 @@ export async function GET(request: NextRequest) {
     ])
     console.log('Admin dashboard: Counts fetched - Products:', totalProducts, 'Orders:', totalOrders, 'Users:', totalUsers)
 
-    // Get total revenue from paid orders only (connected to DOKU payments)
-    console.log('Admin dashboard: Fetching revenue from PAID orders...')
+    // Get total revenue from completed orders (PAID, PROCESSING, SHIPPED, DELIVERED)
+    console.log('Admin dashboard: Fetching revenue from completed orders...')
     const revenueResult = await prisma.order.aggregate({
       where: { 
-        status: 'PAID',
-        paidAt: { not: null } // Ensure order was actually paid
+        status: { 
+          in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'] 
+        }
       },
       _sum: { totalAmount: true }
     })
     const totalRevenue = Number(revenueResult._sum.totalAmount) || 0
-    console.log('Admin dashboard: Revenue from PAID orders:', totalRevenue)
+    console.log('Admin dashboard: Revenue from completed orders:', totalRevenue)
+    
+    // Also get breakdown by status for debugging
+    const statusBreakdown = await prisma.order.groupBy({
+      by: ['status'],
+      _count: { _all: true },
+      _sum: { totalAmount: true }
+    })
+    console.log('Admin dashboard: Order status breakdown:', statusBreakdown)
 
     // Get recent orders
     console.log('Admin dashboard: Fetching recent orders...')
