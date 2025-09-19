@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
-import { Eye, Package, Truck, CheckCircle, XCircle, Trash2, Search } from 'lucide-react'
+import { Eye, Package, Truck, CheckCircle, XCircle, Trash2, Search, Loader2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
@@ -38,6 +38,8 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [updatingOrders, setUpdatingOrders] = useState<Set<string>>(new Set())
+  const [deletingOrders, setDeletingOrders] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (user) {
@@ -63,12 +65,22 @@ export default function AdminOrdersPage() {
     try {
       if (!user) return
       
+      // Add to updating set
+      setUpdatingOrders(prev => new Set(prev).add(orderId))
+      
       await apiClient.put(`/api/admin/orders/${orderId}`, { status: newStatus })
       toast.success('Order status updated successfully')
       fetchOrders() // Refresh orders
     } catch (error) {
       console.error('Error updating order status:', error)
       toast.error('Failed to update order status')
+    } finally {
+      // Remove from updating set
+      setUpdatingOrders(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(orderId)
+        return newSet
+      })
     }
   }
 
@@ -76,12 +88,22 @@ export default function AdminOrdersPage() {
     try {
       if (!user) return
       
+      // Add to deleting set
+      setDeletingOrders(prev => new Set(prev).add(orderId))
+      
       await apiClient.delete(`/api/admin/orders/${orderId}`)
       toast.success('Order deleted successfully')
       fetchOrders() // Refresh orders
     } catch (error) {
       console.error('Error deleting order:', error)
       toast.error('Failed to delete order')
+    } finally {
+      // Remove from deleting set
+      setDeletingOrders(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(orderId)
+        return newSet
+      })
     }
   }
 
@@ -216,40 +238,60 @@ export default function AdminOrdersPage() {
                 <Button
                   size="sm"
                   onClick={() => updateOrderStatus(order.id, 'PROCESSING')}
+                  disabled={updatingOrders.has(order.id)}
                   className="text-xs"
                 >
-                  <Package className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                  Process
+                  {updatingOrders.has(order.id) ? (
+                    <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Package className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                  )}
+                  {updatingOrders.has(order.id) ? 'Processing...' : 'Process'}
                 </Button>
               )}
               {order.status === 'PAID' && (
                 <Button
                   size="sm"
                   onClick={() => updateOrderStatus(order.id, 'PROCESSING')}
+                  disabled={updatingOrders.has(order.id)}
                   className="text-xs bg-blue-600 hover:bg-blue-700"
                 >
-                  <Package className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                  Start Processing
+                  {updatingOrders.has(order.id) ? (
+                    <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Package className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                  )}
+                  {updatingOrders.has(order.id) ? 'Processing...' : 'Start Processing'}
                 </Button>
               )}
               {order.status === 'PROCESSING' && (
                 <Button
                   size="sm"
                   onClick={() => updateOrderStatus(order.id, 'SHIPPED')}
+                  disabled={updatingOrders.has(order.id)}
                   className="text-xs bg-orange-600 hover:bg-orange-700"
                 >
-                  <Truck className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                  Ship Order
+                  {updatingOrders.has(order.id) ? (
+                    <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Truck className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                  )}
+                  {updatingOrders.has(order.id) ? 'Shipping...' : 'Ship Order'}
                 </Button>
               )}
               {order.status === 'SHIPPED' && (
                 <Button
                   size="sm"
                   onClick={() => updateOrderStatus(order.id, 'DELIVERED')}
+                  disabled={updatingOrders.has(order.id)}
                   className="text-xs bg-green-600 hover:bg-green-700"
                 >
-                  <CheckCircle className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                  <span className="hidden sm:inline">Mark </span>Delivered
+                  {updatingOrders.has(order.id) ? (
+                    <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                  )}
+                  {updatingOrders.has(order.id) ? 'Updating...' : <><span className="hidden sm:inline">Mark </span>Delivered</>}
                 </Button>
               )}
               {(order.status === 'PENDING' || order.status === 'PROCESSING') && (
@@ -257,10 +299,15 @@ export default function AdminOrdersPage() {
                   size="sm"
                   variant="destructive"
                   onClick={() => updateOrderStatus(order.id, 'CANCELLED')}
+                  disabled={updatingOrders.has(order.id)}
                   className="text-xs"
                 >
-                  <XCircle className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                  Cancel
+                  {updatingOrders.has(order.id) ? (
+                    <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 animate-spin" />
+                  ) : (
+                    <XCircle className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                  )}
+                  {updatingOrders.has(order.id) ? 'Cancelling...' : 'Cancel'}
                 </Button>
               )}
               {order.status === 'CANCELLED' && (
@@ -268,10 +315,15 @@ export default function AdminOrdersPage() {
                   size="sm"
                   variant="destructive"
                   onClick={() => deleteOrder(order.id)}
+                  disabled={deletingOrders.has(order.id)}
                   className="text-xs"
                 >
-                  <Trash2 className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                  Delete
+                  {deletingOrders.has(order.id) ? (
+                    <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                  )}
+                  {deletingOrders.has(order.id) ? 'Deleting...' : 'Delete'}
                 </Button>
               )}
             </div>
