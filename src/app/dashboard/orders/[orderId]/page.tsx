@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { apiClient } from '@/lib/api-client'
 import { useAuth } from '@/contexts/AuthContext'
+import { toast } from 'sonner'
 
 interface OrderItem {
   id: string
@@ -118,7 +119,7 @@ export default function OrderDetailPage() {
       setShowReviewForm(false)
       setReviewingItem(null)
       
-      alert('Review submitted successfully!')
+      toast.success('Review submitted successfully!')
     } catch (error) {
       console.error('Error submitting review:', error)
       throw error
@@ -140,13 +141,13 @@ export default function OrderDetailPage() {
       if (response.status === 'PAID') {
         // Refresh order data
         await fetchOrder()
-        alert('Payment confirmed! Your order status has been updated.')
+        toast.success('Payment confirmed! Your order status has been updated.')
       } else {
-        alert('Payment is still pending. Please try again later or contact support.')
+        toast.info('Payment is still pending. Please try again later or contact support.')
       }
     } catch (error) {
       console.error('Error checking payment status:', error)
-      alert('Failed to check payment status. Please try again.')
+      toast.error('Failed to check payment status. Please try again.')
     } finally {
       setLoading(false)
     }

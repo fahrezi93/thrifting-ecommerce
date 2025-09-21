@@ -9,6 +9,7 @@ import { StoreStatusWrapper } from '@/middleware/store-status'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { ToastProvider, ToastViewport } from '@/components/ui/toast'
+import { Toaster } from 'sonner'
 import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
 import { CartSheet } from '@/components/cart/cart-sheet'
 import { WebPushNotificationPermission } from '@/components/web-push-notification'
@@ -78,6 +79,12 @@ export default function RootLayout({
                   <PWAInstallPrompt />
                   <WebPushNotificationPermission />
                   <CartSheet />
+                  <Toaster 
+                    position="top-right"
+                    expand={true}
+                    richColors={true}
+                    closeButton={true}
+                  />
                 </ToastProvider>
               </Providers>
             </StoreStatusWrapper>

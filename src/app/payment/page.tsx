@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { apiClient } from '@/lib/api-client'
+import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -221,12 +223,12 @@ export default function PaymentPage() {
       } else {
         const errorData = await response.json()
         console.error('DOKU payment creation failed:', errorData)
-        alert(errorData.error || 'Failed to create payment. Please try again.')
+        toast.error(errorData.error || 'Failed to create payment. Please try again.')
         setProcessing(false)
       }
     } catch (error) {
       console.error('Payment error:', error)
-      alert('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.')
       setProcessing(false)
     }
   }

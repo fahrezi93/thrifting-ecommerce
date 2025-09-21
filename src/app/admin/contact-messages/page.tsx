@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { apiClient } from '@/lib/api-client'
+import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -148,11 +150,11 @@ export default function ContactMessagesPage() {
         await fetchMessages() // Refresh the list
       } else {
         const error = await response.json()
-        alert(`Error: ${error.error || 'Failed to mark as resolved'}`)
+        toast.error(`Error: ${error.error || 'Failed to mark as resolved'}`)
       }
     } catch (error) {
       console.error('Error marking as resolved:', error)
-      alert('Failed to mark as resolved. Please try again.')
+      toast.error('Failed to mark as resolved. Please try again.')
     } finally {
       setActionLoading({ messageId: '', action: null })
     }
@@ -178,11 +180,11 @@ export default function ContactMessagesPage() {
         await fetchMessages() // Refresh the list
       } else {
         const error = await response.json()
-        alert(`Error: ${error.error || 'Failed to close message'}`)
+        toast.error(`Error: ${error.error || 'Failed to close message'}`)
       }
     } catch (error) {
       console.error('Error closing message:', error)
-      alert('Failed to close message. Please try again.')
+      toast.error('Failed to close message. Please try again.')
     } finally {
       setActionLoading({ messageId: '', action: null })
     }

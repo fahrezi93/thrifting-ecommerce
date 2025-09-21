@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { apiClient } from '@/lib/api-client'
 import { useAuth } from '@/contexts/AuthContext'
+import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,7 +14,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Star, Trash2, MessageSquare, Reply, Edit, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
-import { apiClient } from '@/lib/api-client'
 
 interface Review {
   id: string
@@ -110,7 +111,7 @@ export default function AdminReviewsPage() {
       fetchReviews() // Refresh the list
     } catch (error) {
       console.error('Error deleting review:', error)
-      alert('Failed to delete review')
+      toast.error('Failed to delete review')
     }
   }
 
@@ -160,7 +161,7 @@ export default function AdminReviewsPage() {
       closeReplyModal()
     } catch (error) {
       console.error('Error submitting reply:', error)
-      alert('Failed to submit reply')
+      toast.error('Failed to submit reply')
     } finally {
       setReplyModal(prev => ({ ...prev, isSubmitting: false }))
     }
@@ -172,7 +173,7 @@ export default function AdminReviewsPage() {
       fetchReviews() // Refresh the list
     } catch (error) {
       console.error('Error deleting reply:', error)
-      alert('Failed to delete reply')
+      toast.error('Failed to delete reply')
     }
   }
 

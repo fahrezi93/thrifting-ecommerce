@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Star, Loader2, CheckCircle } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { Star, Loader2, CheckCircle, X } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
+import { useAuth } from '@/contexts/AuthContext'
+import { toast } from 'sonner'
 import Image from 'next/image'
 
 interface ReviewModalProps {
@@ -98,7 +99,7 @@ export default function ReviewModal({
       onClose()
       
       // Show success message
-      alert('Review submitted successfully!')
+      toast.success('Review submitted successfully!')
     } catch (error: any) {
       console.error('Error submitting review:', error)
       setError(error.message || 'Failed to submit review')

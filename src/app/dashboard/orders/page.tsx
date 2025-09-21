@@ -10,6 +10,7 @@ import { ShoppingBag, Package, Truck, CheckCircle, XCircle, Clock, CreditCard, E
 import Image from 'next/image'
 import Link from 'next/link'
 import { apiClient } from '@/lib/api-client'
+import { toast } from 'sonner'
 import ReviewModal from '@/components/ReviewModal'
 
 interface OrderItem {
@@ -169,17 +170,17 @@ export default function OrdersPage() {
         if (responseData.statusUpdated) {
           // Refresh orders list
           fetchOrders();
-          alert(`Order status successfully updated from ${responseData.oldStatus} to ${responseData.newStatus}!`);
+          toast.success(`Order status successfully updated from ${responseData.oldStatus} to ${responseData.newStatus}!`);
         } else {
-          alert(`Order status is still ${responseData.currentStatus}. DOKU status: ${responseData.dokuStatus || 'Unknown'}`);
+          toast.info(`Order status is still ${responseData.currentStatus}. DOKU status: ${responseData.dokuStatus || 'Unknown'}`);
         }
       } else {
         console.error('Failed to check payment status:', responseData);
-        alert(`Failed to check status: ${responseData.error || 'Unknown error'}`);
+        toast.error(`Failed to check status: ${responseData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error checking payment status:', error);
-      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -205,14 +206,14 @@ export default function OrdersPage() {
         // Refresh orders list
         fetchOrders();
         console.log(`Order ${orderNumber} status updated to ${status}`);
-        alert(`Order status successfully updated to ${status}!`);
+        toast.success(`Order status successfully updated to ${status}!`);
       } else {
         console.error('Failed to update order status:', responseData);
-        alert(`Failed to update status: ${responseData.error || 'Unknown error'}`);
+        toast.error(`Failed to update status: ${responseData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error updating order status:', error);
-      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

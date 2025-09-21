@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api-client';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -306,8 +308,10 @@ export default function CustomPaymentPage() {
         console.log('Payment status check result:', statusData);
         
         if (statusData.statusUpdated && statusData.newStatus === 'PAID') {
-          alert('Payment successful! Order status has been updated to PAID.');
-          window.location.href = '/dashboard/orders';
+          toast.success('Payment successful! Order status has been updated to PAID.');
+          setTimeout(() => {
+            window.location.href = '/dashboard/orders';
+          }, 1500);
           return;
         }
       }
@@ -334,7 +338,7 @@ export default function CustomPaymentPage() {
           console.error('Failed to parse error response as JSON:', jsonError);
           const textResponse = await response.text();
           console.error('Raw error response:', textResponse);
-          alert(`Payment failed: ${textResponse || 'Unknown error'}`);
+          toast.error(`Payment failed: ${textResponse || 'Unknown error'}`);
           return;
         }
         console.error('Payment API Error Response:', errorData);
@@ -357,18 +361,22 @@ export default function CustomPaymentPage() {
           if (statusResponse.ok) {
             const statusData = await statusResponse.json();
             if (statusData.statusUpdated && statusData.newStatus === 'PAID') {
-              alert('Payment successful! Order status has been updated to PAID.');
-              window.location.href = '/dashboard/orders';
+              toast.success('Payment successful! Order status has been updated to PAID.');
+              setTimeout(() => {
+                window.location.href = '/dashboard/orders';
+              }, 1500);
               return;
             }
           }
           
-          alert('This order has already been paid. Please check order status in your dashboard.');
-          window.location.href = '/dashboard/orders';
+          toast.info('This order has already been paid. Please check order status in your dashboard.');
+          setTimeout(() => {
+            window.location.href = '/dashboard/orders';
+          }, 1500);
           return;
         }
         
-        alert(`Payment failed: ${errorData.error || 'Unknown error'}`);
+        toast.error(`Payment failed: ${errorData.error || 'Unknown error'}`);
         return;
       }
 
@@ -379,7 +387,7 @@ export default function CustomPaymentPage() {
         console.error('Failed to parse success response as JSON:', jsonError);
         const textResponse = await response.text();
         console.error('Raw success response:', textResponse);
-        alert(`Payment response error: Invalid response format`);
+        toast.error(`Payment response error: Invalid response format`);
         return;
       }
       console.log('Payment: Response data:', data);
@@ -387,11 +395,11 @@ export default function CustomPaymentPage() {
       if (data.paymentUrl) {
         window.location.href = data.paymentUrl;
       } else if (data.error) {
-        alert(`Error: ${data.error}`);
+        toast.error(`Error: ${data.error}`);
       }
     } catch (error) {
       console.error('Payment error:', error);
-      alert(`Error occurred while processing payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`Error occurred while processing payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsProcessing(false);
     }
