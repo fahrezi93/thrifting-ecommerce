@@ -17,8 +17,26 @@ function initializeFirebaseAdmin() {
   try {
     let serviceAccount;
     
-    // Try to get credentials from environment variable first (for production/Vercel)
-    if (process.env.FIREBASE_ADMIN_SDK_JSON && process.env.FIREBASE_ADMIN_SDK_JSON.length > 50) {
+    // Try Base64 encoded credentials first (RECOMMENDED for Vercel)
+    if (process.env.FIREBASE_ADMIN_SDK_JSON_BASE64) {
+      console.log('Found FIREBASE_ADMIN_SDK_JSON_BASE64 environment variable')
+      const base64Value = process.env.FIREBASE_ADMIN_SDK_JSON_BASE64
+      console.log('Base64 environment variable length:', base64Value.length)
+      
+      try {
+        // Decode Base64 to JSON string
+        const jsonString = Buffer.from(base64Value, 'base64').toString('utf-8')
+        serviceAccount = JSON.parse(jsonString)
+        console.log('✅ Successfully parsed Firebase Admin SDK from Base64 environment variable')
+        console.log('Project ID:', serviceAccount.project_id)
+        console.log('Client email:', serviceAccount.client_email?.substring(0, 20) + '...')
+      } catch (parseError) {
+        console.error('❌ Failed to parse FIREBASE_ADMIN_SDK_JSON_BASE64:', parseError)
+        throw new Error(`Invalid Base64 or JSON in FIREBASE_ADMIN_SDK_JSON_BASE64: ${parseError}`)
+      }
+    }
+    // Fallback to regular JSON environment variable
+    else if (process.env.FIREBASE_ADMIN_SDK_JSON && process.env.FIREBASE_ADMIN_SDK_JSON.length > 50) {
       console.log('Found FIREBASE_ADMIN_SDK_JSON environment variable')
       const envValue = process.env.FIREBASE_ADMIN_SDK_JSON
       console.log('Environment variable length:', envValue.length)
