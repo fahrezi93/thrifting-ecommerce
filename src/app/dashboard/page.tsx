@@ -58,14 +58,28 @@ export default function DashboardPage() {
 
   const fetchUserStatistics = async () => {
     try {
-      if (!user) return
+      if (!user) {
+        setStatsLoading(false)
+        return
+      }
       
-      const token = await user.getIdToken?.()
-      if (!token) return
+      if (!user.getIdToken) {
+        console.error('User authentication error: getIdToken method not available')
+        setStatsLoading(false)
+        return
+      }
+      
+      const token = await user.getIdToken()
+      if (!token) {
+        console.error('User authentication error: no token received')
+        setStatsLoading(false)
+        return
+      }
       
       const response = await fetch('/api/user/statistics', {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       })
       
@@ -73,10 +87,33 @@ export default function DashboardPage() {
         const stats = await response.json()
         setStatistics(stats)
       } else {
-        console.error('Failed to fetch statistics:', response.status)
+        const errorData = await response.text()
+        console.error('Failed to fetch user statistics:', response.status, errorData)
+        
+        // Set empty statistics as fallback
+        setStatistics({
+          totalOrders: 0,
+          totalSpent: 0,
+          itemsSaved: 0,
+          recentOrders: [],
+          averageOrderValue: 0,
+          completedOrders: 0,
+          pendingOrders: 0
+        })
       }
     } catch (error) {
       console.error('Error fetching user statistics:', error)
+      
+      // Set empty statistics as fallback
+      setStatistics({
+        totalOrders: 0,
+        totalSpent: 0,
+        itemsSaved: 0,
+        recentOrders: [],
+        averageOrderValue: 0,
+        completedOrders: 0,
+        pendingOrders: 0
+      })
     } finally {
       setStatsLoading(false)
     }
@@ -212,7 +249,7 @@ export default function DashboardPage() {
                   <Package className="h-5 w-5 text-primary mr-2" />
                 </div>
                 <div className="text-2xl font-bold text-primary">
-                  {statistics?.totalOrders || 0}
+                  {statistics?.totalOrders ?? 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Total Orders</div>
               </div>
@@ -221,7 +258,7 @@ export default function DashboardPage() {
                   <DollarSign className="h-5 w-5 text-primary mr-2" />
                 </div>
                 <div className="text-2xl font-bold text-primary">
-                  {statistics ? formatPrice(statistics.totalSpent) : 'Rp 0'}
+                  {statistics ? formatPrice(statistics.totalSpent || 0) : 'Rp 0'}
                 </div>
                 <div className="text-sm text-muted-foreground">Total Spent</div>
               </div>
@@ -230,14 +267,14 @@ export default function DashboardPage() {
                   <Heart className="h-5 w-5 text-primary mr-2" />
                 </div>
                 <div className="text-2xl font-bold text-primary">
-                  {statistics?.itemsSaved || 0}
+                  {statistics?.itemsSaved ?? 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Items Saved</div>
               </div>
             </div>
           )}
           
-          {statistics && statistics.recentOrders.length > 0 && (
+          {statistics && statistics.recentOrders && statistics.recentOrders.length > 0 && (
             <div className="mt-6">
               <h4 className="font-semibold mb-3">Recent Orders</h4>
               <div className="space-y-2">

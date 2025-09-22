@@ -5,16 +5,8 @@ import { verifyIdToken, getFirebaseAdminStatus } from '@/lib/firebase-admin'
 // GET - Fetch user statistics
 export async function GET(request: NextRequest) {
   try {
-    console.log('Starting user statistics fetch...')
-    
     // Check Firebase Admin status first
     const firebaseStatus = getFirebaseAdminStatus()
-    console.log('Firebase Admin Status:', {
-      adminAuth: !!firebaseStatus.adminAuth,
-      adminDb: !!firebaseStatus.adminDb,
-      hasEnvVar: firebaseStatus.hasEnvVar,
-      error: firebaseStatus.initializationError
-    })
     
     if (!firebaseStatus.adminAuth) {
       console.error('Firebase Admin not initialized:', firebaseStatus.initializationError)
@@ -26,12 +18,10 @@ export async function GET(request: NextRequest) {
     
     const authHeader = request.headers.get('authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      console.log('No authorization header found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const token = authHeader.substring(7)
-    console.log('Token received, verifying...')
     
     let decodedToken
     try {
@@ -42,14 +32,10 @@ export async function GET(request: NextRequest) {
     }
     
     if (!decodedToken) {
-      console.log('Decoded token is null')
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    console.log('Token verified for user:', decodedToken.uid)
-
     // Get user statistics
-    console.log('Fetching user data from database...')
     let orders, wishlistCount
     
     try {
@@ -66,7 +52,6 @@ export async function GET(request: NextRequest) {
           where: { userId: decodedToken.uid }
         })
       ])
-      console.log(`Found ${orders.length} orders and ${wishlistCount} wishlist items`)
     } catch (dbError) {
       console.error('Database query failed:', dbError)
       return NextResponse.json({ 
@@ -104,7 +89,6 @@ export async function GET(request: NextRequest) {
       pendingOrders: orders.filter(order => ['PENDING', 'PROCESSING', 'PAID', 'SHIPPED'].includes(order.status)).length
     }
 
-    console.log('Statistics calculated successfully')
     return NextResponse.json(statistics)
   } catch (error) {
     console.error('Error fetching user statistics:', error)
