@@ -23,8 +23,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (categories && categories.length > 0) {
+      // Convert categories to proper case for database matching
+      const formattedCategories = categories.map(cat => {
+        // Convert "TOPS" to "Tops", "BOTTOMS" to "Bottoms", etc.
+        return cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase()
+      })
+      
+      console.log('Category filter:', {
+        original: categories,
+        formatted: formattedCategories
+      })
+      
       whereConditions.category = {
-        name: { in: categories }
+        name: { in: formattedCategories }
       }
     }
 
@@ -61,6 +72,8 @@ export async function GET(request: NextRequest) {
         break
     }
 
+    console.log('Query conditions:', JSON.stringify(whereConditions, null, 2))
+    
     const products = await prisma.product.findMany({
       where: whereConditions,
       include: {
@@ -68,6 +81,15 @@ export async function GET(request: NextRequest) {
       },
       orderBy
     })
+
+    console.log(`Found ${products.length} products`)
+    if (products.length > 0) {
+      console.log('Sample products:', products.slice(0, 3).map(p => ({ 
+        name: p.name, 
+        category: p.category.name,
+        price: p.price 
+      })))
+    }
 
     // Parse imageUrls from JSON string to array for all products
     const filteredProducts = products.map(product => ({
