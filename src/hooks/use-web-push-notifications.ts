@@ -26,13 +26,13 @@ export function useWebPushNotifications() {
         scope: '/'
       })
       
-      console.log('Service Worker registered:', registration)
+      // console.log('Service Worker registered:', registration)
       
       // Check for existing subscription
       const existingSubscription = await registration.pushManager.getSubscription()
       if (existingSubscription) {
         setSubscription(existingSubscription)
-        console.log('Existing subscription found:', existingSubscription)
+        // console.log('Existing subscription found:', existingSubscription)
       }
     } catch (error) {
       console.error('Error checking subscription:', error)
@@ -41,7 +41,7 @@ export function useWebPushNotifications() {
 
   const requestPermissionAndSubscribe = async () => {
     if (!isSupported || !user) {
-      console.log('Push notifications not supported or user not logged in')
+      // console.log('Push notifications not supported or user not logged in')
       return false
     }
 
@@ -53,14 +53,14 @@ export function useWebPushNotifications() {
       setPermission(permission)
       
       if (permission !== 'granted') {
-        console.log('Notification permission denied')
+        // console.log('Notification permission denied')
         setLoading(false)
         return false
       }
 
       // Get service worker registration
       const registration = await navigator.serviceWorker.ready
-      console.log('Service Worker ready:', registration)
+      // console.log('Service Worker ready:', registration)
 
       // Check if already subscribed
       let pushSubscription = await registration.pushManager.getSubscription()
@@ -75,7 +75,7 @@ export function useWebPushNotifications() {
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
         })
         
-        console.log('New push subscription created:', pushSubscription)
+        // console.log('New push subscription created:', pushSubscription)
       }
 
       // Send subscription to server
