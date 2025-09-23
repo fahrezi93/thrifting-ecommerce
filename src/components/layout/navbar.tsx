@@ -23,6 +23,8 @@ import { useStore } from '@/contexts/StoreContext'
 import { PWAInstallButton } from '@/components/pwa-install-button'
 import { useDisplayMode } from '@/hooks/use-display-mode'
 import { NotificationBell } from '@/components/layout/notification-bell'
+import { MainNavigation } from '@/components/layout/main-navigation'
+import { MobileNavigation } from '@/components/layout/mobile-navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // Component to check and display admin menu
@@ -107,16 +109,8 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link href="/products" className="text-sm font-medium hover:text-primary transition-colors">
-              Shop
-            </Link>
-            <Link href="/categories" className="text-sm font-medium hover:text-primary transition-colors">
-              Categories
-            </Link>
-            <Link href="/about" className="text-sm font-medium hover:text-primary transition-colors">
-              About
-            </Link>
+          <div className="hidden md:flex items-center">
+            <MainNavigation />
           </div>
 
           {/* Search Bar */}
@@ -142,7 +136,6 @@ export function Navbar() {
             <div className="hidden md:block">
               <NotificationBell />
             </div>
-            
             
             {/* Cart */}
             <ClientOnly fallback={
@@ -323,38 +316,17 @@ export function Navbar() {
                   </motion.form>
 
                   {/* Mobile Navigation Links */}
-                  <div className="space-y-2">
-                    {[
-                      { href: "/products", label: "Shop" },
-                      { href: "/categories", label: "Categories" },
-                      { href: "/about", label: "About" }
-                    ].map((item, index) => (
-                      <motion.div
-                        key={item.href}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 + (index * 0.1), duration: 0.3 }}
-                      >
-                        <Link
-                          href={item.href}
-                          className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          {item.label}
-                        </Link>
-                      </motion.div>
-                    ))}
-                    
-                    {/* Notifications - Mobile Only */}
-                    <motion.div 
-                      className="md:hidden py-2"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.6, duration: 0.3 }}
-                    >
-                      <NotificationBell />
-                    </motion.div>
-                  </div>
+                  <MobileNavigation onClose={() => setIsMenuOpen(false)} />
+                  
+                  {/* Notifications - Mobile Only */}
+                  <motion.div 
+                    className="md:hidden py-4 border-t mt-4"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5, duration: 0.3 }}
+                  >
+                    <NotificationBell />
+                  </motion.div>
 
                   {/* Mobile Auth - Only show Sign In/Sign Up for non-authenticated users */}
                   <ClientOnly fallback={
@@ -372,7 +344,7 @@ export function Navbar() {
                         className="space-y-2 pt-4 border-t"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.7, duration: 0.3 }}
+                        transition={{ delay: 0.8, duration: 0.3 }}
                       >
                         <div className="py-2 text-sm text-muted-foreground">Loading...</div>
                       </motion.div>
@@ -381,7 +353,7 @@ export function Navbar() {
                         className="space-y-2 pt-4 border-t"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.7, duration: 0.3 }}
+                        transition={{ delay: 0.8, duration: 0.3 }}
                       >
                         {[
                           { href: "/auth/signin", label: "Sign In" },

@@ -15,6 +15,7 @@ import { motion } from 'framer-motion'
 import AnimatedProductCard from '@/components/ui/animated-product-card'
 import ScrollReveal from '@/components/ui/scroll-reveal'
 import HeroSlideshow from '@/components/ui/hero-slideshow'
+import { ContainerTextFlip } from '@/components/ui/container-text-flip'
 
 interface Product {
   id: string
@@ -106,17 +107,40 @@ export default function HomePage() {
                   <Recycle className="h-4 w-4" />
                   Sustainable Fashion
                 </motion.div>
-                <motion.h1 
-                  className="text-4xl md:text-6xl font-bold leading-tight"
+                <motion.div 
+                  className="space-y-4"
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.8 }}
                 >
-                  Sustainable Fashion
-                  <span className="block text-primary bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    Starts Here
-                  </span>
-                </motion.h1>
+                  <div className="text-4xl md:text-6xl font-bold leading-tight">
+                    {/* Desktop: Side by side */}
+                    <div className="hidden md:flex items-center gap-3 mb-2">
+                      <span>Discover</span>
+                      <ContainerTextFlip
+                        words={["Sustainable", "Affordable", "Unique", "Quality", "Vintage"]}
+                        interval={2500}
+                        animationDuration={600}
+                        className="text-4xl md:text-6xl font-bold"
+                        textClassName="text-foreground"
+                      />
+                    </div>
+                    
+                    {/* Mobile: Stacked consistently */}
+                    <div className="md:hidden space-y-2 mb-2">
+                      <div>Discover</div>
+                      <ContainerTextFlip
+                        words={["Sustainable", "Affordable", "Unique", "Quality", "Vintage"]}
+                        interval={2500}
+                        animationDuration={600}
+                        className="text-4xl font-bold"
+                        textClassName="text-foreground"
+                      />
+                    </div>
+                    
+                    <div>Fashion for Everyone</div>
+                  </div>
+                </motion.div>
                 <motion.p 
                   className="text-lg md:text-xl text-muted-foreground max-w-2xl"
                   initial={{ opacity: 0, y: 20 }}
@@ -340,8 +364,8 @@ export default function HomePage() {
                       <Link href="/auth/signup">Create Account</Link>
                     </Button>
                   )}
-                  <Button size="lg" variant="outline" asChild className="border-primary-foreground hover:bg-primary-foreground">
-                    <Link href="/products" className="text-black hover:text-primary">Browse Collection</Link>
+                  <Button size="lg" variant="secondary" asChild>
+                    <Link href="/products">Browse Collection</Link>
                   </Button>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Github, Instagram, Mail, Phone, MapPin, Clock, CreditCard } from 'lucide-react'
 import { useStore } from '@/contexts/StoreContext'
 import { motion } from 'framer-motion'
+import { ThemeToggleButton } from '@/components/ui/theme-toggle'
 
 export function Footer() {
   const { settings } = useStore()
@@ -141,6 +142,22 @@ export function Footer() {
         </div>
 
         <div className="border-t mt-8 pt-8">
+          {/* Theme Toggle - Above Copyright, Left Aligned */}
+          <div className="flex justify-start items-center mb-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+            >
+              <ThemeToggleButton 
+                variant="circle-blur" 
+                start="center"
+                className="shadow-sm hover:shadow-md transition-shadow duration-200"
+              />
+            </motion.div>
+          </div>
+          
+          {/* Copyright and Links */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
               © 2025 {settings?.storeName || 'Thrift Haven'}. All rights reserved.
