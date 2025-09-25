@@ -95,7 +95,10 @@ export function ProfileDropdown() {
     };
 
     document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, [isOpen]);
 
   if (!user) return null;
@@ -104,12 +107,10 @@ export function ProfileDropdown() {
     if (!buttonRef.current) return { top: 0, right: 0 };
     
     const rect = buttonRef.current.getBoundingClientRect();
-    const scrollY = window.scrollY;
-    const scrollX = window.scrollX;
     
     return {
-      top: rect.bottom + scrollY + 8,
-      right: window.innerWidth - rect.right - scrollX,
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
     };
   };
 
@@ -129,6 +130,9 @@ export function ProfileDropdown() {
       style={{
         ...getDropdownPosition(),
         zIndex: 99999,
+        position: 'fixed',
+        transform: 'translateZ(0)',
+        willChange: 'transform',
       }}
     >
       {/* User Info Header */}

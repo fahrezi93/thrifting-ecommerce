@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext'
 export function CartSheet() {
   const { user } = useAuth()
   const { items, isOpen, toggleCart, updateQuantity, removeItem, getTotalPrice } = useCart()
+  
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -22,17 +23,27 @@ export function CartSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={toggleCart}>
-      <SheetContent className="w-full sm:max-w-lg">
+      <SheetContent 
+        className="w-full sm:max-w-lg" 
+        style={{ 
+          height: 'auto', 
+          maxHeight: '100vh',
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          zIndex: 99999
+        }}
+      >
         <SheetHeader>
           <SheetTitle>Shopping Cart ({items?.length || 0})</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           {items && items.length > 0 ? (
             <>
-              {/* Cart Items */}
-              <div className="flex-1 overflow-y-auto py-4 min-h-0">
-                <div className="space-y-4 px-1">
+            {/* Cart Items */}
+            <div className="flex-1 overflow-y-auto py-4 min-h-0 max-h-[50vh]">
+              <div className="space-y-4 px-1">
                   {items.map((item) => (
                     <div key={item.id} className="flex gap-3 p-3 border rounded-lg bg-white">
                       <div className="relative h-16 w-16 flex-shrink-0">
@@ -126,7 +137,7 @@ export function CartSheet() {
                 <p className="text-gray-600 mb-6 text-sm">
                   Discover amazing thrift finds and add them to your cart to get started!
                 </p>
-                <Button onClick={toggleCart} asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                <Button onClick={toggleCart} asChild className="w-full">
                   <Link href="/products">Continue Shopping</Link>
                 </Button>
               </div>

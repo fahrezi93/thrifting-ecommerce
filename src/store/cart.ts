@@ -193,7 +193,7 @@ export const useCart = create<CartStore>()(
       },
       
       toggleCart: () => {
-        set({ isOpen: !get().isOpen })
+        set({ isOpen: !get().isOpen });
       },
       
       getTotalItems: () => {
