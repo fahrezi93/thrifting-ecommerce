@@ -24,26 +24,17 @@ export function CartSheet() {
     <Sheet open={isOpen} onOpenChange={toggleCart}>
       <SheetContent className="w-full sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>Shopping Cart ({items.length})</SheetTitle>
+          <SheetTitle>Shopping Cart ({items?.length || 0})</SheetTitle>
         </SheetHeader>
 
         <div className="flex flex-col h-full">
-          {items.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-muted-foreground mb-4">Your cart is empty</p>
-                <Button onClick={toggleCart} asChild>
-                  <Link href="/products">Continue Shopping</Link>
-                </Button>
-              </div>
-            </div>
-          ) : (
+          {items && items.length > 0 ? (
             <>
               {/* Cart Items */}
-              <div className="flex-1 overflow-y-auto py-4">
-                <div className="space-y-4">
+              <div className="flex-1 overflow-y-auto py-4 min-h-0">
+                <div className="space-y-4 px-1">
                   {items.map((item) => (
-                    <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
+                    <div key={item.id} className="flex gap-3 p-3 border rounded-lg bg-white">
                       <div className="relative h-16 w-16 flex-shrink-0">
                         <Image
                           src={item.imageUrl}
@@ -62,7 +53,7 @@ export function CartSheet() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-7 w-7"
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           >
                             <Minus className="h-3 w-3" />
@@ -71,7 +62,7 @@ export function CartSheet() {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-7 w-7"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             disabled={item.quantity >= item.stock}
                           >
@@ -83,7 +74,7 @@ export function CartSheet() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-8 w-8 flex-shrink-0"
                         onClick={() => removeItem(item.id)}
                       >
                         <X className="h-4 w-4" />
@@ -94,7 +85,7 @@ export function CartSheet() {
               </div>
 
               {/* Cart Footer */}
-              <div className="border-t pt-4 pb-4 space-y-4 mt-auto">
+              <div className="border-t pt-4 space-y-4 mt-auto">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total:</span>
                   <span className="font-bold text-lg">{formatPrice(getTotalPrice())}</span>
@@ -123,6 +114,23 @@ export function CartSheet() {
                 )}
               </div>
             </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center py-8">
+              <div className="text-center px-6 py-8">
+                <div className="mb-6">
+                  <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Your cart is empty</h3>
+                <p className="text-gray-600 mb-6 text-sm">
+                  Discover amazing thrift finds and add them to your cart to get started!
+                </p>
+                <Button onClick={toggleCart} asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                  <Link href="/products">Continue Shopping</Link>
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       </SheetContent>

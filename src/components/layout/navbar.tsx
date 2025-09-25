@@ -2,18 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ShoppingBag, Search, User, Menu, X, Settings, LogOut, UserCircle, Shield, Heart } from 'lucide-react'
+import { ShoppingBag, Search, Menu, X, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/store/cart'
 import { useRouter } from 'next/navigation'
@@ -23,6 +14,7 @@ import { useStore } from '@/contexts/StoreContext'
 import { PWAInstallButton } from '@/components/pwa-install-button'
 import { useDisplayMode } from '@/hooks/use-display-mode'
 import { NotificationBell } from '@/components/layout/notification-bell'
+import { ProfileDropdown } from '@/components/layout/profile-dropdown'
 import { MainNavigation } from '@/components/layout/main-navigation'
 import { MobileNavigation } from '@/components/layout/mobile-navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -59,26 +51,15 @@ function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobi
   if (loading) return null
   if (!isAdmin) return null
 
-  if (isMobile) {
-    return (
-      <Link
-        href="/admin"
-        className="block py-2 text-sm font-medium hover:text-primary transition-colors"
-        onClick={onClose}
-      >
-        <Shield className="inline mr-2 h-4 w-4" />
-        Admin Panel
-      </Link>
-    )
-  }
-
   return (
-    <DropdownMenuItem asChild>
-      <Link href="/admin" className="cursor-pointer">
-        <Shield className="mr-2 h-4 w-4" />
-        <span>Admin Panel</span>
-      </Link>
-    </DropdownMenuItem>
+    <Link
+      href="/admin"
+      className="block py-2 text-sm font-medium hover:text-primary transition-colors"
+      onClick={onClose}
+    >
+      <Shield className="inline mr-2 h-4 w-4" />
+      Admin Panel
+    </Link>
   )
 }
 
@@ -179,60 +160,7 @@ export function Navbar() {
                   </Button>
                 </div>
               ) : user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={''} alt={user.name || user.email || ''} />
-                        <AvatarFallback>
-                          {user.name ? user.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user.name || 'User'}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile" className="cursor-pointer">
-                        <UserCircle className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/wishlist" className="cursor-pointer flex items-center justify-between w-full">
-                        <div className="flex items-center">
-                          <Heart className="mr-2 h-4 w-4" />
-                          <span>Wishlist</span>
-                        </div>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard" className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Dashboard</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <AdminMenuCheck user={user} />
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => logout()}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <ProfileDropdown />
               ) : (
                 <div className="hidden md:flex items-center space-x-2">
                   <Link href="/auth/signin">

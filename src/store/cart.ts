@@ -209,7 +209,7 @@ export const useCart = create<CartStore>()(
       partialize: (state) => ({ 
         isOpen: state.isOpen,
         userId: state.userId,
-        // Don't persist items in localStorage, load from server
+        items: [], // Always start with empty items
       }),
     }
   )
