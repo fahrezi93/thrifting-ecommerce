@@ -67,7 +67,7 @@ export const emailTemplates = {
                 <p>
                   📧 support@thrifthaven.com<br>
                   📞 +62 123 456 7890<br>
-                  📍 Jakarta, Indonesia
+                  📍 Cirebon, Indonesia
                 </p>
                 
                 <p><small>This is an automated response from our customer support system.</small></p>
@@ -95,7 +95,7 @@ Thrift Haven Customer Support Team
 
 Email: support@thrifthaven.com
 Phone: +62 123 456 7890
-Address: Jakarta, Indonesia
+Address: Cirebon, Indonesia
     `
   }),
 
@@ -145,7 +145,7 @@ Address: Jakarta, Indonesia
                 <p>
                   📧 support@thrifthaven.com<br>
                   📞 +62 123 456 7890<br>
-                  📍 Jakarta, Indonesia
+                  📍 Cirebon, Indonesia
                 </p>
               </div>
             </div>
@@ -167,7 +167,7 @@ Thrift Haven Customer Support Team
 
 Email: support@thrifthaven.com
 Phone: +62 123 456 7890
-Address: Jakarta, Indonesia
+Address: Cirebon, Indonesia
     `
   })
 }
