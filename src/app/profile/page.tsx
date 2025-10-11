@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { User, Mail, Phone, MapPin, Calendar, Package, CreditCard } from 'lucide-react'
+import { User, Mail, Phone, MapPin, Calendar, Package, CreditCard, Eye } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 interface UserProfile {
@@ -432,42 +432,87 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {orders && orders.length > 0 && orders.map((order) => (
-                      <Card key={order.id}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <h4 className="font-semibold">Order #{order.orderNumber?.slice(-8) || order.id?.slice(-8) || 'N/A'}</h4>
-                              <p className="text-sm text-muted-foreground">
-                                {order.createdAt ? formatDate(order.createdAt) : 'N/A'}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              {getStatusBadge(order.status || 'UNKNOWN')}
-                              <p className="font-semibold mt-1">{formatPrice(order.totalAmount || 0)}</p>
-                            </div>
-                          </div>
+                    {orders && orders.length > 0 && orders.map((order) => {
+                      // Helper function to get image URL with proper parsing
+                      const getImageUrl = (imageUrls: any): string => {
+                        try {
+                          let urls: string[] = []
                           
-                          <div className="space-y-2">
-                            {order.items && order.items.length > 0 && order.items.map((item) => (
-                              <div key={item.id || Math.random()} className="flex items-center gap-3 p-2 bg-muted rounded">
-                                <img
-                                  src={(item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls[0] : null) || '/placeholder-image.svg'}
-                                  alt={item.name || 'Product'}
-                                  className="w-12 h-12 object-cover rounded"
-                                />
-                                <div className="flex-1">
-                                  <p className="font-medium text-sm">{item.name || 'Unknown Product'}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    Qty: {item.quantity || 1} × {formatPrice(item.price || 0)}
-                                  </p>
-                                </div>
+                          if (!imageUrls) return '/placeholder-image.jpg'
+                          
+                          if (typeof imageUrls === 'string') {
+                            urls = JSON.parse(imageUrls)
+                          } else if (Array.isArray(imageUrls)) {
+                            urls = imageUrls
+                          }
+                          
+                          if (urls.length > 0 && urls[0]) {
+                            const url = urls[0].trim()
+                            if (url.startsWith('http') || url.startsWith('https')) {
+                              return url
+                            } else if (url.startsWith('/')) {
+                              return url
+                            }
+                          }
+                        } catch (error) {
+                          console.error('Error parsing imageUrls:', error)
+                        }
+                        return '/placeholder-image.jpg'
+                      }
+
+                      return (
+                        <Card key={order.id}>
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h4 className="font-semibold">Order #{order.orderNumber?.slice(-8) || order.id?.slice(-8) || 'N/A'}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {order.createdAt ? formatDate(order.createdAt) : 'N/A'}
+                                </p>
                               </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                              <div className="text-right">
+                                {getStatusBadge(order.status || 'UNKNOWN')}
+                                <p className="font-semibold mt-1">{formatPrice(order.totalAmount || 0)}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2 mb-4">
+                              {order.items && order.items.length > 0 && order.items.map((item) => (
+                                <div key={item.id || Math.random()} className="flex items-center gap-3 p-2 bg-muted rounded">
+                                  <img
+                                    src={getImageUrl(item.imageUrls)}
+                                    alt={item.name || 'Product'}
+                                    className="w-12 h-12 object-cover rounded"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement
+                                      target.src = '/placeholder-image.jpg'
+                                    }}
+                                  />
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm">{item.name || 'Unknown Product'}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Qty: {item.quantity || 1} × {formatPrice(item.price || 0)}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* View Details Button */}
+                            <div className="pt-2 border-t">
+                              <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
                   </div>
                 )}
               </CardContent>

@@ -44,7 +44,7 @@ function AdminMenuCheck({ user, onClose }: { user: any, onClose: () => void }) {
   return (
     <Link
       href="/admin"
-      className="flex items-center px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+      className="flex items-center px-3 py-2 text-sm hover:bg-gray-100 transition-colors cursor-pointer text-gray-700"
       onClick={onClose}
     >
       <Shield className="mr-2 h-4 w-4" />
@@ -84,6 +84,27 @@ export function ProfileDropdown() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
+  // Close dropdown on scroll to prevent positioning issues
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleScroll = () => {
+      setIsOpen(false);
+    };
+
+    const handleResize = () => {
+      setIsOpen(false);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isOpen]);
+
   // Handle escape key
   useEffect(() => {
     if (!isOpen) return;
@@ -107,10 +128,21 @@ export function ProfileDropdown() {
     if (!buttonRef.current) return { top: 0, right: 0 };
     
     const rect = buttonRef.current.getBoundingClientRect();
+    const dropdownHeight = 280; // Fixed height for consistency
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    
+    // Simple logic: open downward unless there's clearly not enough space
+    const shouldOpenUpward = spaceBelow < 200 && spaceAbove > spaceBelow;
     
     return {
-      top: rect.bottom + 8,
+      top: shouldOpenUpward ? rect.top - dropdownHeight - 8 : rect.bottom + 8,
       right: window.innerWidth - rect.right,
+      maxHeight: shouldOpenUpward 
+        ? Math.min(spaceAbove - 20, dropdownHeight) 
+        : Math.min(spaceBelow - 20, dropdownHeight),
+      minHeight: 200
     };
   };
 
@@ -126,22 +158,19 @@ export function ProfileDropdown() {
   const dropdownContent = isOpen && mounted ? (
     <div
       ref={dropdownRef}
-      className="fixed w-56 bg-popover border rounded-md shadow-md p-1 text-popover-foreground"
+      className="fixed w-56 bg-white border border-gray-200 rounded-lg shadow-xl text-gray-900 overflow-y-auto z-50"
       style={{
         ...getDropdownPosition(),
-        zIndex: 99999,
-        position: 'fixed',
-        transform: 'translateZ(0)',
-        willChange: 'transform',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       }}
     >
       {/* User Info Header */}
-      <div className="px-3 py-2 border-b">
+      <div className="px-3 py-2 border-b border-gray-200">
         <div className="flex flex-col space-y-1">
-          <p className="text-sm font-medium leading-none">
+          <p className="text-sm font-medium leading-none text-gray-900">
             {user.name || 'User'}
           </p>
-          <p className="text-xs leading-none text-muted-foreground">
+          <p className="text-xs leading-none text-gray-500">
             {user.email}
           </p>
         </div>
@@ -151,7 +180,7 @@ export function ProfileDropdown() {
       <div className="py-1">
         <Link
           href="/profile"
-          className="flex items-center px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+          className="flex items-center px-3 py-2 text-sm hover:bg-gray-100 transition-colors cursor-pointer text-gray-700"
           onClick={handleClose}
         >
           <UserCircle className="mr-2 h-4 w-4" />
@@ -160,7 +189,7 @@ export function ProfileDropdown() {
 
         <Link
           href="/wishlist"
-          className="flex items-center px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+          className="flex items-center px-3 py-2 text-sm hover:bg-gray-100 transition-colors cursor-pointer text-gray-700"
           onClick={handleClose}
         >
           <Heart className="mr-2 h-4 w-4" />
@@ -169,7 +198,7 @@ export function ProfileDropdown() {
 
         <Link
           href="/dashboard"
-          className="flex items-center px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+          className="flex items-center px-3 py-2 text-sm hover:bg-gray-100 transition-colors cursor-pointer text-gray-700"
           onClick={handleClose}
         >
           <Settings className="mr-2 h-4 w-4" />
@@ -179,10 +208,10 @@ export function ProfileDropdown() {
         <AdminMenuCheck user={user} onClose={handleClose} />
 
         {/* Separator */}
-        <div className="my-1 h-px bg-border" />
+        <div className="my-1 h-px bg-gray-200" />
 
         <button
-          className="flex items-center w-full px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+          className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-100 transition-colors cursor-pointer"
           onClick={handleLogout}
         >
           <LogOut className="mr-2 h-4 w-4" />
