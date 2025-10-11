@@ -65,6 +65,8 @@ export function ProfileDropdown() {
     return () => setMounted(false);
   }, []);
 
+
+
   // Handle click outside to close dropdown
   useEffect(() => {
     if (!isOpen) return;
@@ -84,38 +86,7 @@ export function ProfileDropdown() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Close dropdown on scroll for better UX
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleScroll = () => {
-      setIsOpen(false);
-    };
-
-    const handleResize = () => {
-      setIsOpen(false);
-    };
-
-    // Use a small delay to prevent immediate closing on mobile touch
-    let scrollTimer: NodeJS.Timeout;
-    const throttledScroll = () => {
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
-        setIsOpen(false);
-      }, 50);
-    };
-
-    window.addEventListener('scroll', throttledScroll, { passive: true });
-    window.addEventListener('resize', handleResize, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', throttledScroll);
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(scrollTimer);
-    };
-  }, [isOpen]);
-
-  // Handle escape key
+  // Handle escape key and scroll to close dropdown
   useEffect(() => {
     if (!isOpen) return;
 
@@ -125,12 +96,26 @@ export function ProfileDropdown() {
       }
     };
 
+    const handleScroll = () => {
+      setIsOpen(false);
+    };
+
+    const handleResize = () => {
+      setIsOpen(false);
+    };
+
     document.addEventListener('keydown', handleEscape);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
     
     return () => {
       document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
     };
   }, [isOpen]);
+
+
 
   if (!user) return null;
 
@@ -143,30 +128,41 @@ export function ProfileDropdown() {
     const spaceBelow = viewportHeight - rect.bottom;
     const spaceAbove = rect.top;
     const margin = 16;
+    const scrollY = window.pageYOffset || window.scrollY;
     
     let top: number;
     let maxHeight: number;
     
     // Check if there's enough space below
     if (spaceBelow >= dropdownHeight + margin) {
-      // Open downward (preferred)
-      top = rect.bottom + window.scrollY + 8;
+      // Open downward (preferred) - use absolute positioning with scroll offset
+      top = rect.bottom + scrollY + 8;
       maxHeight = Math.min(spaceBelow - margin, 300);
     } else if (spaceAbove >= dropdownHeight + margin) {
-      // Open upward
-      top = rect.top + window.scrollY - dropdownHeight - 8;
+      // Open upward - use absolute positioning with scroll offset
+      top = rect.top + scrollY - dropdownHeight - 8;
       maxHeight = Math.min(spaceAbove - margin, 300);
     } else {
       // Use the space with more room
       if (spaceBelow > spaceAbove) {
         // Not much space, but use what's available below
-        top = rect.bottom + window.scrollY + 8;
+        top = rect.bottom + scrollY + 8;
         maxHeight = Math.max(spaceBelow - margin, 180);
       } else {
         // Use available space above
         maxHeight = Math.max(spaceAbove - margin, 180);
-        top = rect.top + window.scrollY - maxHeight - 8;
+        top = rect.top + scrollY - maxHeight - 8;
       }
+    }
+    
+    // Ensure dropdown doesn't go outside viewport bounds
+    const maxTop = scrollY + viewportHeight - maxHeight - margin;
+    const minTop = scrollY + margin;
+    
+    if (top > maxTop) top = maxTop;
+    if (top < minTop) {
+      top = minTop;
+      maxHeight = Math.min(viewportHeight - 2 * margin, maxHeight);
     }
     
     return {
@@ -189,11 +185,11 @@ export function ProfileDropdown() {
   const dropdownContent = isOpen && mounted ? (
     <div
       ref={dropdownRef}
-      className="fixed w-56 bg-white border border-gray-200 rounded-lg shadow-xl text-gray-900 overflow-y-auto"
+      className="absolute w-56 bg-white border border-gray-200 rounded-lg shadow-xl text-gray-900 overflow-y-auto"
       style={{
         ...getDropdownPosition(),
         zIndex: 9999,
-        position: 'fixed',
+        position: 'absolute',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       }}
     >
