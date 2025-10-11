@@ -84,7 +84,7 @@ export function ProfileDropdown() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Close dropdown on scroll to prevent positioning issues
+  // Close dropdown on scroll for better UX
   useEffect(() => {
     if (!isOpen) return;
 
@@ -96,12 +96,22 @@ export function ProfileDropdown() {
       setIsOpen(false);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Use a small delay to prevent immediate closing on mobile touch
+    let scrollTimer: NodeJS.Timeout;
+    const throttledScroll = () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        setIsOpen(false);
+      }, 50);
+    };
+
+    window.addEventListener('scroll', throttledScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
     
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', throttledScroll);
       window.removeEventListener('resize', handleResize);
+      clearTimeout(scrollTimer);
     };
   }, [isOpen]);
 
@@ -128,21 +138,42 @@ export function ProfileDropdown() {
     if (!buttonRef.current) return { top: 0, right: 0 };
     
     const rect = buttonRef.current.getBoundingClientRect();
-    const dropdownHeight = 280; // Fixed height for consistency
+    const dropdownHeight = 240; // Approximate height needed
     const viewportHeight = window.innerHeight;
     const spaceBelow = viewportHeight - rect.bottom;
     const spaceAbove = rect.top;
+    const margin = 16;
     
-    // Simple logic: open downward unless there's clearly not enough space
-    const shouldOpenUpward = spaceBelow < 200 && spaceAbove > spaceBelow;
+    let top: number;
+    let maxHeight: number;
+    
+    // Check if there's enough space below
+    if (spaceBelow >= dropdownHeight + margin) {
+      // Open downward (preferred)
+      top = rect.bottom + window.scrollY + 8;
+      maxHeight = Math.min(spaceBelow - margin, 300);
+    } else if (spaceAbove >= dropdownHeight + margin) {
+      // Open upward
+      top = rect.top + window.scrollY - dropdownHeight - 8;
+      maxHeight = Math.min(spaceAbove - margin, 300);
+    } else {
+      // Use the space with more room
+      if (spaceBelow > spaceAbove) {
+        // Not much space, but use what's available below
+        top = rect.bottom + window.scrollY + 8;
+        maxHeight = Math.max(spaceBelow - margin, 180);
+      } else {
+        // Use available space above
+        maxHeight = Math.max(spaceAbove - margin, 180);
+        top = rect.top + window.scrollY - maxHeight - 8;
+      }
+    }
     
     return {
-      top: shouldOpenUpward ? rect.top - dropdownHeight - 8 : rect.bottom + 8,
+      top,
       right: window.innerWidth - rect.right,
-      maxHeight: shouldOpenUpward 
-        ? Math.min(spaceAbove - 20, dropdownHeight) 
-        : Math.min(spaceBelow - 20, dropdownHeight),
-      minHeight: 200
+      maxHeight,
+      minHeight: Math.min(maxHeight, 180)
     };
   };
 
@@ -158,9 +189,11 @@ export function ProfileDropdown() {
   const dropdownContent = isOpen && mounted ? (
     <div
       ref={dropdownRef}
-      className="fixed w-56 bg-white border border-gray-200 rounded-lg shadow-xl text-gray-900 overflow-y-auto z-50"
+      className="fixed w-56 bg-white border border-gray-200 rounded-lg shadow-xl text-gray-900 overflow-y-auto"
       style={{
         ...getDropdownPosition(),
+        zIndex: 9999,
+        position: 'fixed',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       }}
     >
