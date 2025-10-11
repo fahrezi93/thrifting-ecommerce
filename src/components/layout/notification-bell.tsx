@@ -182,7 +182,7 @@ export function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Handle escape key
+  // Handle escape key and scroll to close dropdown
   useEffect(() => {
     if (!isOpen) return;
 
@@ -192,8 +192,23 @@ export function NotificationBell() {
       }
     };
 
+    const handleScroll = () => {
+      setIsOpen(false);
+    };
+
+    const handleResize = () => {
+      setIsOpen(false);
+    };
+
     document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [isOpen]);
 
   if (!user) return null;
@@ -202,23 +217,61 @@ export function NotificationBell() {
     if (!buttonRef.current) return { top: 0, right: 0 };
     
     const rect = buttonRef.current.getBoundingClientRect();
-    const scrollY = window.scrollY;
-    const scrollX = window.scrollX;
+    const dropdownHeight = 400; // Max height of notification dropdown
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const margin = 16;
+    const scrollY = window.pageYOffset || window.scrollY;
+    
+    let top: number;
+    let maxHeight: number;
+    
+    // Check if there's enough space below
+    if (spaceBelow >= dropdownHeight + margin) {
+      // Open downward (preferred)
+      top = rect.bottom + scrollY + 8;
+      maxHeight = Math.min(spaceBelow - margin, dropdownHeight);
+    } else if (spaceAbove >= dropdownHeight + margin) {
+      // Open upward
+      top = rect.top + scrollY - dropdownHeight - 8;
+      maxHeight = Math.min(spaceAbove - margin, dropdownHeight);
+    } else {
+      // Use the space with more room
+      if (spaceBelow > spaceAbove) {
+        top = rect.bottom + scrollY + 8;
+        maxHeight = Math.max(spaceBelow - margin, 200);
+      } else {
+        maxHeight = Math.max(spaceAbove - margin, 200);
+        top = rect.top + scrollY - maxHeight - 8;
+      }
+    }
+    
+    // Ensure dropdown doesn't go outside viewport bounds
+    const maxTop = scrollY + viewportHeight - maxHeight - margin;
+    const minTop = scrollY + margin;
+    
+    if (top > maxTop) top = maxTop;
+    if (top < minTop) {
+      top = minTop;
+      maxHeight = Math.min(viewportHeight - 2 * margin, maxHeight);
+    }
     
     return {
-      top: rect.bottom + scrollY + 8,
-      right: window.innerWidth - rect.right - scrollX,
+      top,
+      right: window.innerWidth - rect.right,
+      maxHeight
     };
   };
 
   const dropdownContent = isOpen && mounted ? (
     <div
       ref={dropdownRef}
-      className="fixed w-80 bg-popover border rounded-md shadow-md p-0 text-popover-foreground"
+      className="absolute w-80 bg-white border border-gray-200 rounded-lg shadow-xl text-gray-900 overflow-hidden"
       style={{
         ...getDropdownPosition(),
-        zIndex: 99999,
-        maxHeight: '400px',
+        zIndex: 9999,
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       }}
     >
       <div className="p-3 border-b">

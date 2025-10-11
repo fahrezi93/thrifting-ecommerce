@@ -56,32 +56,78 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      style={{
-        position: 'fixed',
+>(({ side = "right", className, children, ...props }, ref) => {
+  const getSheetStyles = () => {
+    const baseStyles = {
+      position: 'fixed' as const,
+      zIndex: 100,
+      top: 0,
+      bottom: 0,
+      height: '100vh',
+      maxHeight: '100vh',
+      overflowY: 'auto' as const,
+    };
+
+    if (side === 'right') {
+      return {
+        ...baseStyles,
+        right: 0,
+        width: 'min(90vw, 32rem)',
+      };
+    } else if (side === 'left') {
+      return {
+        ...baseStyles,
+        left: 0,
+        width: 'min(90vw, 20rem)',
+      };
+    } else if (side === 'top') {
+      return {
+        ...baseStyles,
         top: 0,
-        height: '100vh',
-        width: side === 'right' ? 'min(75vw, 32rem)' : 'min(75vw, 20rem)',
-        right: side === 'right' ? 0 : undefined,
-        left: side === 'left' ? 0 : undefined,
-        zIndex: 100,
-        ...props.style
-      }}
-      {...props}
-    >
-      {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-    </SheetPrimitive.Content>
-  </SheetPortal>
-))
+        left: 0,
+        right: 0,
+        bottom: 'auto',
+        height: 'auto',
+        maxHeight: '90vh',
+        width: '100vw',
+      };
+    } else if (side === 'bottom') {
+      return {
+        ...baseStyles,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        top: 'auto',
+        height: 'auto',
+        maxHeight: '90vh',
+        width: '100vw',
+      };
+    }
+
+    return baseStyles;
+  };
+
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        ref={ref}
+        className={cn(sheetVariants({ side }), className)}
+        style={{
+          ...getSheetStyles(),
+          ...props.style
+        }}
+        {...props}
+      >
+        {children}
+        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </SheetPrimitive.Close>
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  );
+})
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({

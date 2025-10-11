@@ -23,16 +23,16 @@ export function CartSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={toggleCart}>
-      <SheetContent className="h-screen w-full sm:max-w-lg flex flex-col">
-        <SheetHeader className="flex-shrink-0">
+      <SheetContent className="flex flex-col p-0 gap-0" side="right">
+        <SheetHeader className="flex-shrink-0 p-6 pb-3">
           <SheetTitle>Shopping Cart ({items?.length || 0})</SheetTitle>
         </SheetHeader>
 
         {items && items.length > 0 ? (
           <>
             {/* Cart Items - Scrollable Area */}
-            <div className="flex-1 overflow-y-auto py-4 min-h-0">
-              <div className="space-y-4 px-1">
+            <div className="flex-1 overflow-y-auto py-2 min-h-0 px-6">
+              <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-3 p-3 border rounded-lg bg-white">
                     <div className="relative h-16 w-16 flex-shrink-0">
@@ -85,7 +85,7 @@ export function CartSheet() {
             </div>
 
             {/* Cart Footer - Fixed at Bottom */}
-            <div className="border-t pt-4 space-y-4 flex-shrink-0">
+            <div className="border-t pt-4 space-y-4 flex-shrink-0 px-6 pb-6">
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total:</span>
                 <span className="font-bold text-lg">{formatPrice(getTotalPrice())}</span>
@@ -115,8 +115,8 @@ export function CartSheet() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center py-8">
-            <div className="text-center px-6 py-8">
+          <div className="flex-1 flex items-center justify-center py-8 px-6">
+            <div className="text-center py-8">
               <div className="mb-6">
                 <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
