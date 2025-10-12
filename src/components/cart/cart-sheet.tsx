@@ -23,7 +23,7 @@ export function CartSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={toggleCart}>
-      <SheetContent className="flex flex-col h-full p-0 gap-0" side="right">
+      <SheetContent className="flex flex-col h-screen p-0 gap-0" side="right">
         <SheetHeader className="flex-shrink-0 p-6 pb-3 border-b">
           <SheetTitle>Shopping Cart ({items?.length || 0})</SheetTitle>
         </SheetHeader>

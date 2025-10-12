@@ -64,16 +64,8 @@
     @apply border-border;
   }
   
-  html {
-    height: 100%;
-    overflow-x: hidden;
-  }
-  
   body {
     @apply bg-background text-foreground;
-    min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height for mobile */
-    position: relative;
   }
   
   /* View Transitions API support */
