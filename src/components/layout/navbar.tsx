@@ -65,7 +65,7 @@ function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobi
 
 export function Navbar() {
   const { user, logout, loading } = useAuth()
-  const { getTotalItems, toggleCart } = useCart()
+  const { getTotalItems } = useCart()
   const { settings } = useStore()
   const { isInstalled, displayMode } = useDisplayMode()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -129,20 +129,21 @@ export function Navbar() {
                 <ShoppingBag className="h-5 w-5" />
               </Button>
             }>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleCart}
-                className="relative z-50"
-                type="button"
-              >
-                <ShoppingBag className="h-5 w-5" />
-                {getTotalItems() > 0 && (
-                  <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-primary text-xs text-primary-foreground flex items-center justify-center">
-                    {getTotalItems()}
-                  </span>
-                )}
-              </Button>
+              <Link href="/cart">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative z-50"
+                  type="button"
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                  {getTotalItems() > 0 && (
+                    <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-primary text-xs text-primary-foreground flex items-center justify-center">
+                      {getTotalItems()}
+                    </span>
+                  )}
+                </Button>
+              </Link>
             </ClientOnly>
 
             {/* User Menu */}

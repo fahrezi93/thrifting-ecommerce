@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { useCart } from '@/store/cart'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
 import ScrollReveal from '@/components/ui/scroll-reveal'
+import { toast } from 'sonner'
 
 interface Product {
   id: string
@@ -56,6 +57,7 @@ export default function ProductsPage() {
   
   const { addItem } = useCart()
   const { user } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
     fetchProducts()
@@ -77,7 +79,18 @@ export default function ProductsPage() {
       const response = await fetch(`/api/products?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
-        setProducts(data)
+        // Ensure imageUrls is an array for each product
+        const productsWithParsedImages = data.map((product: any) => {
+          if (typeof product.imageUrls === 'string') {
+            try {
+              product.imageUrls = JSON.parse(product.imageUrls)
+            } catch (e) {
+              product.imageUrls = [product.imageUrls]
+            }
+          }
+          return product as Product
+        })
+        setProducts(productsWithParsedImages)
       }
     } catch (error) {
       console.error('Error fetching products:', error)
@@ -123,6 +136,16 @@ export default function ProductsPage() {
       imageUrl: product.imageUrls[0],
       size: product.size,
       stock: product.stock,
+    })
+    
+    // Show success toast with View Cart action
+    toast.success('Added to Cart!', {
+      description: `${product.name} has been added to your cart.`,
+      action: {
+        label: 'View Cart',
+        onClick: () => router.push('/cart')
+      },
+      duration: 3000
     })
   }
 

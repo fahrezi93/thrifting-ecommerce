@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,6 +13,7 @@ import { ArrowLeft, Heart, Share2, ShoppingCart, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 import ReviewDisplay from '@/components/reviews/review-display'
+import { toast } from 'sonner'
 
 interface Product {
   id: string
@@ -30,6 +31,7 @@ interface Product {
 
 export default function ProductDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
@@ -49,6 +51,14 @@ export default function ProductDetailPage() {
       const response = await fetch(`/api/products/${id}`)
       if (response.ok) {
         const data = await response.json()
+        // Ensure imageUrls is an array
+        if (typeof data.imageUrls === 'string') {
+          try {
+            data.imageUrls = JSON.parse(data.imageUrls)
+          } catch (e) {
+            data.imageUrls = [data.imageUrls]
+          }
+        }
         setProduct(data)
       }
     } catch (error) {
@@ -102,10 +112,15 @@ export default function ProductDetailPage() {
         size: product.size,
         stock: product.stock,
       })
-      addToast({
-        title: 'Added to Cart!',
+      
+      // Use sonner toast with action button
+      toast.success('Added to Cart!', {
         description: `${product.name} has been added to your cart.`,
-        variant: 'success'
+        action: {
+          label: 'View Cart',
+          onClick: () => router.push('/cart')
+        },
+        duration: 3000
       })
     }
   }
