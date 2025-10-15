@@ -463,14 +463,14 @@ export default function CustomPaymentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold mb-2">
             Choose Payment Method
           </h1>
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <span>Complete payment within</span>
             <Badge variant="destructive" className="font-mono">
               {formatTime(timeLeft)}
@@ -489,7 +489,7 @@ export default function CustomPaymentPage() {
                 {Object.entries(groupedMethods).map(([type, methods]) => (
                   <div key={type}>
                     <div className="flex items-center gap-2 mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold">
                         {getTypeLabel(type as PaymentMethod['type'])}
                       </h3>
                       <Badge variant="outline" className={getTypeColor(type as PaymentMethod['type'])}>
@@ -503,8 +503,8 @@ export default function CustomPaymentPage() {
                           key={method.id}
                           className={`p-4 border rounded-lg cursor-pointer transition-all ${
                             selectedMethod === method.id
-                              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 ring-2 ring-blue-200 dark:ring-blue-900'
+                              : 'border hover:border-muted-foreground/30 hover:bg-muted/50'
                           } ${!method.available ? 'opacity-50 cursor-not-allowed' : ''}`}
                           onClick={() => method.available && setSelectedMethod(method.id)}
                         >
@@ -513,8 +513,8 @@ export default function CustomPaymentPage() {
                               {method.icon}
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-medium text-gray-900">{method.name}</h4>
-                              <p className="text-sm text-gray-600">{method.description}</p>
+                              <h4 className="font-medium">{method.name}</h4>
+                              <p className="text-sm text-muted-foreground">{method.description}</p>
                             </div>
                             {selectedMethod === method.id && (
                               <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
@@ -544,16 +544,16 @@ export default function CustomPaymentPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">No. Invoice</span>
-                    <span className="font-mono text-gray-900">{orderData.orderNumber || 'N/A'}</span>
+                    <span className="text-muted-foreground">No. Invoice</span>
+                    <span className="font-mono">{orderData.orderNumber || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Name</span>
-                    <span className="text-gray-900">{orderData.customerName || 'N/A'}</span>
+                    <span className="text-muted-foreground">Name</span>
+                    <span>{orderData.customerName || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Email</span>
-                    <span className="text-gray-900">{orderData.customerEmail || 'N/A'}</span>
+                    <span className="text-muted-foreground">Email</span>
+                    <span>{orderData.customerEmail || 'N/A'}</span>
                   </div>
                 </div>
                 
@@ -561,12 +561,12 @@ export default function CustomPaymentPage() {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="text-gray-900">IDR {(orderData.totalAmount || 0).toLocaleString()}</span>
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>IDR {(orderData.totalAmount || 0).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total Payment</span>
-                    <span className="text-blue-600">IDR {(orderData.totalAmount || 0).toLocaleString()}</span>
+                    <span className="text-blue-600 dark:text-blue-400">IDR {(orderData.totalAmount || 0).toLocaleString()}</span>
                   </div>
                 </div>
                 
@@ -586,7 +586,7 @@ export default function CustomPaymentPage() {
                   )}
                 </Button>
                 
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   By continuing, you agree to the payment terms and conditions
                 </p>
               </CardContent>

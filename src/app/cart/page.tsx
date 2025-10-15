@@ -21,7 +21,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
@@ -46,7 +46,7 @@ export default function CartPage() {
                 <Card key={item.id} className="p-6">
                   <div className="flex gap-6">
                     {/* Product Image */}
-                    <div className="relative h-32 w-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                    <div className="relative h-32 w-32 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
                       <Image
                         src={item.imageUrl || '/placeholder.png'}
                         alt={item.name}
@@ -67,7 +67,7 @@ export default function CartPage() {
                           <h3 className="font-semibold text-lg mb-1">{item.name}</h3>
                           <p className="text-sm text-muted-foreground">Size: {item.size}</p>
                           {item.stock < 5 && (
-                            <p className="text-sm text-orange-600 mt-1">
+                            <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
                               Only {item.stock} left in stock
                             </p>
                           )}
@@ -184,8 +184,8 @@ export default function CartPage() {
           <Card className="p-12">
             <div className="text-center max-w-md mx-auto">
               <div className="mb-6 flex justify-center">
-                <div className="h-32 w-32 rounded-full bg-gray-100 flex items-center justify-center">
-                  <ShoppingBag className="h-16 w-16 text-gray-400" />
+                <div className="h-32 w-32 rounded-full bg-muted flex items-center justify-center">
+                  <ShoppingBag className="h-16 w-16 text-muted-foreground" />
                 </div>
               </div>
               <h2 className="text-2xl font-bold mb-3">Your cart is empty</h2>

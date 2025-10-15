@@ -45,7 +45,7 @@ export default function ShippingInfo() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">Loading...</div>
         </div>
@@ -54,27 +54,27 @@ export default function ShippingInfo() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Shipping Information</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4">Shipping Information</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Fast, reliable delivery across Indonesia with multiple shipping options
           </p>
         </div>
 
         {/* Shipping Options */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Shipping Options</h2>
+          <h2 className="text-2xl font-bold mb-6">Shipping Options</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {shippingOptions.map((option, index) => {
               const IconComponent = option.icon
               return (
                 <Card key={index} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="text-center">
-                    <div className="mx-auto mb-4 p-3 bg-blue-100 rounded-full w-fit">
-                      <IconComponent className="h-8 w-8 text-blue-600" />
+                    <div className="mx-auto mb-4 p-3 bg-blue-100 dark:bg-blue-900/20 rounded-full w-fit">
+                      <IconComponent className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                     </div>
                     <CardTitle className="text-xl">{option.name}</CardTitle>
                     <CardDescription>{option.description}</CardDescription>
@@ -85,7 +85,7 @@ export default function ShippingInfo() {
                         {option.duration}
                       </Badge>
                     </div>
-                    <p className="text-lg font-semibold text-green-600">{option.cost}</p>
+                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">{option.cost}</p>
                   </CardContent>
                 </Card>
               )
@@ -95,19 +95,19 @@ export default function ShippingInfo() {
 
         {/* Coverage Areas */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Delivery Coverage</h2>
+          <h2 className="text-2xl font-bold mb-6">Delivery Coverage</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {coverageAreas.map((area, index) => (
               <Card key={index}>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center">
-                    <MapPin className="h-5 w-5 mr-2 text-red-500" />
+                    <MapPin className="h-5 w-5 mr-2 text-red-500 dark:text-red-400" />
                     {area.region}
                   </CardTitle>
                   <Badge variant="outline">{area.delivery}</Badge>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-1 text-sm text-gray-600">
+                  <ul className="space-y-1 text-sm text-muted-foreground">
                     {area.cities.map((city, cityIndex) => (
                       <li key={cityIndex}>• {city}</li>
                     ))}

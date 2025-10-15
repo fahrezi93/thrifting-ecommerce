@@ -97,7 +97,7 @@ export default function SizeGuide() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">Loading...</div>
         </div>
@@ -106,12 +106,12 @@ export default function SizeGuide() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Size Guide</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4">Size Guide</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Find your perfect fit with our comprehensive sizing charts and measurement guide
           </p>
         </div>
@@ -120,7 +120,7 @@ export default function SizeGuide() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center">
-              <Ruler className="h-6 w-6 mr-2 text-blue-500" />
+              <Ruler className="h-6 w-6 mr-2 text-blue-500 dark:text-blue-400" />
               How to Measure Yourself
             </CardTitle>
             <CardDescription>
@@ -130,14 +130,14 @@ export default function SizeGuide() {
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {measurementTips.map((tip, index) => (
-                <div key={index} className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-blue-900 mb-2">{tip.title}</h3>
-                  <p className="text-sm text-blue-700">{tip.description}</p>
+                <div key={index} className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">{tip.title}</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-400">{tip.description}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <p className="text-sm text-yellow-800">
+            <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <p className="text-sm text-yellow-800 dark:text-yellow-300">
                 <strong>💡 Pro Tip:</strong> Measure over your undergarments for the most accurate fit. 
                 If you're between sizes, we recommend sizing up for a more comfortable fit.
               </p>
@@ -173,22 +173,22 @@ export default function SizeGuide() {
                       Tops & Blouses
                     </h3>
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-gray-300">
+                      <table className="w-full border-collapse border">
                         <thead>
-                          <tr className="bg-gray-100">
-                            <th className="border border-gray-300 px-4 py-2 text-left">Size</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Bust (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Waist (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Hip (cm)</th>
+                          <tr className="bg-muted">
+                            <th className="border px-4 py-2 text-left">Size</th>
+                            <th className="border px-4 py-2 text-left">Bust (cm)</th>
+                            <th className="border px-4 py-2 text-left">Waist (cm)</th>
+                            <th className="border px-4 py-2 text-left">Hip (cm)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {womenSizes.tops.map((size, index) => (
-                            <tr key={index} className="hover:bg-gray-50">
-                              <td className="border border-gray-300 px-4 py-2 font-semibold">{size.size}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.bust}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.waist}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.hip}</td>
+                            <tr key={index} className="hover:bg-muted/50">
+                              <td className="border px-4 py-2 font-semibold">{size.size}</td>
+                              <td className="border px-4 py-2">{size.bust}</td>
+                              <td className="border px-4 py-2">{size.waist}</td>
+                              <td className="border px-4 py-2">{size.hip}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -200,22 +200,22 @@ export default function SizeGuide() {
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Bottoms & Pants</h3>
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-gray-300">
+                      <table className="w-full border-collapse border">
                         <thead>
-                          <tr className="bg-gray-100">
-                            <th className="border border-gray-300 px-4 py-2 text-left">Size</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Waist (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Hip (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Inseam (cm)</th>
+                          <tr className="bg-muted">
+                            <th className="border px-4 py-2 text-left">Size</th>
+                            <th className="border px-4 py-2 text-left">Waist (cm)</th>
+                            <th className="border px-4 py-2 text-left">Hip (cm)</th>
+                            <th className="border px-4 py-2 text-left">Inseam (cm)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {womenSizes.bottoms.map((size, index) => (
-                            <tr key={index} className="hover:bg-gray-50">
-                              <td className="border border-gray-300 px-4 py-2 font-semibold">{size.size}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.waist}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.hip}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.inseam}</td>
+                            <tr key={index} className="hover:bg-muted/50">
+                              <td className="border px-4 py-2 font-semibold">{size.size}</td>
+                              <td className="border px-4 py-2">{size.waist}</td>
+                              <td className="border px-4 py-2">{size.hip}</td>
+                              <td className="border px-4 py-2">{size.inseam}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -227,24 +227,24 @@ export default function SizeGuide() {
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Dresses</h3>
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-gray-300">
+                      <table className="w-full border-collapse border">
                         <thead>
-                          <tr className="bg-gray-100">
-                            <th className="border border-gray-300 px-4 py-2 text-left">Size</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Bust (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Waist (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Hip (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Length (cm)</th>
+                          <tr className="bg-muted">
+                            <th className="border px-4 py-2 text-left">Size</th>
+                            <th className="border px-4 py-2 text-left">Bust (cm)</th>
+                            <th className="border px-4 py-2 text-left">Waist (cm)</th>
+                            <th className="border px-4 py-2 text-left">Hip (cm)</th>
+                            <th className="border px-4 py-2 text-left">Length (cm)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {womenSizes.dresses.map((size, index) => (
-                            <tr key={index} className="hover:bg-gray-50">
-                              <td className="border border-gray-300 px-4 py-2 font-semibold">{size.size}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.bust}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.waist}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.hip}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.length}</td>
+                            <tr key={index} className="hover:bg-muted/50">
+                              <td className="border px-4 py-2 font-semibold">{size.size}</td>
+                              <td className="border px-4 py-2">{size.bust}</td>
+                              <td className="border px-4 py-2">{size.waist}</td>
+                              <td className="border px-4 py-2">{size.hip}</td>
+                              <td className="border px-4 py-2">{size.length}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -263,22 +263,22 @@ export default function SizeGuide() {
                       Shirts & Tops
                     </h3>
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-gray-300">
+                      <table className="w-full border-collapse border">
                         <thead>
-                          <tr className="bg-gray-100">
-                            <th className="border border-gray-300 px-4 py-2 text-left">Size</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Chest (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Waist (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Neck (cm)</th>
+                          <tr className="bg-muted">
+                            <th className="border px-4 py-2 text-left">Size</th>
+                            <th className="border px-4 py-2 text-left">Chest (cm)</th>
+                            <th className="border px-4 py-2 text-left">Waist (cm)</th>
+                            <th className="border px-4 py-2 text-left">Neck (cm)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {menSizes.tops.map((size, index) => (
-                            <tr key={index} className="hover:bg-gray-50">
-                              <td className="border border-gray-300 px-4 py-2 font-semibold">{size.size}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.chest}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.waist}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.neck}</td>
+                            <tr key={index} className="hover:bg-muted/50">
+                              <td className="border px-4 py-2 font-semibold">{size.size}</td>
+                              <td className="border px-4 py-2">{size.chest}</td>
+                              <td className="border px-4 py-2">{size.waist}</td>
+                              <td className="border px-4 py-2">{size.neck}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -290,22 +290,22 @@ export default function SizeGuide() {
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Pants & Trousers</h3>
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-gray-300">
+                      <table className="w-full border-collapse border">
                         <thead>
-                          <tr className="bg-gray-100">
-                            <th className="border border-gray-300 px-4 py-2 text-left">Size</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Waist (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Hip (cm)</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left">Inseam (cm)</th>
+                          <tr className="bg-muted">
+                            <th className="border px-4 py-2 text-left">Size</th>
+                            <th className="border px-4 py-2 text-left">Waist (cm)</th>
+                            <th className="border px-4 py-2 text-left">Hip (cm)</th>
+                            <th className="border px-4 py-2 text-left">Inseam (cm)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {menSizes.bottoms.map((size, index) => (
-                            <tr key={index} className="hover:bg-gray-50">
-                              <td className="border border-gray-300 px-4 py-2 font-semibold">{size.size}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.waist}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.hip}</td>
-                              <td className="border border-gray-300 px-4 py-2">{size.inseam}</td>
+                            <tr key={index} className="hover:bg-muted/50">
+                              <td className="border px-4 py-2 font-semibold">{size.size}</td>
+                              <td className="border px-4 py-2">{size.waist}</td>
+                              <td className="border px-4 py-2">{size.hip}</td>
+                              <td className="border px-4 py-2">{size.inseam}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -326,22 +326,22 @@ export default function SizeGuide() {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300">
+              <table className="w-full border-collapse border">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-4 py-2 text-left">EU</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">US</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">UK</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">CM</th>
+                  <tr className="bg-muted">
+                    <th className="border px-4 py-2 text-left">EU</th>
+                    <th className="border px-4 py-2 text-left">US</th>
+                    <th className="border px-4 py-2 text-left">UK</th>
+                    <th className="border px-4 py-2 text-left">CM</th>
                   </tr>
                 </thead>
                 <tbody>
                   {shoeSizes.map((size, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-2 font-semibold">{size.eu}</td>
-                      <td className="border border-gray-300 px-4 py-2">{size.us}</td>
-                      <td className="border border-gray-300 px-4 py-2">{size.uk}</td>
-                      <td className="border border-gray-300 px-4 py-2">{size.cm}</td>
+                    <tr key={index} className="hover:bg-muted/50">
+                      <td className="border px-4 py-2 font-semibold">{size.eu}</td>
+                      <td className="border px-4 py-2">{size.us}</td>
+                      <td className="border px-4 py-2">{size.uk}</td>
+                      <td className="border px-4 py-2">{size.cm}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -62,12 +62,12 @@ export default function Contact() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Contact Us</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             We'd love to hear from you. Get in touch with our team for any questions or support.
           </p>
         </div>
@@ -79,24 +79,24 @@ export default function Contact() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-red-500" />
+                  <MapPin className="h-5 w-5 mr-2 text-red-500 dark:text-red-400" />
                   Visit Our Store
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <h4 className="font-semibold">Thrift Haven Jakarta</h4>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Jl. Sudirman No. 123<br/>
                     Jakarta Pusat 10220<br/>
                     Indonesia
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-blue-500" />
+                  <Clock className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                   <div>
                     <p className="text-sm font-medium">Store Hours</p>
-                    <p className="text-xs text-gray-600">Mon-Sun: 10 AM - 9 PM</p>
+                    <p className="text-xs text-muted-foreground">Mon-Sun: 10 AM - 9 PM</p>
                   </div>
                 </div>
               </CardContent>
@@ -109,35 +109,35 @@ export default function Contact() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-100 rounded-full">
-                    <Phone className="h-4 w-4 text-green-600" />
+                  <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-full">
+                    <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
                     <p className="font-medium">Phone</p>
-                    <p className="text-sm text-gray-600">+62 21 1234 5678</p>
-                    <p className="text-xs text-gray-500">Mon-Fri, 9 AM - 6 PM</p>
+                    <p className="text-sm text-muted-foreground">+62 21 1234 5678</p>
+                    <p className="text-xs text-muted-foreground">Mon-Fri, 9 AM - 6 PM</p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 rounded-full">
-                    <Mail className="h-4 w-4 text-blue-600" />
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                    <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <p className="font-medium">Email</p>
-                    <p className="text-sm text-gray-600">hello@thrifthaven.com</p>
-                    <p className="text-xs text-gray-500">Response within 24 hours</p>
+                    <p className="text-sm text-muted-foreground">hello@thrifthaven.com</p>
+                    <p className="text-xs text-muted-foreground">Response within 24 hours</p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-purple-100 rounded-full">
-                    <MessageCircle className="h-4 w-4 text-purple-600" />
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-full">
+                    <MessageCircle className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
                     <p className="font-medium">Live Chat</p>
-                    <p className="text-sm text-gray-600">Available on website</p>
-                    <p className="text-xs text-gray-500">9 AM - 9 PM daily</p>
+                    <p className="text-sm text-muted-foreground">Available on website</p>
+                    <p className="text-xs text-muted-foreground">9 AM - 9 PM daily</p>
                   </div>
                 </div>
               </CardContent>

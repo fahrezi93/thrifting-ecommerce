@@ -105,7 +105,7 @@ export default function HelpCenter() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">Loading...</div>
         </div>
@@ -114,12 +114,12 @@ export default function HelpCenter() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Help Center</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4">Help Center</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Find answers to common questions or get in touch with our support team
           </p>
         </div>
@@ -137,21 +137,21 @@ export default function HelpCenter() {
               <CardContent>
                 <div className="space-y-4">
                   {faqs.map((faq, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg">
+                    <div key={index} className="border rounded-lg">
                       <button
                         onClick={() => toggleFaq(index)}
-                        className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                        className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-muted/50 transition-colors"
                       >
-                        <span className="font-medium text-gray-900">{faq.question}</span>
+                        <span className="font-medium">{faq.question}</span>
                         {openFaq === index ? (
-                          <ChevronUp className="h-5 w-5 text-gray-500" />
+                          <ChevronUp className="h-5 w-5 text-muted-foreground" />
                         ) : (
-                          <ChevronDown className="h-5 w-5 text-gray-500" />
+                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
                         )}
                       </button>
                       {openFaq === index && (
                         <div className="px-6 pb-4">
-                          <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                          <p className="text-muted-foreground leading-relaxed">{faq.answer}</p>
                         </div>
                       )}
                     </div>
@@ -173,31 +173,31 @@ export default function HelpCenter() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <MessageCircle className="h-5 w-5 text-blue-500" />
+                  <MessageCircle className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                   <div>
                     <p className="font-medium">Live Chat</p>
-                    <p className="text-sm text-gray-600">Available 9 AM - 9 PM</p>
+                    <p className="text-sm text-muted-foreground">Available 9 AM - 9 PM</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Phone className="h-5 w-5 text-green-500" />
+                  <Phone className="h-5 w-5 text-green-500 dark:text-green-400" />
                   <div>
                     <p className="font-medium">{settings.storePhone}</p>
-                    <p className="text-sm text-gray-600">Mon-Fri, 9 AM - 6 PM</p>
+                    <p className="text-sm text-muted-foreground">Mon-Fri, 9 AM - 6 PM</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Mail className="h-5 w-5 text-red-500" />
+                  <Mail className="h-5 w-5 text-red-500 dark:text-red-400" />
                   <div>
                     <p className="font-medium">{settings.supportEmail}</p>
-                    <p className="text-sm text-gray-600">We reply within 24 hours</p>
+                    <p className="text-sm text-muted-foreground">We reply within 24 hours</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <Clock className="h-5 w-5 text-purple-500" />
+                  <Clock className="h-5 w-5 text-purple-500 dark:text-purple-400" />
                   <div>
                     <p className="font-medium">Business Hours</p>
-                    <p className="text-sm text-gray-600">{settings.businessHours}</p>
+                    <p className="text-sm text-muted-foreground">{settings.businessHours}</p>
                   </div>
                 </div>
               </CardContent>
