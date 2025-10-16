@@ -123,4 +123,11 @@
   .fixed {
     position: fixed !important;
   }
+  
+  /* Toast container - force fixed positioning relative to viewport */
+  [data-toast-viewport] {
+    position: fixed !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
 }

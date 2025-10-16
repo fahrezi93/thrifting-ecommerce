@@ -110,21 +110,31 @@ export function ToastViewport() {
 
   if (!mounted) return null
 
+  const containerStyle: React.CSSProperties = {
+    position: 'fixed',
+    bottom: '16px',
+    right: '16px',
+    left: 'auto',
+    top: 'auto',
+    zIndex: 9999,
+    pointerEvents: 'none',
+    display: 'flex',
+    flexDirection: 'column-reverse',
+    gap: '8px',
+    width: 'calc(100vw - 32px)',
+    maxWidth: '420px',
+  }
+
+  // For mobile screens
+  if (typeof window !== 'undefined' && window.innerWidth < 640) {
+    containerStyle.right = '16px'
+    containerStyle.left = '16px'
+    containerStyle.width = 'auto'
+    containerStyle.maxWidth = 'none'
+  }
+
   return createPortal(
-    <div 
-      style={{
-        position: 'fixed',
-        bottom: '16px',
-        right: '16px',
-        zIndex: 9999,
-        pointerEvents: 'none',
-        maxWidth: '420px',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column-reverse',
-        gap: '8px'
-      }}
-    >
+    <div data-toast-viewport style={containerStyle}>
       {toasts.map((toast) => (
         <Toast key={toast.id} {...toast} />
       ))}
