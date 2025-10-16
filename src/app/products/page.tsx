@@ -299,14 +299,18 @@ export default function ProductsPage() {
                   <Slider
                     value={priceRange}
                     onValueChange={setPriceRange}
+                    min={0}
                     max={1000000}
                     step={10000}
                     className="w-full"
                   />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                    <span>{formatPrice(priceRange[0])}</span>
-                    <span>{formatPrice(priceRange[1])}</span>
+                  <div className="flex justify-between text-xs text-muted-foreground mt-3">
+                    <span className="font-medium">{formatPrice(priceRange[0])}</span>
+                    <span className="font-medium">{formatPrice(priceRange[1])}</span>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1 text-center">
+                    Showing products from {formatPrice(priceRange[0])} to {formatPrice(priceRange[1])}
+                  </p>
                 </div>
               </div>
             </Card>
