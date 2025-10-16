@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -71,14 +72,14 @@ export function Toast({
   if (!open) return null
 
   const variantStyles = {
-    default: "border bg-white text-gray-900",
-    destructive: "border-red-200 bg-red-50 text-red-800",
-    success: "border-green-200 bg-green-50 text-green-800",
+    default: "border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100",
+    destructive: "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200",
+    success: "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200",
   }
 
   return (
     <div className={cn(
-      "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-all animate-in fade-in-0 slide-in-from-top-full duration-200",
+      "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-all",
       variantStyles[variant]
     )}>
       <div className="grid gap-1">
@@ -101,12 +102,33 @@ export function Toast({
 
 export function ToastViewport() {
   const { toasts } = useToast()
+  const [mounted, setMounted] = React.useState(false)
 
-  return (
-    <div className="fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]">
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
+
+  return createPortal(
+    <div 
+      style={{
+        position: 'fixed',
+        bottom: '16px',
+        right: '16px',
+        zIndex: 9999,
+        pointerEvents: 'none',
+        maxWidth: '420px',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column-reverse',
+        gap: '8px'
+      }}
+    >
       {toasts.map((toast) => (
         <Toast key={toast.id} {...toast} />
       ))}
-    </div>
+    </div>,
+    document.body
   )
 }
