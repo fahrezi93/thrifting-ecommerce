@@ -35,16 +35,24 @@ export const useCart = create<CartStore>()(
       
       setUserId: (userId) => {
         const currentUserId = get().userId
+        const currentItems = get().items
+        
         if (currentUserId !== userId) {
-          // Set new user ID but don't clear cart immediately
           set({ userId })
+          
           if (userId) {
-            // Load cart from server for new user
+            // User logged in - try to merge local cart with server cart
+            if (currentItems.length > 0) {
+              // If there are items in local cart, keep them
+              console.log('Keeping local cart items:', currentItems.length)
+            }
+            // Load cart from server (will merge if needed)
             get().loadUserCart(userId)
-          } else {
-            // Clear cart only when logging out
+          } else if (currentUserId) {
+            // User logged out - clear cart
             set({ items: [] })
           }
+          // If currentUserId is null and userId is null, it's initial load - keep cart
         }
       },
 
@@ -66,9 +74,58 @@ export const useCart = create<CartStore>()(
           })
 
           if (response.ok) {
-            const { items } = await response.json()
-            set({ items: items || [] })
-            console.log('Cart loaded successfully:', items?.length || 0, 'items')
+            const { items: serverItems } = await response.json()
+            const localItems = get().items
+            
+            // Merge local cart with server cart
+            if (localItems.length > 0 && serverItems && serverItems.length > 0) {
+              // Merge: prioritize local cart but add server items that aren't in local
+              const mergedItems = [...localItems]
+              serverItems.forEach((serverItem: CartItem) => {
+                const existsInLocal = localItems.find(item => item.id === serverItem.id)
+                if (!existsInLocal) {
+                  mergedItems.push(serverItem)
+                }
+              })
+              set({ items: mergedItems })
+              console.log('Cart merged:', mergedItems.length, 'items')
+              
+              // Save merged cart back to server
+              try {
+                await fetch('/api/user/cart', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ items: mergedItems }),
+                })
+              } catch (error) {
+                console.error('Error saving merged cart:', error)
+              }
+            } else if (serverItems && serverItems.length > 0) {
+              // Only server has items
+              set({ items: serverItems })
+              console.log('Cart loaded from server:', serverItems.length, 'items')
+            } else if (localItems.length > 0) {
+              // Only local has items, save to server
+              console.log('Saving local cart to server:', localItems.length, 'items')
+              try {
+                await fetch('/api/user/cart', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ items: localItems }),
+                })
+              } catch (error) {
+                console.error('Error saving local cart to server:', error)
+              }
+            } else {
+              // Both empty
+              set({ items: [] })
+            }
           } else {
             console.error('Failed to load cart:', response.status)
           }
@@ -79,8 +136,6 @@ export const useCart = create<CartStore>()(
 
       addItem: async (item) => {
         const { userId } = get()
-        if (!userId) return
-
         const items = get().items
         const existingItem = items.find((i) => i.id === item.id)
         
@@ -97,50 +152,53 @@ export const useCart = create<CartStore>()(
         
         set({ items: newItems })
         
-        // Save to server
-        try {
-          const { auth } = await import('@/lib/firebase')
-          const token = await auth.currentUser?.getIdToken()
-          await fetch('/api/user/cart', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({ items: newItems }),
-          })
-        } catch (error) {
-          console.error('Error saving cart:', error)
+        // Save to server if user is logged in
+        if (userId) {
+          try {
+            const { auth } = await import('@/lib/firebase')
+            const token = await auth.currentUser?.getIdToken()
+            await fetch('/api/user/cart', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({ items: newItems }),
+            })
+          } catch (error) {
+            console.error('Error saving cart:', error)
+          }
         }
+        // If not logged in, cart is saved to localStorage by persist middleware
       },
       
       removeItem: async (id) => {
         const { userId } = get()
-        if (!userId) return
-
         const newItems = get().items.filter((item) => item.id !== id)
         set({ items: newItems })
         
-        // Save to server
-        try {
-          const { auth } = await import('@/lib/firebase')
-          const token = await auth.currentUser?.getIdToken()
-          await fetch('/api/user/cart', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({ items: newItems }),
-          })
-        } catch (error) {
-          console.error('Error saving cart:', error)
+        // Save to server if user is logged in
+        if (userId) {
+          try {
+            const { auth } = await import('@/lib/firebase')
+            const token = await auth.currentUser?.getIdToken()
+            await fetch('/api/user/cart', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({ items: newItems }),
+            })
+          } catch (error) {
+            console.error('Error saving cart:', error)
+          }
         }
+        // If not logged in, cart is saved to localStorage by persist middleware
       },
       
       updateQuantity: async (id, quantity) => {
         const { userId } = get()
-        if (!userId) return
 
         if (quantity <= 0) {
           get().removeItem(id)
@@ -155,21 +213,24 @@ export const useCart = create<CartStore>()(
         
         set({ items: newItems })
         
-        // Save to server
-        try {
-          const { auth } = await import('@/lib/firebase')
-          const token = await auth.currentUser?.getIdToken()
-          await fetch('/api/user/cart', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({ items: newItems }),
-          })
-        } catch (error) {
-          console.error('Error saving cart:', error)
+        // Save to server if user is logged in
+        if (userId) {
+          try {
+            const { auth } = await import('@/lib/firebase')
+            const token = await auth.currentUser?.getIdToken()
+            await fetch('/api/user/cart', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({ items: newItems }),
+            })
+          } catch (error) {
+            console.error('Error saving cart:', error)
+          }
         }
+        // If not logged in, cart is saved to localStorage by persist middleware
       },
       
       clearCart: async () => {
@@ -209,7 +270,7 @@ export const useCart = create<CartStore>()(
       partialize: (state) => ({ 
         isOpen: state.isOpen,
         userId: state.userId,
-        items: [], // Always start with empty items
+        items: state.items, // Persist cart items
       }),
     }
   )
