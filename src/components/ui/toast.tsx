@@ -106,39 +106,41 @@ export function ToastViewport() {
 
   React.useEffect(() => {
     setMounted(true)
+    
+    // Create a separate container attached directly to body
+    // This ensures it's not affected by any parent transforms
+    const toastRoot = document.getElementById('toast-root')
+    if (!toastRoot) {
+      const newRoot = document.createElement('div')
+      newRoot.id = 'toast-root'
+      newRoot.style.cssText = `
+        position: fixed !important;
+        bottom: 16px !important;
+        right: 16px !important;
+        z-index: 9999 !important;
+        pointer-events: none !important;
+        display: flex !important;
+        flex-direction: column-reverse !important;
+        gap: 8px !important;
+        max-width: 420px !important;
+        transform: none !important;
+        will-change: auto !important;
+      `
+      document.body.appendChild(newRoot)
+    }
   }, [])
 
   if (!mounted) return null
 
-  const containerStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: '16px',
-    right: '16px',
-    left: 'auto',
-    top: 'auto',
-    zIndex: 9999,
-    pointerEvents: 'none',
-    display: 'flex',
-    flexDirection: 'column-reverse',
-    gap: '8px',
-    width: 'calc(100vw - 32px)',
-    maxWidth: '420px',
-  }
-
-  // For mobile screens
-  if (typeof window !== 'undefined' && window.innerWidth < 640) {
-    containerStyle.right = '16px'
-    containerStyle.left = '16px'
-    containerStyle.width = 'auto'
-    containerStyle.maxWidth = 'none'
-  }
+  const toastRoot = document.getElementById('toast-root')
+  if (!toastRoot) return null
 
   return createPortal(
-    <div data-toast-viewport style={containerStyle}>
+    <>
       {toasts.map((toast) => (
         <Toast key={toast.id} {...toast} />
       ))}
-    </div>,
-    document.body
+    </>,
+    toastRoot
   )
 }

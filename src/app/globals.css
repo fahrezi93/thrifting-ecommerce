@@ -92,10 +92,10 @@
   }
   
   /* Force GPU acceleration for smooth transitions */
-  body {
+  /* Note: transform on body breaks position:fixed, so we apply it to main instead */
+  main {
     transform: translateZ(0);
     backface-visibility: hidden;
-    perspective: 1000px;
   }
   
   /* Optimize critical elements */
@@ -125,9 +125,12 @@
   }
   
   /* Toast container - force fixed positioning relative to viewport */
+  #toast-root,
   [data-toast-viewport] {
     position: fixed !important;
     transform: none !important;
     will-change: auto !important;
+    backface-visibility: visible !important;
+    perspective: none !important;
   }
 }
