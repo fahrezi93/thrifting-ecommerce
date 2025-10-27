@@ -35,63 +35,10 @@ export async function getServerSession(request: NextRequest): Promise<Authentica
     }
     
     if (!adminAuth) {
-      // Fallback: decode JWT manually to get UID (when Firebase Admin SDK is not available)
-      console.log('Firebase Admin SDK not available, using fallback authentication')
-      try {
-        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
-        console.log('Decoded token payload:', { 
-          user_id: payload.user_id, 
-          sub: payload.sub, 
-          email: payload.email,
-          aud: payload.aud,
-          iss: payload.iss
-        })
-        
-        // Validate that this is a Firebase token
-        if (!payload.iss || !payload.iss.includes('securetoken.google.com')) {
-          console.log('Invalid token issuer:', payload.iss)
-          return null
-        }
-        
-        if (!payload.aud || payload.aud !== 'thrifting-ecommerce') {
-          console.log('Invalid token audience:', payload.aud)
-          return null
-        }
-        
-        // Check token expiration
-        const now = Math.floor(Date.now() / 1000)
-        if (payload.exp && payload.exp < now) {
-          console.log('Token expired:', payload.exp, 'current:', now)
-          return null
-        }
-        
-        const userId = payload.user_id || payload.sub
-        if (!userId) {
-          console.log('No user ID found in token payload')
-          return null
-        }
-        
-        const user = await prisma.user.findUnique({
-          where: { id: userId }
-        })
-        
-        if (!user) {
-          console.log('User not found in database:', userId)
-          return null
-        }
-        
-        console.log('Fallback authentication successful for user:', user.email, 'role:', user.role)
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          firebaseUid: user.id
-        }
-      } catch (fallbackError) {
-        console.error('Fallback token decode failed:', fallbackError)
-        return null
-      }
+      // SECURITY: Firebase Admin SDK is required for secure authentication
+      console.error('Firebase Admin SDK not initialized - authentication failed')
+      console.error('Please ensure FIREBASE_ADMIN_SDK_JSON environment variable is set')
+      return null
     }
     
     const decodedToken = await adminAuth.verifyIdToken(token)

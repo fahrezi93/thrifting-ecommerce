@@ -17,9 +17,9 @@ function initializeFirebaseAdmin() {
   try {
     let serviceAccount;
     
-    // Try to get credentials from environment variable (for production/Vercel)
+    // PRIORITY 1: Try to get credentials from environment variable (for production/Vercel)
     if (process.env.FIREBASE_ADMIN_SDK_JSON && process.env.FIREBASE_ADMIN_SDK_JSON.length > 50) {
-      console.log('Found FIREBASE_ADMIN_SDK_JSON environment variable')
+      console.log('🔧 Loading Firebase Admin SDK from environment variable (Production mode)')
       const envValue = process.env.FIREBASE_ADMIN_SDK_JSON
       console.log('Environment variable length:', envValue.length)
       console.log('Environment starts with:', envValue.substring(0, 50))
@@ -28,32 +28,34 @@ function initializeFirebaseAdmin() {
         // Clean the environment variable value
         let cleanValue = envValue.trim()
         
-        // Remove any quotes that might wrap the entire JSON
+        // Remove any quotes that might wrap the entire JSON (Vercel sometimes adds these)
         if ((cleanValue.startsWith('"') && cleanValue.endsWith('"')) || 
             (cleanValue.startsWith("'") && cleanValue.endsWith("'"))) {
           cleanValue = cleanValue.slice(1, -1)
         }
         
-        // Replace escaped quotes and newlines
+        // Replace escaped quotes and newlines (common in Vercel environment variables)
         cleanValue = cleanValue.replace(/\\"/g, '"').replace(/\\n/g, '\n')
         
         serviceAccount = JSON.parse(cleanValue);
         console.log('✅ Successfully parsed Firebase Admin SDK from environment variable')
         console.log('Project ID:', serviceAccount.project_id)
         console.log('Client email:', serviceAccount.client_email?.substring(0, 20) + '...')
+        console.log('🚀 Using production Firebase credentials from Vercel')
       } catch (parseError) {
         console.error('❌ Failed to parse FIREBASE_ADMIN_SDK_JSON:', parseError)
         console.log('Environment variable preview:', envValue.substring(0, 200) + '...')
         throw new Error(`Invalid JSON in FIREBASE_ADMIN_SDK_JSON: ${parseError}`)
       }
     } else {
-      // Fallback to local file (for development only)
-      console.log('FIREBASE_ADMIN_SDK_JSON not found, trying local file')
+      // PRIORITY 2: Fallback to local file (for development only)
+      console.log('⚠️ FIREBASE_ADMIN_SDK_JSON not found in environment')
+      console.log('📁 Falling back to local file (Development mode)')
       try {
         // Use dynamic import to prevent build errors when file doesn't exist
         const fs = require('fs')
         const path = require('path')
-        const filePath = path.join(process.cwd(), 'thrifting-ecommerce-firebase-adminsdk-fbsvc-d9f4bfdff5.json')
+        const filePath = path.join(process.cwd(), 'thrifting-ecommerce-firebase-adminsdk-fbsvc-b4f7b03bf2.json')
         
         console.log('Looking for Firebase Admin SDK file at:', filePath)
         

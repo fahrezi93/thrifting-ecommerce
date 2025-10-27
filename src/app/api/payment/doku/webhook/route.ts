@@ -26,12 +26,13 @@ export async function POST(request: NextRequest) {
     
     console.log('DOKU Webhook: Parsed data:', data)
     
-    // Verify signature (if DOKU provides one)
-    // const isValidSignature = verifyDokuSignature(body, signature)
-    // if (!isValidSignature) {
-    //   console.error('DOKU Webhook: Invalid signature')
-    //   return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-    // }
+    // Verify signature for security
+    const isValidSignature = verifyDokuSignature(body, signature)
+    if (!isValidSignature) {
+      console.error('DOKU Webhook: Invalid signature')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+    }
+    console.log('DOKU Webhook: Signature verified successfully')
     
     // Extract order information from DOKU notification
     // DOKU SNAP format uses different field names
@@ -185,7 +186,11 @@ export async function POST(request: NextRequest) {
 
 // Function to verify DOKU signature (implement based on DOKU documentation)
 function verifyDokuSignature(body: string, signature: string | null): boolean {
-  if (!signature) return true // Skip verification if no signature provided
+  // SECURITY: Require signature for production
+  if (!signature) {
+    console.error('DOKU Webhook: No signature provided')
+    return false
+  }
   
   try {
     // Get appropriate secret key based on environment
@@ -193,6 +198,11 @@ function verifyDokuSignature(body: string, signature: string | null): boolean {
     const secretKey = environment === 'production' 
       ? (process.env.DOKU_PRODUCTION_SECRET_KEY || '')
       : (process.env.DOKU_SANDBOX_SECRET_KEY || process.env.DOKU_SECRET_KEY || '')
+    
+    if (!secretKey) {
+      console.error('DOKU Webhook: Secret key not configured')
+      return false
+    }
     
     console.log('DOKU Webhook: Using', environment, 'environment for signature verification')
     
@@ -203,7 +213,12 @@ function verifyDokuSignature(body: string, signature: string | null): boolean {
       .update(body)
       .digest('hex')
     
-    return signature === expectedSignature
+    const isValid = signature === expectedSignature
+    if (!isValid) {
+      console.error('DOKU Webhook: Signature mismatch')
+    }
+    
+    return isValid
   } catch (error) {
     console.error('DOKU Webhook: Signature verification error:', error)
     return false
