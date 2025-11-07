@@ -4,6 +4,9 @@ thrifting-ecommerce-firebase-adminsdk-fbsvc-b4f7b03bf2.json
 
 # Firebase credentials - DO NOT COMMIT
 firebase-admin-vercel-format.txt
+firebase-vercel-env.txt
+firebase-vercel-fixed.txt
+firebase-vercel-correct.txt
 VERCEL_FIREBASE_SETUP.md
 *firebase-adminsdk*.json
 

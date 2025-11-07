@@ -17,8 +17,31 @@ function initializeFirebaseAdmin() {
   try {
     let serviceAccount;
     
-    // PRIORITY 1: Try to get credentials from environment variable (for production/Vercel)
-    if (process.env.FIREBASE_ADMIN_SDK_JSON && process.env.FIREBASE_ADMIN_SDK_JSON.length > 50) {
+    // PRIORITY 1: Try to get credentials from separate environment variables (RECOMMENDED for Vercel)
+    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+      console.log('🔧 Loading Firebase Admin SDK from separate environment variables (Production mode)')
+      
+      serviceAccount = {
+        type: "service_account",
+        project_id: process.env.FIREBASE_PROJECT_ID,
+        private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+        private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle escaped newlines
+        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+        client_id: process.env.FIREBASE_CLIENT_ID,
+        auth_uri: "https://accounts.google.com/o/oauth2/auth",
+        token_uri: "https://oauth2.googleapis.com/token",
+        auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+        client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+        universe_domain: "googleapis.com"
+      };
+      
+      console.log('✅ Successfully loaded Firebase Admin SDK from separate environment variables')
+      console.log('Project ID:', serviceAccount.project_id)
+      console.log('Client email:', serviceAccount.client_email?.substring(0, 20) + '...')
+      console.log('🚀 Using production Firebase credentials from Vercel')
+    }
+    // PRIORITY 2: Try to get credentials from single JSON environment variable (fallback)
+    else if (process.env.FIREBASE_ADMIN_SDK_JSON && process.env.FIREBASE_ADMIN_SDK_JSON.length > 50) {
       console.log('🔧 Loading Firebase Admin SDK from environment variable (Production mode)')
       const envValue = process.env.FIREBASE_ADMIN_SDK_JSON
       console.log('Environment variable length:', envValue.length)
