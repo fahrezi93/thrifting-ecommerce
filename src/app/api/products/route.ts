@@ -7,11 +7,13 @@ export async function GET(request: NextRequest) {
 
     const search = searchParams.get('search')?.toLowerCase()
     const categories = searchParams.get('categories')?.split(',')
+    const category = searchParams.get('category') // Single category slug
     const sizes = searchParams.get('sizes')?.split(',')
     const conditions = searchParams.get('conditions')?.split(',')
     const minPrice = parseFloat(searchParams.get('minPrice') || '0')
     const maxPrice = parseFloat(searchParams.get('maxPrice') || '10000000')
     const sortBy = searchParams.get('sortBy') || 'newest'
+    const featured = searchParams.get('featured') === 'true'
 
     // Build Prisma query conditions
     const whereConditions: any = {
@@ -19,6 +21,18 @@ export async function GET(request: NextRequest) {
       price: {
         gte: minPrice,
         lte: maxPrice
+      }
+    }
+
+    // Filter by featured
+    if (featured) {
+      whereConditions.isFeatured = true
+    }
+
+    // Filter by single category slug
+    if (category) {
+      whereConditions.category = {
+        slug: category
       }
     }
 
@@ -91,11 +105,24 @@ export async function GET(request: NextRequest) {
       })))
     }
 
-    // Parse imageUrls from JSON string to array for all products
-    const filteredProducts = products.map(product => ({
-      ...product,
-      imageUrls: JSON.parse(product.imageUrls)
-    }))
+    // Parse imageUrls - handle both JSON array strings and plain URL strings
+    const filteredProducts = products.map(product => {
+      let imageUrls = []
+      try {
+        if (product.imageUrls) {
+          const parsed = JSON.parse(product.imageUrls)
+          imageUrls = Array.isArray(parsed) ? parsed : [product.imageUrls]
+        }
+      } catch {
+        // If parsing fails, treat as single URL string
+        imageUrls = product.imageUrls ? [product.imageUrls] : []
+      }
+      
+      return {
+        ...product,
+        imageUrls
+      }
+    })
 
     return NextResponse.json(filteredProducts)
   } catch (error) {

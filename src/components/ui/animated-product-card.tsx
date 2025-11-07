@@ -30,8 +30,18 @@ const AnimatedProductCard = ({ product, index }: AnimatedProductCardProps) => {
     }).format(price)
   }
 
-  const imageUrls = JSON.parse(product.imageUrls || '[]')
-  const firstImage = imageUrls[0] || '/placeholder-image.jpg'
+  // Handle imageUrls - can be JSON array string or single URL string
+  let firstImage = '/placeholder-image.jpg'
+  try {
+    if (product.imageUrls) {
+      // Try to parse as JSON array first
+      const parsed = JSON.parse(product.imageUrls)
+      firstImage = Array.isArray(parsed) ? (parsed[0] || '/placeholder-image.jpg') : product.imageUrls
+    }
+  } catch {
+    // If parsing fails, treat as single URL string
+    firstImage = product.imageUrls || '/placeholder-image.jpg'
+  }
 
   return (
     <motion.div

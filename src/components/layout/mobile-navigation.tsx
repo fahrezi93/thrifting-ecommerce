@@ -18,79 +18,78 @@ import {
   Briefcase
 } from 'lucide-react';
 
-const mobileNavItems = [
-  {
-    title: 'Home',
-    href: '/',
-    icon: Home,
-  },
-  {
-    title: 'All Products',
-    href: '/products',
-    icon: ShoppingBag,
-  },
-  {
-    title: 'Clothing',
-    href: '/categories/clothing',
-    icon: ShirtIcon,
-    subItems: [
-      { title: 'T-Shirts', href: '/categories/t-shirts' },
-      { title: 'Shirts', href: '/categories/shirts' },
-      { title: 'Hoodies & Sweaters', href: '/categories/hoodies' },
-      { title: 'Jackets', href: '/categories/jackets' },
-      { title: 'Dresses', href: '/categories/dresses' },
-      { title: 'Blouses', href: '/categories/blouses' },
-    ]
-  },
-  {
-    title: 'Pants',
-    href: '/categories/pants',
-    icon: Briefcase,
-    subItems: [
-      { title: 'Jeans', href: '/categories/jeans' },
-      { title: 'Long Pants', href: '/categories/long-pants' },
-      { title: 'Shorts', href: '/categories/shorts' },
-      { title: 'Cargo Pants', href: '/categories/cargo-pants' },
-      { title: 'Wide Pants', href: '/categories/wide-pants' },
-      { title: 'Skirts', href: '/categories/skirts' },
-    ]
-  },
-  {
-    title: 'Shoes',
-    href: '/categories/shoes',
-    icon: Footprints,
-    subItems: [
-      { title: 'Sneakers', href: '/categories/sneakers' },
-      { title: 'Boots', href: '/categories/boots' },
-      { title: 'Heels', href: '/categories/heels' },
-      { title: 'Flats', href: '/categories/flats' },
-      { title: 'Sandals', href: '/categories/sandals' },
-      { title: 'Sports Shoes', href: '/categories/sports-shoes' },
-    ]
-  },
-  {
-    title: 'About Us',
-    href: '/about',
-    icon: Heart,
-  },
-  {
-    title: 'Help Center',
-    href: '/help-center',
-    icon: HelpCircle,
-  },
-  {
-    title: 'Contact',
-    href: '/contact',
-    icon: Phone,
-  },
-];
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface NavItem {
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  subItems?: { title: string; href: string }[];
+}
+
+// Helper to get an icon for a category
+const getCategoryIcon = (categoryName: string) => {
+  const lowerCaseName = categoryName.toLowerCase();
+  if (lowerCaseName.includes('clothing') || lowerCaseName.includes('tops')) return ShirtIcon;
+  if (lowerCaseName.includes('pants') || lowerCaseName.includes('bottoms')) return Briefcase;
+  if (lowerCaseName.includes('shoe')) return Footprints;
+  if (lowerCaseName.includes('accessory')) return Glasses;
+  return Sparkles; // Default icon
+};
+
 
 interface MobileNavigationProps {
   onClose: () => void;
 }
 
 export function MobileNavigation({ onClose }: MobileNavigationProps) {
+  const [navItems, setNavItems] = React.useState<NavItem[]>([]);
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    const staticItems: NavItem[] = [
+      { title: 'Home', href: '/', icon: Home },
+      { title: 'All Products', href: '/products', icon: ShoppingBag },
+    ];
+
+    const fetchCategoriesAndBuildNav = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const categories: Category[] = await response.json();
+          const categoryItems: NavItem[] = categories.map(category => ({
+            title: category.name,
+            href: `/categories/${category.slug}`,
+            icon: getCategoryIcon(category.name),
+          }));
+
+          const finalStaticItems: NavItem[] = [
+            { title: 'About Us', href: '/about', icon: Heart },
+            { title: 'Help Center', href: '/help-center', icon: HelpCircle },
+            { title: 'Contact', href: '/contact', icon: Phone },
+          ];
+
+          setNavItems([...staticItems, ...categoryItems, ...finalStaticItems]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories for mobile nav:', error);
+        // Set default items on error
+        setNavItems([
+          ...staticItems,
+          { title: 'About Us', href: '/about', icon: Heart },
+          { title: 'Help Center', href: '/help-center', icon: HelpCircle },
+          { title: 'Contact', href: '/contact', icon: Phone },
+        ]);
+      }
+    };
+
+    fetchCategoriesAndBuildNav();
+  }, []);
 
   const toggleExpanded = (title: string) => {
     setExpandedItems(prev => 
@@ -102,7 +101,7 @@ export function MobileNavigation({ onClose }: MobileNavigationProps) {
 
   return (
     <div className="space-y-2">
-      {mobileNavItems.map((item, index) => (
+      {navItems.map((item, index) => (
         <motion.div
           key={item.title}
           initial={{ opacity: 0, x: -20 }}

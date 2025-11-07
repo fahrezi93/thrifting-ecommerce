@@ -52,7 +52,7 @@ export default function ProductsPage() {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
   const [selectedConditions, setSelectedConditions] = useState<string[]>([])
   const [priceRange, setPriceRange] = useState([0, 1000000])
-  const [sortBy, setSortBy] = useState('newest')
+  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest')
   const [showFilters, setShowFilters] = useState(false)
   
   const { addItem } = useCart()
@@ -60,8 +60,47 @@ export default function ProductsPage() {
   const router = useRouter()
 
   useEffect(() => {
-    fetchProducts()
-  }, [searchQuery, selectedCategories, selectedSizes, selectedConditions, priceRange, sortBy])
+    const handler = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+      
+      if (searchQuery) {
+        params.set('search', searchQuery);
+      } else {
+        params.delete('search');
+      }
+
+      if (selectedCategories.length > 0) {
+        params.set('categories', selectedCategories.join(','));
+      } else {
+        params.delete('categories');
+      }
+
+      if (selectedSizes.length > 0) {
+        params.set('sizes', selectedSizes.join(','));
+      } else {
+        params.delete('sizes');
+      }
+
+      if (selectedConditions.length > 0) {
+        params.set('conditions', selectedConditions.join(','));
+      } else {
+        params.delete('conditions');
+      }
+
+      params.set('minPrice', priceRange[0].toString());
+      params.set('maxPrice', priceRange[1].toString());
+      params.set('sortBy', sortBy);
+
+      // Use router.push to update the URL without a full page reload
+      router.push(`/products?${params.toString()}`, { scroll: false });
+      
+      fetchProducts();
+    }, 300); // Debounce to avoid excessive API calls
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery, selectedCategories, selectedSizes, selectedConditions, priceRange, sortBy, router]);
 
   const fetchProducts = async () => {
     setLoading(true)

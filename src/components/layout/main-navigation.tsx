@@ -29,50 +29,6 @@ import {
   Star
 } from 'lucide-react';
 
-const categories = [
-  {
-    title: 'Clothing',
-    href: '/categories/clothing',
-    description: 'Quality thrift clothing collection',
-    icon: ShirtIcon,
-    items: [
-      { title: 'T-Shirts', href: '/categories/t-shirts' },
-      { title: 'Shirts', href: '/categories/shirts' },
-      { title: 'Hoodies & Sweaters', href: '/categories/hoodies' },
-      { title: 'Jackets', href: '/categories/jackets' },
-      { title: 'Dresses', href: '/categories/dresses' },
-      { title: 'Blouses', href: '/categories/blouses' },
-    ]
-  },
-  {
-    title: 'Pants',
-    href: '/categories/pants',
-    description: 'Various types of thrift pants selection',
-    icon: Briefcase,
-    items: [
-      { title: 'Jeans', href: '/categories/jeans' },
-      { title: 'Long Pants', href: '/categories/long-pants' },
-      { title: 'Shorts', href: '/categories/shorts' },
-      { title: 'Cargo Pants', href: '/categories/cargo-pants' },
-      { title: 'Wide Pants', href: '/categories/wide-pants' },
-      { title: 'Skirts', href: '/categories/skirts' },
-    ]
-  },
-  {
-    title: 'Shoes',
-    href: '/categories/shoes',
-    description: 'Thrift shoes in best condition',
-    icon: Footprints,
-    items: [
-      { title: 'Sneakers', href: '/categories/sneakers' },
-      { title: 'Boots', href: '/categories/boots' },
-      { title: 'Heels', href: '/categories/heels' },
-      { title: 'Flats', href: '/categories/flats' },
-      { title: 'Sandals', href: '/categories/sandals' },
-      { title: 'Sports Shoes', href: '/categories/sports-shoes' },
-    ]
-  }
-];
 
 const aboutLinks = [
   {
@@ -134,69 +90,189 @@ const supportLinks = [
   }
 ];
 
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+}
+
+// Helper to get an icon for a category
+const getCategoryIcon = (categoryName: string) => {
+  const lowerCaseName = categoryName.toLowerCase();
+  if (lowerCaseName.includes('clothing') || lowerCaseName.includes('tops')) return ShirtIcon;
+  if (lowerCaseName.includes('pants') || lowerCaseName.includes('bottoms')) return Briefcase;
+  if (lowerCaseName.includes('shoe')) return Footprints;
+  if (lowerCaseName.includes('accessory')) return Glasses;
+  if (lowerCaseName.includes('watch')) return Watch;
+  return Sparkles; // Default icon
+};
+
 export function MainNavigation() {
+  const [categories, setCategories] = React.useState<Category[]>([]);
+  const [featuredImages, setFeaturedImages] = React.useState<string[]>(['/placeholder-image.jpg']);
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+
+    const fetchFeaturedImages = async () => {
+      try {
+        const response = await fetch('/api/products?sortBy=newest');
+        if (response.ok) {
+          const products = await response.json();
+          const images: string[] = [];
+          
+          products.slice(0, 10).forEach((product: any) => {
+            if (product.imageUrls && Array.isArray(product.imageUrls) && product.imageUrls.length > 0) {
+              images.push(product.imageUrls[0]);
+            }
+          });
+
+          if (images.length > 0) {
+            setFeaturedImages(images);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch featured images:', error);
+      }
+    };
+
+    fetchCategories();
+    fetchFeaturedImages();
+  }, []);
+
+  // Rotate featured images every 2 seconds with random selection
+  React.useEffect(() => {
+    if (featuredImages.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => {
+        let newIndex;
+        do {
+          newIndex = Math.floor(Math.random() * featuredImages.length);
+        } while (newIndex === prev && featuredImages.length > 1);
+        return newIndex;
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [featuredImages.length]);
   return (
     <NavigationMenu>
       <NavigationMenuList>
-        {/* Shop Categories */}
+        {/* Shop - Focus on Products */}
         <NavigationMenuItem>
           <NavigationMenuTrigger>Shop</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <div className="grid gap-3 p-6 md:w-[500px] lg:w-[600px] lg:grid-cols-2">
+            <div className="grid gap-3 p-4 md:w-[400px] lg:w-[450px] lg:grid-cols-2">
               <div className="row-span-3">
                 <NavigationMenuLink asChild>
                   <Link
-                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                    className="relative flex h-full w-full select-none flex-col justify-end rounded-md overflow-hidden p-4 no-underline outline-none focus:shadow-md group"
                     href="/products"
                   >
-                    <ShirtIcon className="h-6 w-6" />
-                    <div className="mb-2 mt-4 text-lg font-medium">
-                      All Products
+                    {featuredImages.map((image, idx) => (
+                      <div 
+                        key={idx}
+                        className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-105"
+                        style={{ 
+                          backgroundImage: `url(${image})`,
+                          opacity: idx === currentImageIndex ? 1 : 0
+                        }}
+                      />
+                    ))}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20" />
+                    <div className="relative z-10">
+                      <ShirtIcon className="h-5 w-5 text-white" />
+                      <div className="mb-1 mt-3 text-base font-medium text-white">
+                        All Products
+                      </div>
+                      <p className="text-xs leading-tight text-white/90">
+                        Browse our complete collection
+                      </p>
                     </div>
-                    <p className="text-sm leading-tight text-muted-foreground">
-                      Browse our complete collection of sustainable fashion pieces
-                    </p>
+                  </Link>
+                </NavigationMenuLink>
+              </div>
+              <ListItem
+                title="Newest First"
+                href="/products?sortBy=newest"
+                icon={Sparkles}
+              >
+                Latest additions to our sustainable fashion collection
+              </ListItem>
+              <ListItem
+                title="Price: Low to High"
+                href="/products?sortBy=price-low"
+                icon={Heart}
+              >
+                Great value for money with amazing prices
+              </ListItem>
+              <ListItem
+                title="Price: High to Low"
+                href="/products?sortBy=price-high"
+                icon={Star}
+              >
+                Premium quality items sorted by price
+              </ListItem>
+            </div>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+
+        {/* Categories */}
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="grid gap-3 p-4 md:w-[400px] lg:w-[450px] lg:grid-cols-2">
+              <div className="row-span-3">
+                <NavigationMenuLink asChild>
+                  <Link
+                    className="relative flex h-full w-full select-none flex-col justify-end rounded-md overflow-hidden p-4 no-underline outline-none focus:shadow-md group"
+                    href="/categories"
+                  >
+                    {featuredImages.map((image, idx) => (
+                      <div 
+                        key={idx}
+                        className="absolute inset-0 bg-cover bg-center transition-all duration-700 group-hover:scale-105"
+                        style={{ 
+                          backgroundImage: `url(${image})`,
+                          opacity: idx === currentImageIndex ? 1 : 0
+                        }}
+                      />
+                    ))}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20" />
+                    <div className="relative z-10">
+                      <Sparkles className="h-5 w-5 text-white" />
+                      <div className="mb-1 mt-3 text-base font-medium text-white">
+                        All Categories
+                      </div>
+                      <p className="text-xs leading-tight text-white/90">
+                        Explore all categories
+                      </p>
+                    </div>
                   </Link>
                 </NavigationMenuLink>
               </div>
               {categories.map((category) => (
                 <ListItem
-                  key={category.title}
-                  title={category.title}
-                  href={category.href}
-                  icon={category.icon}
+                  key={category.id}
+                  title={category.name}
+                  href={`/categories/${category.slug}`}
+                  icon={getCategoryIcon(category.name)}
                 >
-                  {category.description}
+                  {category.description || `Browse ${category.name.toLowerCase()}`}
                 </ListItem>
-              ))}
-            </div>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-
-        {/* Categories with Subcategories */}
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <div className="grid gap-3 p-6 md:w-[600px] lg:w-[800px] lg:grid-cols-3">
-              {categories.map((category) => (
-                <div key={category.title} className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <category.icon className="h-4 w-4 text-primary" />
-                    <h4 className="text-sm font-medium leading-none">{category.title}</h4>
-                  </div>
-                  <div className="grid gap-1">
-                    {category.items.map((item) => (
-                      <NavigationMenuLink key={item.title} asChild>
-                        <Link
-                          href={item.href}
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        >
-                          <div className="text-sm font-medium leading-none">{item.title}</div>
-                        </Link>
-                      </NavigationMenuLink>
-                    ))}
-                  </div>
-                </div>
               ))}
             </div>
           </NavigationMenuContent>
@@ -266,16 +342,16 @@ const ListItem = React.forwardRef<
         ref={ref}
         href={href}
         className={cn(
-          'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
+          'block select-none space-y-1 rounded-md p-2 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
           className
         )}
         {...props}
       >
         <div className="flex items-center gap-2">
-          {Icon && <Icon className="h-4 w-4 text-primary" />}
-          <div className="text-sm font-medium leading-none">{title}</div>
+          {Icon && <Icon className="h-3.5 w-3.5 text-primary" />}
+          <div className="text-xs font-medium leading-none">{title}</div>
         </div>
-        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+        <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
           {children}
         </p>
       </Link>

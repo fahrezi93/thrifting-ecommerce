@@ -79,7 +79,7 @@ export function Toast({
 
   return (
     <div className={cn(
-      "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-all",
+      "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-all max-w-full",
       variantStyles[variant]
     )}>
       <div className="grid gap-1">
@@ -113,28 +113,36 @@ export function ToastViewport() {
     if (!toastRoot) {
       const newRoot = document.createElement('div')
       newRoot.id = 'toast-root'
-      newRoot.style.cssText = `
-        position: fixed !important;
-        bottom: 16px !important;
-        right: 16px !important;
-        left: auto !important;
-        z-index: 9999 !important;
-        pointer-events: none !important;
-        display: flex !important;
-        flex-direction: column-reverse !important;
-        gap: 8px !important;
-        max-width: 420px !important;
-        transform: none !important;
-        will-change: auto !important;
-      `
-      // Add responsive styling for mobile
+      
+      // Base styles
+      newRoot.style.position = 'fixed'
+      newRoot.style.zIndex = '9999'
+      newRoot.style.pointerEvents = 'none'
+      newRoot.style.display = 'flex'
+      newRoot.style.flexDirection = 'column-reverse'
+      newRoot.style.gap = '8px'
+      newRoot.style.transform = 'none'
+      newRoot.style.willChange = 'auto'
+      
+      // Mobile-first responsive positioning
       if (window.innerWidth < 640) {
-        newRoot.style.maxWidth = 'calc(100vw - 32px)'
-        newRoot.style.left = 'auto'
+        // Mobile: full width with padding, prevent overflow
+        newRoot.style.bottom = '16px'
+        newRoot.style.left = '16px'
         newRoot.style.right = '16px'
+        newRoot.style.maxWidth = 'calc(100vw - 32px)'
+        newRoot.style.width = 'calc(100vw - 32px)'
+        newRoot.style.boxSizing = 'border-box'
       } else {
+        // Desktop: positioned at bottom-right
+        newRoot.style.bottom = '16px'
+        newRoot.style.right = '16px'
         newRoot.style.left = 'auto'
+        newRoot.style.maxWidth = '420px'
+        newRoot.style.width = '420px'
+        newRoot.style.boxSizing = 'border-box'
       }
+      
       document.body.appendChild(newRoot)
     }
     
@@ -143,13 +151,21 @@ export function ToastViewport() {
       const toastRoot = document.getElementById('toast-root')
       if (toastRoot) {
         if (window.innerWidth < 640) {
+          // Mobile: full width with padding, prevent overflow
+          toastRoot.style.bottom = '16px'
+          toastRoot.style.left = '16px'
+          toastRoot.style.right = '16px'
           toastRoot.style.maxWidth = 'calc(100vw - 32px)'
-          toastRoot.style.left = 'auto'
-          toastRoot.style.right = '16px'
+          toastRoot.style.width = 'calc(100vw - 32px)'
+          toastRoot.style.boxSizing = 'border-box'
         } else {
-          toastRoot.style.maxWidth = '420px'
-          toastRoot.style.left = 'auto'
+          // Desktop: positioned at bottom-right
+          toastRoot.style.bottom = '16px'
           toastRoot.style.right = '16px'
+          toastRoot.style.left = 'auto'
+          toastRoot.style.maxWidth = '420px'
+          toastRoot.style.width = '420px'
+          toastRoot.style.boxSizing = 'border-box'
         }
       }
     }

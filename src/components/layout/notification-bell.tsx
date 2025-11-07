@@ -218,54 +218,58 @@ export function NotificationBell() {
   if (!user) return null;
 
   const getDropdownPosition = () => {
-    if (!buttonRef.current) return { top: 0, right: 0 };
-    
+    if (!buttonRef.current) return {};
+
     const rect = buttonRef.current.getBoundingClientRect();
     const dropdownHeight = 400; // Max height of notification dropdown
+    const dropdownWidth = 320; // w-80 is 320px
     const viewportHeight = window.innerHeight;
-    const spaceBelow = viewportHeight - rect.bottom;
-    const spaceAbove = rect.top;
+    const viewportWidth = window.innerWidth;
     const margin = 16;
     const scrollY = window.pageYOffset || window.scrollY;
-    
+
     let top: number;
     let maxHeight: number;
-    
-    // Check if there's enough space below
+    let position: React.CSSProperties = {};
+
+    // Vertical positioning
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
     if (spaceBelow >= dropdownHeight + margin) {
-      // Open downward (preferred)
       top = rect.bottom + scrollY + 8;
       maxHeight = Math.min(spaceBelow - margin, dropdownHeight);
     } else if (spaceAbove >= dropdownHeight + margin) {
-      // Open upward
       top = rect.top + scrollY - dropdownHeight - 8;
       maxHeight = Math.min(spaceAbove - margin, dropdownHeight);
+    } else if (spaceBelow > spaceAbove) {
+      top = rect.bottom + scrollY + 8;
+      maxHeight = Math.max(spaceBelow - margin, 200);
     } else {
-      // Use the space with more room
-      if (spaceBelow > spaceAbove) {
-        top = rect.bottom + scrollY + 8;
-        maxHeight = Math.max(spaceBelow - margin, 200);
-      } else {
-        maxHeight = Math.max(spaceAbove - margin, 200);
-        top = rect.top + scrollY - maxHeight - 8;
-      }
+      maxHeight = Math.max(spaceAbove - margin, 200);
+      top = rect.top + scrollY - maxHeight - 8;
+    }
+
+    // Horizontal positioning
+    const spaceRight = viewportWidth - rect.left;
+    const spaceLeft = rect.right;
+
+    if (spaceRight >= dropdownWidth + margin) {
+      // Align to left of button
+      position.left = rect.left;
+    } else if (spaceLeft >= dropdownWidth + margin) {
+      // Align to right of button
+      position.right = viewportWidth - rect.right;
+    } else {
+      // Center if not enough space on either side
+      position.left = (viewportWidth - dropdownWidth) / 2;
     }
     
-    // Ensure dropdown doesn't go outside viewport bounds
-    const maxTop = scrollY + viewportHeight - maxHeight - margin;
-    const minTop = scrollY + margin;
-    
-    if (top > maxTop) top = maxTop;
-    if (top < minTop) {
-      top = minTop;
-      maxHeight = Math.min(viewportHeight - 2 * margin, maxHeight);
-    }
-    
-    return {
-      top,
-      right: window.innerWidth - rect.right,
-      maxHeight
-    };
+    // Final position object
+    position.top = top;
+    position.maxHeight = maxHeight;
+
+    return position;
   };
 
   const dropdownContent = isOpen && mounted ? (
