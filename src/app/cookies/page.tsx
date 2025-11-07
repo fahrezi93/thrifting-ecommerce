@@ -25,7 +25,7 @@ export default function CookiePolicyPage() {
             This policy explains how we use cookies and similar technologies to enhance your browsing experience.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Last updated: January 2025
+            Last updated: October 2025
           </p>
         </div>
 

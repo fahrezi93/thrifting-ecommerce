@@ -34,7 +34,12 @@ function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobi
       try {
         const { role } = await apiClient.get('/api/auth/check-role')
         setIsAdmin(role === 'ADMIN')
-      } catch (error) {
+      } catch (error: any) {
+        // Silently handle 401 errors (user not authenticated or not admin)
+        if (error?.message?.includes('401')) {
+          setIsAdmin(false)
+          return
+        }
         console.error('Error checking admin role:', error)
         // Fallback: check if user email is admin
         if (user.email === 'admin@admin.com') {

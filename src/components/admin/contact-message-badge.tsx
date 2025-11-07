@@ -43,8 +43,15 @@ export function ContactMessageBadge() {
       if (response.ok) {
         const data = await response.json()
         setUnreadCount(data.count || 0)
+      } else if (response.status === 401) {
+        // Silently handle 401 - user not authenticated or not admin
+        return
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle 401 errors
+      if (error?.message?.includes('401')) {
+        return
+      }
       console.error('Error fetching unread count:', error)
     }
   }

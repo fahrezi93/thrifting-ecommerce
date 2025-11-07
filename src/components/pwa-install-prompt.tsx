@@ -118,9 +118,14 @@ export function PWAInstallPrompt() {
     return null
   }
 
+  // Don't show if showInstallPrompt is false
+  if (!showInstallPrompt) {
+    return null
+  }
+
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
-      <Card className="shadow-lg border-2 border-primary/20">
+    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm max-w-[calc(100vw-32px)]">
+      <Card className="shadow-lg border-2 border-primary/20 w-full">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="flex-1">

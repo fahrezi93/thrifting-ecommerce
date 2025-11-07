@@ -133,4 +133,24 @@
     backface-visibility: visible !important;
     perspective: none !important;
   }
+  
+  /* Mobile responsive toast positioning */
+  @media (max-width: 640px) {
+    #toast-root {
+      left: auto !important;
+      right: 16px !important;
+      max-width: calc(100vw - 32px) !important;
+    }
+    
+    /* Sonner toast mobile fix */
+    [data-sonner-toaster] {
+      left: auto !important;
+      right: 16px !important;
+      max-width: calc(100vw - 32px) !important;
+    }
+    
+    [data-sonner-toast] {
+      max-width: calc(100vw - 32px) !important;
+    }
+  }
 }

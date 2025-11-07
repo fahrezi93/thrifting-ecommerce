@@ -14,8 +14,17 @@ export async function GET(request: NextRequest) {
     })
     
     return NextResponse.json(notifications)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching notifications:', error)
+    
+    // Return 401 for authentication errors
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Failed to fetch notifications' },
       { status: 500 }
@@ -37,8 +46,17 @@ export async function PATCH(request: NextRequest) {
     })
     
     return NextResponse.json(notification)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating notification:', error)
+    
+    // Return 401 for authentication errors
+    if (error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Failed to update notification' },
       { status: 500 }

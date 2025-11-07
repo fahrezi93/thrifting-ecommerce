@@ -82,6 +82,13 @@ export default function RootLayout({
                     expand={true}
                     richColors={true}
                     closeButton={true}
+                    toastOptions={{
+                      style: {
+                        maxWidth: 'calc(100vw - 32px)',
+                        width: '100%',
+                      },
+                      className: 'toast-mobile-fix',
+                    }}
                   />
                 </ToastProvider>
               </Providers>

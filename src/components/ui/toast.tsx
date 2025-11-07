@@ -117,6 +117,7 @@ export function ToastViewport() {
         position: fixed !important;
         bottom: 16px !important;
         right: 16px !important;
+        left: auto !important;
         z-index: 9999 !important;
         pointer-events: none !important;
         display: flex !important;
@@ -126,8 +127,35 @@ export function ToastViewport() {
         transform: none !important;
         will-change: auto !important;
       `
+      // Add responsive styling for mobile
+      if (window.innerWidth < 640) {
+        newRoot.style.maxWidth = 'calc(100vw - 32px)'
+        newRoot.style.left = 'auto'
+        newRoot.style.right = '16px'
+      } else {
+        newRoot.style.left = 'auto'
+      }
       document.body.appendChild(newRoot)
     }
+    
+    // Handle window resize for responsive behavior
+    const handleResize = () => {
+      const toastRoot = document.getElementById('toast-root')
+      if (toastRoot) {
+        if (window.innerWidth < 640) {
+          toastRoot.style.maxWidth = 'calc(100vw - 32px)'
+          toastRoot.style.left = 'auto'
+          toastRoot.style.right = '16px'
+        } else {
+          toastRoot.style.maxWidth = '420px'
+          toastRoot.style.left = 'auto'
+          toastRoot.style.right = '16px'
+        }
+      }
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   if (!mounted) return null

@@ -53,8 +53,11 @@ export default function AdminDashboard() {
         if (response.ok) {
           const data = await response.json()
           setStats(data)
+        } else if (response.status === 401) {
+          // Silently handle 401 - user not authenticated or not admin
+          return
         } else {
-          console.error('Failed to fetch dashboard stats:', response.status, response.statusText)
+          console.error('Failed to fetch dashboard stats:', response.status)
           // Set empty stats to prevent error display
           setStats({
             totalProducts: 0,

@@ -91,7 +91,11 @@ export function NotificationBell() {
       const data = await apiClient.get('/api/notifications');
       setNotifications(data);
       setUnreadCount(data.filter((n: Notification) => !n.isRead).length);
-    } catch (error) {
+    } catch (error: any) {
+      // Silently handle 401 errors (user not authenticated)
+      if (error?.message?.includes('401')) {
+        return;
+      }
       console.error('Error fetching notifications:', error);
     }
   };

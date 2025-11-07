@@ -2,6 +2,11 @@
 thrifting-ecommerce-firebase-adminsdk-fbsvc-d9f4bfdff5.json
 thrifting-ecommerce-firebase-adminsdk-fbsvc-b4f7b03bf2.json
 
+# Firebase credentials - DO NOT COMMIT
+firebase-admin-vercel-format.txt
+VERCEL_FIREBASE_SETUP.md
+*firebase-adminsdk*.json
+
 node_modules/
 .pnp
 .pnp.js

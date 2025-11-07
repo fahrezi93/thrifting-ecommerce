@@ -35,7 +35,15 @@ function initializeFirebaseAdmin() {
         }
         
         // Replace escaped quotes and newlines (common in Vercel environment variables)
-        cleanValue = cleanValue.replace(/\\"/g, '"').replace(/\\n/g, '\n')
+        // Handle both \\n (double escaped) and \n (single escaped)
+        cleanValue = cleanValue
+          .replace(/\\\\n/g, '\n')  // Handle double escaped newlines first
+          .replace(/\\n/g, '\n')     // Then handle single escaped newlines
+          .replace(/\\"/g, '"')      // Handle escaped quotes
+          .replace(/\\\\/g, '\\')    // Handle escaped backslashes
+        
+        // Remove any control characters that might cause issues
+        cleanValue = cleanValue.replace(/[\x00-\x09\x0B-\x0C\x0E-\x1F]/g, '')
         
         serviceAccount = JSON.parse(cleanValue);
         console.log('✅ Successfully parsed Firebase Admin SDK from environment variable')
@@ -44,7 +52,8 @@ function initializeFirebaseAdmin() {
         console.log('🚀 Using production Firebase credentials from Vercel')
       } catch (parseError) {
         console.error('❌ Failed to parse FIREBASE_ADMIN_SDK_JSON:', parseError)
-        console.log('Environment variable preview:', envValue.substring(0, 200) + '...')
+        console.log('Environment variable preview (first 300 chars):', envValue.substring(0, 300) + '...')
+        console.log('Character at position 179:', envValue.charCodeAt(179), 'char:', envValue.charAt(179))
         throw new Error(`Invalid JSON in FIREBASE_ADMIN_SDK_JSON: ${parseError}`)
       }
     } else {
