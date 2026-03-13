@@ -62,3 +62,17 @@ export const deleteImageFromCloudinary = async (publicId: string): Promise<boole
         return false;
     }
 };
+/**
+ * Generates an optimized Cloudinary URL for an image
+ * @param publicId The public ID of the image
+ * @param options Transformation options
+ * @returns The optimized URL
+ */
+export const getCloudinaryUrl = (publicId: string, options: any = {}): string => {
+    return cloudinary.url(publicId, {
+        secure: true,
+        fetch_format: 'auto',
+        quality: 'auto',
+        ...options
+    });
+};
