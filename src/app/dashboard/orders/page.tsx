@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -56,7 +56,7 @@ const statusConfig = {
   CANCELLED: { label: 'Cancelled', icon: XCircle, color: 'bg-red-100 text-red-800 hover:bg-red-200', description: 'Order was cancelled' },
 }
 
-export default function OrdersPage() {
+function OrdersContent() {
   const searchParams = useSearchParams()
   const { data: session } = useSession()
   const user = session?.user
@@ -254,7 +254,14 @@ export default function OrdersPage() {
   }
 
   if (loading) {
-    return <div>Loading orders...</div>
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading orders...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -490,5 +497,20 @@ export default function OrdersPage() {
         onReviewSubmitted={handleReviewSubmitted}
       />
     </div>
+  )
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading orders...</p>
+        </div>
+      </div>
+    }>
+      <OrdersContent />
+    </Suspense>
   )
 }

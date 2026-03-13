@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { apiClient } from '@/lib/api-client'
@@ -133,7 +133,7 @@ const paymentMethods: PaymentMethod[] = [
   }
 ]
 
-export default function PaymentPage() {
+function PaymentContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { data: session } = useSession()
@@ -197,8 +197,8 @@ export default function PaymentPage() {
 
     setProcessing(true)
     try {
-      // Get Firebase token for authentication
-      const authToken = '' /* token removed */
+      // Get auth token from session or somewhere else
+      const authToken = '' 
       
       // Map payment method to DOKU format
       const dokuPaymentMethod = mapPaymentMethodToDoku(selectedMethod)
@@ -477,5 +477,22 @@ export default function PaymentPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading payment information...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <PaymentContent />
+    </Suspense>
   )
 }

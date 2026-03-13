@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -43,7 +43,7 @@ const categories = [
 const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const conditions = ['Excellent', 'Good', 'Fair']
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -465,5 +465,23 @@ export default function ProductsPage() {
       </div>
       
     </>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-muted rounded w-1/4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="h-64 bg-muted rounded"></div>
+            <div className="md:col-span-3 h-96 bg-muted rounded"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   )
 }

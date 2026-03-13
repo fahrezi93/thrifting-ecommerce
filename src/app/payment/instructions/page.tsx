@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,7 +31,7 @@ interface PaymentInstruction {
   expiresAt: string
 }
 
-export default function PaymentInstructionsPage() {
+function PaymentInstructionsContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { data: session } = useSession()
@@ -81,7 +81,7 @@ export default function PaymentInstructionsPage() {
     try {
       if (!user) return
       
-      const token = '' /* token removed */
+      const token = ''
       const response = await fetch(`/api/payment/instructions?orderId=${orderId}&method=${method}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -108,7 +108,7 @@ export default function PaymentInstructionsPage() {
     try {
       if (!user) return
       
-      const token = '' /* token removed */
+      const token = ''
       const response = await fetch(`/api/payment/status?orderId=${orderId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -375,5 +375,22 @@ export default function PaymentInstructionsPage() {
         </Button>
       </div>
     </div>
+  )
+}
+
+export default function PaymentInstructionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading payment instructions...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <PaymentInstructionsContent />
+    </Suspense>
   )
 }

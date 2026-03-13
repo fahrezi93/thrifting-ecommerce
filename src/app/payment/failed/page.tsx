@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { XCircle, RefreshCw, ArrowLeft, AlertTriangle, Package, ShoppingBag, CreditCard, Mail } from 'lucide-react'
 
-export default function PaymentFailedPage() {
+function PaymentFailedContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [retryCount, setRetryCount] = useState(0)
@@ -189,5 +189,17 @@ export default function PaymentFailedPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function PaymentFailedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-500"></div>
+      </div>
+    }>
+      <PaymentFailedContent />
+    </Suspense>
   )
 }
