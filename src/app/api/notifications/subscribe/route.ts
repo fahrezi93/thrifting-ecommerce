@@ -13,28 +13,50 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id
 
-    const { subscription, userId: bodyUserId } = await request.json()
-
-    // Use userId from session (more secure) or from body as fallback
-    const finalUserId = userId || bodyUserId
-
-    if (!finalUserId) {
+    if (!userId) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
+    }
+
+    // Parse request body
+    let body: Record<string, unknown>
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      )
+    }
+
+    // The client sends the raw PushSubscription object directly via JSON.stringify(subscription)
+    // This puts endpoint, expirationTime, keys at the top level of the body
+    // Also support wrapped format: { subscription: { endpoint, keys, ... } }
+    const subscription = body.endpoint ? body : (body.subscription as Record<string, unknown> | undefined)
+
+    const endpoint = subscription?.endpoint as string | undefined
+    const keys = subscription?.keys as { p256dh?: string; auth?: string } | undefined
+
+    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+      console.error('Invalid subscription data received:', JSON.stringify(body, null, 2))
+      return NextResponse.json(
+        { error: 'Invalid subscription data: missing endpoint or keys' },
+        { status: 400 }
+      )
     }
 
     // Check if subscription already exists
     const existingSubscription = await prisma.pushSubscription.findUnique({
-      where: { endpoint: subscription.endpoint }
+      where: { endpoint }
     })
 
     if (existingSubscription) {
       // Update existing subscription
       await prisma.pushSubscription.update({
-        where: { endpoint: subscription.endpoint },
+        where: { endpoint },
         data: {
-          userId: finalUserId,
-          p256dh: subscription.keys.p256dh,
-          auth: subscription.keys.auth,
+          userId,
+          p256dh: keys.p256dh,
+          auth: keys.auth,
           isActive: true,
           updatedAt: new Date()
         }
@@ -43,17 +65,17 @@ export async function POST(request: NextRequest) {
       // Create new subscription
       await prisma.pushSubscription.create({
         data: {
-          userId: finalUserId,
-          endpoint: subscription.endpoint,
-          p256dh: subscription.keys.p256dh,
-          auth: subscription.keys.auth,
+          userId,
+          endpoint,
+          p256dh: keys.p256dh,
+          auth: keys.auth,
           userAgent: request.headers.get('user-agent') || '',
           isActive: true
         }
       })
     }
 
-    console.log(`Push subscription saved for user ${finalUserId}`)
+    console.log(`Push subscription saved for user ${userId}`)
 
     return NextResponse.json({
       success: true,
