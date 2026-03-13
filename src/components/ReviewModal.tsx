@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Star, Loader2, CheckCircle, X } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
@@ -29,7 +29,8 @@ export default function ReviewModal({
   productImage,
   onReviewSubmitted
 }: ReviewModalProps) {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [comment, setComment] = useState('')

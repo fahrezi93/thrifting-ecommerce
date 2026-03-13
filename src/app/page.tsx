@@ -9,7 +9,7 @@ import { ShoppingBag, Recycle, Heart, Star } from 'lucide-react'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { PushNotificationSetup } from '@/components/push-notification-setup'
 import { useStore } from '@/contexts/StoreContext'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import AnimatedProductCard from '@/components/ui/animated-product-card'
@@ -30,7 +30,8 @@ interface Product {
 }
 
 export default function HomePage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const { settings } = useStore()
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)

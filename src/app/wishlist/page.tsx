@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -32,7 +32,9 @@ interface WishlistItem {
 }
 
 export default function WishlistPage() {
-  const { user, loading } = useAuth()
+  const { data: session, status } = useSession()
+  const user = session?.user
+  const loading = status === 'loading'
   const router = useRouter()
   const { addToast } = useToast()
   const { addItem } = useCart()
@@ -54,8 +56,8 @@ export default function WishlistPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken?.()
-      if (!token) return
+      const token = null
+      
       
       const response = await fetch('/api/user/wishlist', {
         headers: {
@@ -92,8 +94,8 @@ export default function WishlistPage() {
       
       setRemovingItems(prev => new Set(prev).add(productId))
       
-      const token = await user.getIdToken?.()
-      if (!token) return
+      const token = null
+      
       
       const response = await fetch(`/api/user/wishlist?productId=${productId}`, {
         method: 'DELETE',

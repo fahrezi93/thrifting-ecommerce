@@ -1,14 +1,5 @@
-// This file is not used since we're using Firebase Auth
-// Keeping it for compatibility but it won't be functional
 import NextAuth from 'next-auth'
-
-const authOptions = {
-  providers: [],
-  pages: {
-    signIn: '/auth/signin',
-    signUp: '/auth/signup',
-  },
-}
+import { authOptions } from '@/lib/auth'
 
 const handler = NextAuth(authOptions)
 

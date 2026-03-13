@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ChevronDown, ChevronUp, Search, MessageCircle, Phone, Mail, MapPin, Clock } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 import { useStoreSettings } from '@/hooks/use-store-settings'
 

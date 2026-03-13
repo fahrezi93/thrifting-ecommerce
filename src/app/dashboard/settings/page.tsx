@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,7 +28,8 @@ interface UserPreferences {
 }
 
 export default function SettingsPage() {
-  const { user, logout } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const router = useRouter()
   const { addToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
@@ -53,8 +54,8 @@ export default function SettingsPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken?.()
-      if (!token) return
+      const token = null
+      
       
       const response = await fetch('/api/user/preferences', {
         headers: {
@@ -100,8 +101,8 @@ export default function SettingsPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken?.()
-      if (!token) return
+      const token = null
+      
       
       const response = await fetch('/api/user/preferences', {
         method: 'PUT',
@@ -154,8 +155,8 @@ export default function SettingsPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken?.()
-      if (!token) return
+      const token = null
+      
       
       const response = await fetch('/api/user/preferences', {
         method: 'PUT',
@@ -191,8 +192,8 @@ export default function SettingsPage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken?.()
-      if (!token) return
+      const token = null
+      
       
       // Update local state immediately
       if (setting === 'profileVisibility') {
@@ -253,7 +254,7 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     try {
-      await logout()
+      await signOut()
       router.push('/')
     } catch (error) {
       console.error('Logout error:', error)
@@ -303,7 +304,7 @@ export default function SettingsPage() {
               <Label>Email Address</Label>
               <div className="flex items-center gap-2">
                 <span className="text-sm">{user?.email}</span>
-                {user?.emailVerified && <Badge variant="default">Verified</Badge>}
+                {(user as any)?.emailVerified && <Badge variant="default">Verified</Badge>}
               </div>
             </div>
           </div>

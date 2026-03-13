@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { UserCircle, Settings, LogOut, Heart, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSession, signOut } from 'next-auth/react'
 import { apiClient } from '@/lib/api-client';
 
 // Component to check and display admin menu
@@ -59,7 +59,8 @@ function AdminMenuCheck({ user, onClose }: { user: any, onClose: () => void }) {
 }
 
 export function ProfileDropdown() {
-  const { user, logout } = useAuth();
+  const { data: session } = useSession()
+  const user = session?.user;
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -183,7 +184,7 @@ export function ProfileDropdown() {
   };
 
   const handleLogout = () => {
-    logout();
+    signOut();
     setIsOpen(false);
   };
 

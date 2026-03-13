@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Shield, User, Mail, Calendar, MoreHorizontal } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
 
@@ -25,20 +25,20 @@ interface UserData {
 }
 
 export default function AdminUsersPage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
   const [users, setUsers] = useState<UserData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user) {
+    if (session?.user) {
       fetchUsers()
     }
-  }, [user])
+  }, [session])
 
   const fetchUsers = async () => {
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       const data = await apiClient.get('/api/admin/users')
       setUsers(data)
     } catch (error) {
@@ -51,8 +51,8 @@ export default function AdminUsersPage() {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       await apiClient.put(`/api/admin/users/${userId}`, { role: newRole })
       toast.success('User role updated successfully')
       fetchUsers() // Refresh users
@@ -142,7 +142,7 @@ export default function AdminUsersPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-end md:justify-start">
                     {userData.role === 'USER' ? (
                       <Button
@@ -153,7 +153,7 @@ export default function AdminUsersPage() {
                       >
                         Make Admin
                       </Button>
-                    ) : userData.id !== user?.id && (
+                    ) : userData.id !== session?.user?.id && (
                       <Button
                         size="sm"
                         variant="outline"

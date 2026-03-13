@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { MapPin, Phone, Mail, Clock, Send, MessageCircle, Loader2 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 
 export default function Contact() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',

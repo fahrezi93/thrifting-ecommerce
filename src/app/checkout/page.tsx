@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,7 +34,9 @@ interface ShippingOption {
 }
 
 export default function CheckoutPage() {
-  const { user, loading } = useAuth()
+  const { data: session, status } = useSession()
+  const user = session?.user
+  const loading = status === 'loading'
   const router = useRouter()
   const { items, getTotalPrice, clearCart } = useCart()
   
@@ -87,13 +89,11 @@ export default function CheckoutPage() {
 
   const fetchAddresses = async () => {
     try {
-      if (!user || !user.getIdToken) return
+      if (!user) return
       
-      const token = await user.getIdToken()
+      // cookies are sent automatically with fetch to same origin in browser
       const response = await fetch('/api/user/addresses', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: {}
       })
       if (response.ok) {
         const data = await response.json()
@@ -133,16 +133,13 @@ export default function CheckoutPage() {
     setError('')
 
     try {
-      if (!user || !user.getIdToken) return
-      
-      const token = await user.getIdToken()
+      if (!user) return
       
       // Step 1: Create order first
       const createOrderResponse = await fetch('/api/payment/create-transaction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           items: items.map(item => ({

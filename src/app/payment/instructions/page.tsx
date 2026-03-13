@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -34,7 +34,8 @@ interface PaymentInstruction {
 export default function PaymentInstructionsPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [instruction, setInstruction] = useState<PaymentInstruction | null>(null)
   const [loading, setLoading] = useState(true)
   const [timeLeft, setTimeLeft] = useState('')
@@ -78,9 +79,9 @@ export default function PaymentInstructionsPage() {
 
   const fetchPaymentInstructions = async () => {
     try {
-      if (!user || !user.getIdToken) return
+      if (!user) return
       
-      const token = await user.getIdToken()
+      const token = '' /* token removed */
       const response = await fetch(`/api/payment/instructions?orderId=${orderId}&method=${method}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -105,9 +106,9 @@ export default function PaymentInstructionsPage() {
     
     setCheckingStatus(true)
     try {
-      if (!user || !user.getIdToken) return
+      if (!user) return
       
-      const token = await user.getIdToken()
+      const token = '' /* token removed */
       const response = await fetch(`/api/payment/status?orderId=${orderId}`, {
         headers: {
           'Authorization': `Bearer ${token}`

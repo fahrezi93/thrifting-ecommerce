@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,7 +27,8 @@ interface UserStatistics {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -62,34 +63,20 @@ export default function DashboardPage() {
         setStatsLoading(false)
         return
       }
-      
-      if (!user.getIdToken) {
-        console.error('User authentication error: getIdToken method not available')
-        setStatsLoading(false)
-        return
-      }
-      
-      const token = await user.getIdToken()
-      if (!token) {
-        console.error('User authentication error: no token received')
-        setStatsLoading(false)
-        return
-      }
-      
+
       const response = await fetch('/api/user/statistics', {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       })
-      
+
       if (response.ok) {
         const stats = await response.json()
         setStatistics(stats)
       } else {
         const errorData = await response.text()
         console.error('Failed to fetch user statistics:', response.status, errorData)
-        
+
         // Set empty statistics as fallback
         setStatistics({
           totalOrders: 0,
@@ -103,7 +90,7 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error fetching user statistics:', error)
-      
+
       // Set empty statistics as fallback
       setStatistics({
         totalOrders: 0,
@@ -132,16 +119,14 @@ export default function DashboardPage() {
     setMessage('')
 
     try {
-      if (!user?.getIdToken) {
+      if (!user) {
         setMessage('Authentication error')
         return
       }
-      const token = await user.getIdToken()
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           name,
@@ -189,7 +174,7 @@ export default function DashboardPage() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -203,7 +188,7 @@ export default function DashboardPage() {
                 Email cannot be changed
               </p>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
               <Input
@@ -273,7 +258,7 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-          
+
           {statistics && statistics.recentOrders && statistics.recentOrders.length > 0 && (
             <div className="mt-6">
               <h4 className="font-semibold mb-3">Recent Orders</h4>

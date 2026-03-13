@@ -12,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { Search, Filter, SlidersHorizontal } from 'lucide-react'
 import { useCart } from '@/store/cart'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import ScrollReveal from '@/components/ui/scroll-reveal'
 import { toast } from 'sonner'
@@ -56,7 +56,8 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false)
   
   const { addItem } = useCart()
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const router = useRouter()
 
   useEffect(() => {

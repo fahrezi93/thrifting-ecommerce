@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 // import { toast } from 'sonner' // Will be added when sonner is installed
 import { Mail, MessageCircle } from 'lucide-react'
 import pusher from '@/lib/pusher-client'
@@ -17,11 +17,11 @@ interface ContactNotification {
 }
 
 export function ContactNotificationListener() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
 
   useEffect(() => {
     // Only listen for admin users
-    if (!user || user.role !== 'ADMIN') return
+    if (!session?.user || session.user.role !== 'ADMIN') return
 
     // Subscribe to admin notifications channel
     const channel = pusher.subscribe('admin-notifications')
@@ -67,7 +67,7 @@ export function ContactNotificationListener() {
       channel.unbind('new-contact-message')
       pusher.unsubscribe('admin-notifications')
     }
-  }, [user])
+  }, [session])
 
   // This component doesn't render anything
   return null

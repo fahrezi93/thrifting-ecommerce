@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { adminAuth } from '@/lib/firebase-admin'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import webpush from 'web-push'
 
 export async function POST(request: NextRequest) {
   try {
     // Verify user authentication
-    const authHeader = request.headers.get('Authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    const userId = decodedToken.uid
+    const userId = session.user.id
 
     // Check VAPID configuration
     if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
           return { success: true, endpoint: sub.endpoint }
         } catch (error) {
           console.error('Failed to send test notification:', error)
-          
+
           // Mark subscription as inactive if it's invalid
           if (error instanceof Error && (error.message.includes('410') || error.message.includes('gone'))) {
             await prisma.pushSubscription.update({
@@ -99,13 +98,13 @@ export async function POST(request: NextRequest) {
               data: { isActive: false }
             })
           }
-          
+
           return { success: false, endpoint: sub.endpoint, error: error instanceof Error ? error.message : String(error) }
         }
       })
     )
 
-    const successful = results.filter(result => 
+    const successful = results.filter(result =>
       result.status === 'fulfilled' && result.value.success
     ).length
 
@@ -124,7 +123,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error sending test notification:', error)
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to send test notification',
         details: error instanceof Error ? error.message : String(error)
       },

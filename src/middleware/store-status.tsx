@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useStore } from '@/contexts/StoreContext'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 
@@ -12,7 +12,8 @@ interface StoreStatusProps {
 
 export function StoreStatusWrapper({ children }: StoreStatusProps) {
   const { settings, loading } = useStore()
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const router = useRouter()
   const pathname = usePathname()
 
@@ -23,19 +24,19 @@ export function StoreStatusWrapper({ children }: StoreStatusProps) {
         // Allow home page during maintenance, but block shop/product pages
         const restrictedPaths = ['/shop', '/products', '/cart', '/checkout', '/profile']
         const isRestrictedPath = restrictedPaths.some(path => pathname.startsWith(path))
-        
+
         if (isRestrictedPath) {
           router.push('/maintenance')
           return
         }
       }
-      
+
       // Store closed behavior - similar to maintenance mode
       if (!settings.isStoreActive && user?.role !== 'ADMIN') {
         // Allow home page when store is closed, but block shop/product pages
         const restrictedPaths = ['/shop', '/products', '/cart', '/checkout', '/profile']
         const isRestrictedPath = restrictedPaths.some(path => pathname.startsWith(path))
-        
+
         if (isRestrictedPath) {
           router.push('/store-closed')
           return

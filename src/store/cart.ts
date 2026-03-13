@@ -32,14 +32,14 @@ export const useCart = create<CartStore>()(
       items: [],
       isOpen: false,
       userId: null,
-      
+
       setUserId: (userId) => {
         const currentUserId = get().userId
         const currentItems = get().items
-        
+
         if (currentUserId !== userId) {
           set({ userId })
-          
+
           if (userId) {
             // User logged in - try to merge local cart with server cart
             if (currentItems.length > 0) {
@@ -58,25 +58,12 @@ export const useCart = create<CartStore>()(
 
       loadUserCart: async (userId) => {
         try {
-          const { auth } = await import('@/lib/firebase')
-          const currentUser = auth.currentUser
-
-          if (!currentUser) {
-            console.log('No current user, skipping cart load')
-            return
-          }
-
-          const token = await currentUser.getIdToken()
-          const response = await fetch(`/api/user/cart`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          })
+          const response = await fetch(`/api/user/cart`)
 
           if (response.ok) {
             const { items: serverItems } = await response.json()
             const localItems = get().items
-            
+
             // Merge local cart with server cart
             if (localItems.length > 0 && serverItems && serverItems.length > 0) {
               // Merge: prioritize local cart but add server items that aren't in local
@@ -89,14 +76,13 @@ export const useCart = create<CartStore>()(
               })
               set({ items: mergedItems })
               console.log('Cart merged:', mergedItems.length, 'items')
-              
+
               // Save merged cart back to server
               try {
                 await fetch('/api/user/cart', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
                   },
                   body: JSON.stringify({ items: mergedItems }),
                 })
@@ -115,7 +101,6 @@ export const useCart = create<CartStore>()(
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
                   },
                   body: JSON.stringify({ items: localItems }),
                 })
@@ -138,7 +123,7 @@ export const useCart = create<CartStore>()(
         const { userId } = get()
         const items = get().items
         const existingItem = items.find((i) => i.id === item.id)
-        
+
         let newItems
         if (existingItem) {
           newItems = items.map((i) =>
@@ -149,19 +134,16 @@ export const useCart = create<CartStore>()(
         } else {
           newItems = [...items, { ...item, quantity: 1 }]
         }
-        
+
         set({ items: newItems })
-        
+
         // Save to server if user is logged in
         if (userId) {
           try {
-            const { auth } = await import('@/lib/firebase')
-            const token = await auth.currentUser?.getIdToken()
             await fetch('/api/user/cart', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
               },
               body: JSON.stringify({ items: newItems }),
             })
@@ -171,22 +153,19 @@ export const useCart = create<CartStore>()(
         }
         // If not logged in, cart is saved to localStorage by persist middleware
       },
-      
+
       removeItem: async (id) => {
         const { userId } = get()
         const newItems = get().items.filter((item) => item.id !== id)
         set({ items: newItems })
-        
+
         // Save to server if user is logged in
         if (userId) {
           try {
-            const { auth } = await import('@/lib/firebase')
-            const token = await auth.currentUser?.getIdToken()
             await fetch('/api/user/cart', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
               },
               body: JSON.stringify({ items: newItems }),
             })
@@ -196,7 +175,7 @@ export const useCart = create<CartStore>()(
         }
         // If not logged in, cart is saved to localStorage by persist middleware
       },
-      
+
       updateQuantity: async (id, quantity) => {
         const { userId } = get()
 
@@ -204,25 +183,22 @@ export const useCart = create<CartStore>()(
           get().removeItem(id)
           return
         }
-        
+
         const newItems = get().items.map((item) =>
           item.id === id
             ? { ...item, quantity: Math.min(quantity, item.stock) }
             : item
         )
-        
+
         set({ items: newItems })
-        
+
         // Save to server if user is logged in
         if (userId) {
           try {
-            const { auth } = await import('@/lib/firebase')
-            const token = await auth.currentUser?.getIdToken()
             await fetch('/api/user/cart', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
               },
               body: JSON.stringify({ items: newItems }),
             })
@@ -232,18 +208,17 @@ export const useCart = create<CartStore>()(
         }
         // If not logged in, cart is saved to localStorage by persist middleware
       },
-      
+
       clearCart: async () => {
         const { userId } = get()
         set({ items: [] })
-        
+
         if (userId) {
           try {
             await fetch('/api/user/cart', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${await (window as any).firebase?.auth()?.currentUser?.getIdToken()}`,
               },
               body: JSON.stringify({ items: [] }),
             })
@@ -252,22 +227,22 @@ export const useCart = create<CartStore>()(
           }
         }
       },
-      
+
       toggleCart: () => {
         set({ isOpen: !get().isOpen });
       },
-      
+
       getTotalItems: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0)
       },
-      
+
       getTotalPrice: () => {
         return get().items.reduce((total, item) => total + item.price * item.quantity, 0)
       },
     }),
     {
       name: 'cart-storage',
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         isOpen: state.isOpen,
         userId: state.userId,
         items: state.items, // Persist cart items

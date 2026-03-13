@@ -1,62 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyIdToken, getFirebaseAdminStatus } from '@/lib/firebase-admin'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 // GET - Fetch user statistics
 export async function GET(request: NextRequest) {
   try {
-    // Check Firebase Admin status first
-    const firebaseStatus = getFirebaseAdminStatus()
-    
-    if (!firebaseStatus.adminAuth) {
-      console.error('Firebase Admin not initialized:', firebaseStatus.initializationError)
-      return NextResponse.json({ 
-        error: 'Firebase Admin not initialized', 
-        details: firebaseStatus.initializationError 
-      }, { status: 500 })
-    }
-    
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await getServerSession(authOptions)
 
-    const token = authHeader.substring(7)
-    
-    let decodedToken
-    try {
-      decodedToken = await verifyIdToken(token)
-    } catch (verifyError) {
-      console.error('Token verification failed:', verifyError)
-      return NextResponse.json({ error: 'Invalid token', details: verifyError instanceof Error ? verifyError.message : 'Unknown error' }, { status: 401 })
-    }
-    
-    if (!decodedToken) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user statistics
     let orders, wishlistCount
-    
+
     try {
       [orders, wishlistCount] = await Promise.all([
         // Get all orders for the user
         prisma.order.findMany({
-          where: { userId: decodedToken.uid },
+          where: { userId: session.user.id },
           include: {
             orderItems: true
           }
         }),
         // Get wishlist items count
         prisma.wishlistItem.count({
-          where: { userId: decodedToken.uid }
+          where: { userId: session.user.id }
         })
       ])
     } catch (dbError) {
       console.error('Database query failed:', dbError)
-      return NextResponse.json({ 
-        error: 'Database error', 
-        details: dbError instanceof Error ? dbError.message : 'Unknown database error' 
+      return NextResponse.json({
+        error: 'Database error',
+        details: dbError instanceof Error ? dbError.message : 'Unknown database error'
       }, { status: 500 })
     }
 
@@ -93,7 +70,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching user statistics:', error)
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch statistics',
         details: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined

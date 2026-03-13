@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { Badge } from '@/components/ui/badge'
 import pusher from '@/lib/pusher-client'
 
 export function ContactMessageBadge() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
@@ -31,9 +32,7 @@ export function ContactMessageBadge() {
 
   const fetchUnreadCount = async () => {
     try {
-      if (!user?.getIdToken) return
-      
-      const token = await user.getIdToken()
+      const token = '' /* token removed */
       const response = await fetch('/api/admin/contact-messages/unread-count', {
         headers: {
           'Authorization': `Bearer ${token}`

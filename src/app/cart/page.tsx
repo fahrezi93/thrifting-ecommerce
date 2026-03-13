@@ -7,10 +7,11 @@ import { Card } from '@/components/ui/card'
 import { Minus, Plus, X, ShoppingBag, ArrowLeft } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 
 export default function CartPage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const { items, updateQuantity, removeItem, getTotalPrice } = useCart()
 
   const formatPrice = (price: number) => {

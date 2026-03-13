@@ -1,32 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyIdToken } from '@/lib/firebase-admin'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 // GET - Fetch user preferences
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await getServerSession(authOptions)
 
-    const token = authHeader.substring(7)
-    const decodedToken = await verifyIdToken(token)
-    
-    if (!decodedToken) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user preferences, create default if doesn't exist
     let preferences = await prisma.userPreferences.findUnique({
-      where: { userId: decodedToken.uid }
+      where: { userId: session.user.id }
     })
 
     if (!preferences) {
       // Create default preferences
       preferences = await prisma.userPreferences.create({
         data: {
-          userId: decodedToken.uid,
+          userId: session.user.id,
           emailNotifications: true,
           orderUpdates: true,
           promotions: false,
@@ -50,16 +45,10 @@ export async function GET(request: NextRequest) {
 // PUT - Update user preferences
 export async function PUT(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await getServerSession(authOptions)
 
-    const token = authHeader.substring(7)
-    const decodedToken = await verifyIdToken(token)
-    
-    if (!decodedToken) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -74,7 +63,7 @@ export async function PUT(request: NextRequest) {
 
     // Upsert user preferences
     const preferences = await prisma.userPreferences.upsert({
-      where: { userId: decodedToken.uid },
+      where: { userId: session.user.id },
       update: {
         emailNotifications: emailNotifications ?? undefined,
         orderUpdates: orderUpdates ?? undefined,
@@ -85,7 +74,7 @@ export async function PUT(request: NextRequest) {
         updatedAt: new Date()
       },
       create: {
-        userId: decodedToken.uid,
+        userId: session.user.id,
         emailNotifications: emailNotifications ?? true,
         orderUpdates: orderUpdates ?? true,
         promotions: promotions ?? false,

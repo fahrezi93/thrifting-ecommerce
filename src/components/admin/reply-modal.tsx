@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Send, Loader2 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 
 interface ContactMessage {
   id: string
@@ -29,27 +29,21 @@ interface ReplyModalProps {
 export function ReplyModal({ isOpen, onClose, contactMessage, onSuccess }: ReplyModalProps) {
   const [replyMessage, setReplyMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!contactMessage || !user || !replyMessage.trim()) return
 
     setIsLoading(true)
 
     try {
-      const token = await user.getIdToken?.()
-      if (!token) {
-        alert('Authentication failed. Please try again.')
-        return
-      }
-      
       const response = await fetch(`/api/admin/contact-messages/${contactMessage.id}/reply`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           replyMessage: replyMessage.trim()

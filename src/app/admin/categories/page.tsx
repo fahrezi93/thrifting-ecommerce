@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,6 @@ import { Switch } from '@/components/ui/switch'
 import { Trash2, Edit, Plus, Package, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api-client'
-import { uploadImageToSupabase } from '@/lib/supabase-storage'
 
 interface Category {
   id: string
@@ -26,7 +25,7 @@ interface Category {
 }
 
 export default function CategoriesPage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -41,12 +40,12 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     fetchCategories()
-  }, [user])
+  }, [session])
 
   const fetchCategories = async () => {
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       const data = await apiClient.get('/api/admin/categories')
       setCategories(data)
     } catch (error) {
@@ -59,10 +58,10 @@ export default function CategoriesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       if (editingCategory) {
         await apiClient.put(`/api/admin/categories/${editingCategory.id}`, formData)
         toast.success('Category updated!')
@@ -70,7 +69,7 @@ export default function CategoriesPage() {
         await apiClient.post('/api/admin/categories', formData)
         toast.success('Category created!')
       }
-      
+
       setShowForm(false)
       setEditingCategory(null)
       setFormData({ name: '', description: '', imageUrl: '', isActive: true })
@@ -103,8 +102,8 @@ export default function CategoriesPage() {
     }
 
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       await apiClient.delete(`/api/admin/categories/${category.id}`)
       toast.success('Category deleted!')
       fetchCategories()
@@ -116,20 +115,33 @@ export default function CategoriesPage() {
 
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true)
-    
+
     try {
-      if (!user) {
+      if (!session?.user) {
         toast.error('Authentication required')
         return
       }
 
-      const result = await uploadImageToSupabase(file)
-      
-      if (result.success && result.url) {
-        setFormData({ ...formData, imageUrl: result.url })
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
+      formDataUpload.append('folder', 'thrifting_ecommerce/categories')
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload
+      })
+
+      if (!response.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const result = await response.json()
+
+      if (result.success && result.urls && result.urls[0]) {
+        setFormData({ ...formData, imageUrl: result.urls[0] })
         toast.success('Image uploaded successfully!')
       } else {
-        toast.error(`Upload failed: ${result.error}`)
+        toast.error(`Upload failed`)
       }
     } catch (error) {
       console.error('Upload error:', error)
@@ -165,7 +177,7 @@ export default function CategoriesPage() {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Categories</h1>
           <p className="text-gray-600">Manage product categories</p>
         </div>
-        <Button 
+        <Button
           onClick={() => setShowForm(!showForm)}
           className="w-full sm:w-auto"
         >
@@ -195,7 +207,7 @@ export default function CategoriesPage() {
                 </div>
                 <div>
                   <Label htmlFor="categoryImage">Category Image</Label>
-                  
+
                   {/* File Upload */}
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mt-2">
                     <input
@@ -208,9 +220,8 @@ export default function CategoriesPage() {
                     />
                     <label
                       htmlFor="category-image-upload"
-                      className={`cursor-pointer flex flex-col items-center justify-center py-4 ${
-                        uploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
-                      }`}
+                      className={`cursor-pointer flex flex-col items-center justify-center py-4 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                        }`}
                     >
                       <Upload className="h-8 w-8 text-gray-400 mb-2" />
                       <span className="text-sm text-gray-600">
@@ -243,7 +254,7 @@ export default function CategoriesPage() {
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -317,11 +328,10 @@ export default function CategoriesPage() {
                       {category._count.products} products
                     </span>
                   </div>
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    category.isActive 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${category.isActive
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-800'
+                    }`}>
                     {category.isActive ? 'Active' : 'Inactive'}
                   </div>
                 </div>

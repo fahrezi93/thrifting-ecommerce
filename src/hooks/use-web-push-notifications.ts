@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 
 export function useWebPushNotifications() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [isSupported, setIsSupported] = useState(false)
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [subscription, setSubscription] = useState<PushSubscription | null>(null)
@@ -25,9 +26,9 @@ export function useWebPushNotifications() {
       const registration = await navigator.serviceWorker.register('/push-sw.js', {
         scope: '/'
       })
-      
+
       // console.log('Service Worker registered:', registration)
-      
+
       // Check for existing subscription
       const existingSubscription = await registration.pushManager.getSubscription()
       if (existingSubscription) {
@@ -46,12 +47,12 @@ export function useWebPushNotifications() {
     }
 
     setLoading(true)
-    
+
     try {
       // Request notification permission
       const permission = await Notification.requestPermission()
       setPermission(permission)
-      
+
       if (permission !== 'granted') {
         // console.log('Notification permission denied')
         setLoading(false)
@@ -64,35 +65,25 @@ export function useWebPushNotifications() {
 
       // Check if already subscribed
       let pushSubscription = await registration.pushManager.getSubscription()
-      
+
       if (!pushSubscription) {
         // Create new subscription
-        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 
+        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
           'BEl62iUYgUivxIkv69yViEuiBIa40HI80NM9f4uOWoFzQhkTF7A3PBJXfXWPFkXfRBNjMWcbJsxUhcVLRlBOQwU'
 
         pushSubscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
         })
-        
+
         // console.log('New push subscription created:', pushSubscription)
       }
 
       // Send subscription to server
-      if (!user?.getIdToken) {
-        throw new Error('User getIdToken method not available')
-      }
-      
-      const token = await user.getIdToken()
-      if (!token) {
-        throw new Error('Unable to get user token')
-      }
-
       const response = await fetch('/api/notifications/subscribe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           subscription: pushSubscription.toJSON(),
@@ -102,7 +93,7 @@ export function useWebPushNotifications() {
 
       if (response.ok) {
         setSubscription(pushSubscription)
-        
+
         // Show test notification
         await registration.showNotification('🎉 Push Notifications Enabled!', {
           body: 'You\'ll now receive notifications even when the app is closed.',
@@ -112,7 +103,7 @@ export function useWebPushNotifications() {
           data: { url: '/' },
           requireInteraction: false
         })
-        
+
         setLoading(false)
         return true
       } else {
@@ -132,21 +123,17 @@ export function useWebPushNotifications() {
     try {
       // Unsubscribe from push manager
       await subscription.unsubscribe()
-      
+
       // Remove from server
-      if (user?.getIdToken) {
-        const token = await user.getIdToken()
-        await fetch('/api/notifications/unsubscribe', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            endpoint: subscription.endpoint
-          })
+      await fetch('/api/notifications/unsubscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          endpoint: subscription.endpoint
         })
-      }
+      })
 
       setSubscription(null)
       setLoading(false)
@@ -162,16 +149,10 @@ export function useWebPushNotifications() {
     if (!subscription || !user) return false
 
     try {
-      if (!user?.getIdToken) {
-        return false
-      }
-      
-      const token = await user.getIdToken()
       const response = await fetch('/api/notifications/test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           title: '🧪 Test Notification',

@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useCart } from '@/store/cart'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { ArrowLeft, Heart, Share2, ShoppingCart, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
@@ -37,7 +37,8 @@ export default function ProductDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isSaved, setIsSaved] = useState(false)
   const { addItem } = useCart()
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const { addToast } = useToast()
 
   useEffect(() => {
@@ -71,9 +72,9 @@ export default function ProductDetailPage() {
   // Check if item is saved on component mount
   useEffect(() => {
     const checkIsSaved = async () => {
-      if (user && product && user.getIdToken) {
+      if (user && product && undefined) {
         try {
-          const token = await user.getIdToken()
+          const token = '' /* token removed */
           const response = await fetch('/api/user/wishlist', {
             headers: { Authorization: `Bearer ${token}` },
           })
@@ -169,8 +170,8 @@ export default function ProductDetailPage() {
     }
 
     try {
-      if (!user || !user.getIdToken) return
-      const token = await user.getIdToken()
+      if (!user) return
+      const token = '' /* token removed */
       if (isSaved) {
         // Remove from saved items
         const response = await fetch(`/api/user/wishlist?productId=${product.id}`, {

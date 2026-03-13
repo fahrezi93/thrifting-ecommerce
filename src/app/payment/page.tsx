@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -136,7 +136,8 @@ const paymentMethods: PaymentMethod[] = [
 export default function PaymentPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [selectedMethod, setSelectedMethod] = useState<string>('')
   const [orderSummary, setOrderSummary] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -192,12 +193,12 @@ export default function PaymentPage() {
   }
 
   const handlePayment = async () => {
-    if (!selectedMethod || !token || !user || !user.getIdToken) return
+    if (!selectedMethod || !token || !user) return
 
     setProcessing(true)
     try {
       // Get Firebase token for authentication
-      const authToken = await user.getIdToken()
+      const authToken = '' /* token removed */
       
       // Map payment method to DOKU format
       const dokuPaymentMethod = mapPaymentMethodToDoku(selectedMethod)

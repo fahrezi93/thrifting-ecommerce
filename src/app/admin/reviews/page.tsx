@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { apiClient } from '@/lib/api-client'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -48,7 +48,7 @@ interface ReviewsResponse {
 }
 
 export default function AdminReviewsPage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({
@@ -57,14 +57,14 @@ export default function AdminReviewsPage() {
     total: 0,
     totalPages: 0
   })
-  
+
   // Filters
   const [filters, setFilters] = useState({
     rating: 'all',
     hasReply: 'all',
     search: ''
   })
-  
+
   // Reply modal state
   const [replyModal, setReplyModal] = useState<{
     isOpen: boolean
@@ -79,10 +79,10 @@ export default function AdminReviewsPage() {
   })
 
   useEffect(() => {
-    if (user?.role === 'ADMIN') {
+    if (session?.user?.role === 'ADMIN') {
       fetchReviews()
     }
-  }, [user, pagination.page, filters])
+  }, [session, pagination.page, filters])
 
   const fetchReviews = async () => {
     try {
@@ -91,10 +91,10 @@ export default function AdminReviewsPage() {
         page: pagination.page.toString(),
         limit: pagination.limit.toString()
       })
-      
+
       if (filters.rating && filters.rating !== 'all') params.append('rating', filters.rating)
       if (filters.hasReply && filters.hasReply !== 'all') params.append('hasReply', filters.hasReply)
-      
+
       const data: ReviewsResponse = await apiClient.get(`/api/admin/reviews?${params}`)
       setReviews(data.reviews)
       setPagination(data.pagination)
@@ -139,10 +139,10 @@ export default function AdminReviewsPage() {
     setReplyModal(prev => ({ ...prev, isSubmitting: true }))
 
     try {
-      const endpoint = replyModal.review.adminReply 
+      const endpoint = replyModal.review.adminReply
         ? '/api/admin/reviews/reply' // Update existing reply
         : '/api/admin/reviews/reply' // Create new reply
-      
+
       if (replyModal.review.adminReply) {
         // Update existing reply
         await apiClient.put('/api/admin/reviews/reply', {
@@ -212,7 +212,7 @@ export default function AdminReviewsPage() {
     return '/placeholder-image.jpg'
   }
 
-  if (!user || user.role !== 'ADMIN') {
+  if (!session?.user || session.user.role !== 'ADMIN') {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Card className="w-96">
@@ -338,9 +338,8 @@ export default function AdminReviewsPage() {
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`w-4 h-4 ${
-                                  i < review.rating ? 'fill-current' : 'text-gray-300'
-                                }`}
+                                className={`w-4 h-4 ${i < review.rating ? 'fill-current' : 'text-gray-300'
+                                  }`}
                               />
                             ))}
                             <span className="text-sm font-medium ml-1">{review.rating}</span>
@@ -493,7 +492,7 @@ export default function AdminReviewsPage() {
               {replyModal.review?.adminReply ? 'Edit Admin Reply' : 'Reply to Review'}
             </DialogTitle>
             <DialogDescription>
-              {replyModal.review?.adminReply 
+              {replyModal.review?.adminReply
                 ? 'Update your response to this customer review'
                 : 'Respond to this customer review professionally'
               }
@@ -509,9 +508,8 @@ export default function AdminReviewsPage() {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-4 h-4 ${
-                          i < (replyModal.review?.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                        }`}
+                        className={`w-4 h-4 ${i < (replyModal.review?.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                          }`}
                       />
                     ))}
                   </div>

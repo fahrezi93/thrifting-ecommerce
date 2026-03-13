@@ -1,13 +1,14 @@
 'use client'
 
 import { useStore } from '@/contexts/StoreContext'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { AlertTriangle, X } from 'lucide-react'
 import { useState } from 'react'
 
 export function MaintenanceBanner() {
   const { settings } = useStore()
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [dismissed, setDismissed] = useState(false)
 
   // Don't show banner if:

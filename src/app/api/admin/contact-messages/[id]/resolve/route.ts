@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyIdToken } from '@/lib/firebase-admin'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { sendResolvedEmail } from '@/lib/email-service'
 
 export async function PATCH(
@@ -8,24 +9,13 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.substring(7)
-    const decodedToken = await verifyIdToken(token)
-    
-    if (!decodedToken) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    // Check if user is admin
-    const user = await prisma.user.findUnique({
-      where: { id: decodedToken.uid }
-    })
-
-    if (!user || user.role !== 'ADMIN') {
+    if (session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 

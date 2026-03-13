@@ -5,9 +5,9 @@ import Link from 'next/link'
 import { ShoppingBag, Search, Menu, X, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { useCart } from '@/store/cart'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { ClientOnly } from '@/components/client-only'
 import { apiClient } from '@/lib/api-client'
 import { useStore } from '@/contexts/StoreContext'
@@ -30,7 +30,7 @@ function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobi
         setLoading(false)
         return
       }
-      
+
       try {
         const { role } = await apiClient.get('/api/auth/check-role')
         setIsAdmin(role === 'ADMIN')
@@ -69,12 +69,19 @@ function AdminMenuCheck({ user, isMobile = false, onClose }: { user: any, isMobi
 }
 
 export function Navbar() {
-  const { user, logout, loading } = useAuth()
+  const { data: session, status } = useSession()
+  const user = session?.user
+  const loading = status === 'loading'
   const { getTotalItems } = useCart()
   const { settings } = useStore()
   const { isInstalled, displayMode } = useDisplayMode()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const pathname = usePathname()
+
+  if (pathname?.startsWith('/auth')) {
+    return null
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,12 +124,12 @@ export function Navbar() {
           <div className="flex items-center space-x-4">
             {/* PWA Install Button */}
             <PWAInstallButton />
-            
+
             {/* Notifications - Desktop Only */}
             <div className="hidden md:block">
               <NotificationBell />
             </div>
-            
+
             {/* Cart */}
             <ClientOnly fallback={
               <Button
@@ -208,30 +215,30 @@ export function Navbar() {
         {/* Mobile Menu */}
         <AnimatePresence>
           {isMenuOpen && (
-            <motion.div 
+            <motion.div
               className="md:hidden border-t overflow-hidden"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ 
+              transition={{
                 duration: 0.3,
                 ease: "easeInOut"
               }}
             >
-              <motion.div 
+              <motion.div
                 className="py-4"
                 initial={{ y: -20 }}
                 animate={{ y: 0 }}
                 exit={{ y: -20 }}
-                transition={{ 
+                transition={{
                   duration: 0.3,
                   delay: 0.1
                 }}
               >
                 <div className="space-y-4">
                   {/* Mobile Search */}
-                  <motion.form 
-                    onSubmit={handleSearch} 
+                  <motion.form
+                    onSubmit={handleSearch}
                     className="flex items-center space-x-2"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -251,9 +258,9 @@ export function Navbar() {
 
                   {/* Mobile Navigation Links */}
                   <MobileNavigation onClose={() => setIsMenuOpen(false)} />
-                  
+
                   {/* Notifications - Mobile Only */}
-                  <motion.div 
+                  <motion.div
                     className="md:hidden py-4 border-t mt-4"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -264,7 +271,7 @@ export function Navbar() {
 
                   {/* Mobile Auth - Only show Sign In/Sign Up for non-authenticated users */}
                   <ClientOnly fallback={
-                    <motion.div 
+                    <motion.div
                       className="space-y-2 pt-4 border-t"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -274,7 +281,7 @@ export function Navbar() {
                     </motion.div>
                   }>
                     {loading ? (
-                      <motion.div 
+                      <motion.div
                         className="space-y-2 pt-4 border-t"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -283,7 +290,7 @@ export function Navbar() {
                         <div className="py-2 text-sm text-muted-foreground">Loading...</div>
                       </motion.div>
                     ) : !user && (
-                      <motion.div 
+                      <motion.div
                         className="space-y-2 pt-4 border-t"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}

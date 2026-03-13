@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 
 interface DashboardStats {
   totalProducts: number
@@ -30,26 +30,21 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user) {
+    if (session?.user) {
       fetchDashboardStats()
     }
-  }, [user])
+  }, [session])
 
   const fetchDashboardStats = async () => {
     try {
-      if (user && user.getIdToken) {
-        const token = await user.getIdToken()
-        const response = await fetch('/api/admin/dashboard', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        })
-        
+      if (session?.user?.role === 'ADMIN') {
+        const response = await fetch('/api/admin/dashboard')
+
         if (response.ok) {
           const data = await response.json()
           setStats(data)
@@ -277,14 +272,13 @@ export default function AdminDashboard() {
                       <p className="font-semibold text-sm md:text-base">
                         {formatPrice(order.totalAmount)}
                       </p>
-                      <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
-                        order.status === 'PAID' ? 'bg-green-100 text-green-800' :
-                        order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'COMPLETED' || order.status === 'DELIVERED' ? 'bg-purple-100 text-purple-800' :
-                        order.status === 'PROCESSING' ? 'bg-orange-100 text-orange-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${order.status === 'PAID' ? 'bg-green-100 text-green-800' :
+                          order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                            order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
+                              order.status === 'COMPLETED' || order.status === 'DELIVERED' ? 'bg-purple-100 text-purple-800' :
+                                order.status === 'PROCESSING' ? 'bg-orange-100 text-orange-800' :
+                                  'bg-red-100 text-red-800'
+                        }`}>
                         {order.status}
                       </span>
                     </div>

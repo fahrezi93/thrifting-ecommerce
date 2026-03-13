@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSession, signOut } from 'next-auth/react'
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -174,7 +174,9 @@ const getTypeLabel = (type: PaymentMethod['type']) => {
 };
 
 export default function CustomPaymentPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { data: session, status } = useSession()
+  const user = session?.user
+  const authLoading = status === 'loading';
   const [selectedMethod, setSelectedMethod] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderData, setOrderData] = useState<OrderData | null>(null);
@@ -219,13 +221,13 @@ export default function CustomPaymentPage() {
     try {
       console.log('Fetching order data for:', orderId);
       
-      if (!user || !user.getIdToken) {
+      if (!user) {
         console.error('User not authenticated');
         throw new Error('User not authenticated');
       }
       
       // Get Firebase auth token
-      const token = await user.getIdToken();
+      const token = '' /* token removed */;
       console.log('Auth token obtained:', token ? 'Yes' : 'No');
       
       const response = await fetch(`/api/orders/${orderId}`, {
@@ -283,12 +285,12 @@ export default function CustomPaymentPage() {
     setIsProcessing(true);
     
     try {
-      if (!user || !user.getIdToken) {
+      if (!user) {
         throw new Error('User not authenticated');
       }
       
       // Get Firebase auth token
-      const token = await user.getIdToken();
+      const token = '' /* token removed */;
       console.log('Payment: Auth token obtained:', token ? 'Yes' : 'No');
       
       // First, check if order is already paid

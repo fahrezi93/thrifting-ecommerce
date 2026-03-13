@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/hooks/use-toast'
 import { AlertModal } from '@/components/ui/modal'
 import { Save, Store, Globe, Mail, Phone } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { useStore } from '@/contexts/StoreContext'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
@@ -31,7 +31,7 @@ interface StoreSettings {
 export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false)
   const { addToast } = useToast()
-  const [alertModal, setAlertModal] = useState<{isOpen: boolean, title: string, description: string, variant?: 'default' | 'success' | 'error' | 'warning'}>({isOpen: false, title: '', description: ''})
+  const [alertModal, setAlertModal] = useState<{ isOpen: boolean, title: string, description: string, variant?: 'default' | 'success' | 'error' | 'warning' }>({ isOpen: false, title: '', description: '' })
   const [settings, setSettings] = useState<StoreSettings>({
     storeName: 'Thrift Haven',
     storeDescription: 'Sustainable fashion for the conscious shopper. Discover unique, quality pre-loved clothing.',
@@ -45,19 +45,19 @@ export default function AdminSettingsPage() {
     maintenanceMode: false,
   })
   const [loading, setLoading] = useState(true)
-  const { user } = useAuth()
+  const { data: session } = useSession()
   const { refreshSettings } = useStore()
 
   useEffect(() => {
-    if (user) {
+    if (session?.user) {
       fetchSettings()
     }
-  }, [user])
+  }, [session])
 
   const fetchSettings = async () => {
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       setLoading(true)
       const data = await apiClient.get('/api/admin/settings')
       setSettings(data)
@@ -71,12 +71,12 @@ export default function AdminSettingsPage() {
 
   const saveSettings = async () => {
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       setSaving(true)
       const response = await apiClient.put('/api/admin/settings', settings)
       console.log('Settings saved:', response.data)
-      
+
       // Broadcast store status change to all connected devices via SSE
       await fetch('/api/store/status-updates', {
         method: 'POST',
@@ -89,12 +89,12 @@ export default function AdminSettingsPage() {
           }
         })
       })
-      
+
       console.log('Store status updated, broadcasting to all connected devices')
-      
+
       // Refresh the store context to update all components
       await refreshSettings()
-      
+
       toast.success('Settings saved successfully!')
     } catch (error) {
       console.error('Error saving settings:', error)
@@ -163,7 +163,7 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="storePhone">Store Phone</Label>
@@ -280,7 +280,7 @@ export default function AdminSettingsPage() {
       {/* Alert Modal */}
       <AlertModal
         isOpen={alertModal.isOpen}
-        onClose={() => setAlertModal({isOpen: false, title: '', description: ''})}
+        onClose={() => setAlertModal({ isOpen: false, title: '', description: '' })}
         title={alertModal.title}
         description={alertModal.description}
         variant={alertModal.variant}

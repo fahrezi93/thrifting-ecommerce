@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,7 +37,7 @@ interface Pagination {
 }
 
 export default function ContactMessagesPage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
   const [messages, setMessages] = useState<ContactMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -63,33 +63,26 @@ export default function ContactMessagesPage() {
   })
 
   useEffect(() => {
-    if (user) {
+    if (session?.user) {
       fetchMessages()
     }
-  }, [user, statusFilter, pagination.page])
+  }, [session, statusFilter, pagination.page])
 
   const fetchMessages = async () => {
     try {
-      if (!user) return
-      
-      const token = await user.getIdToken?.()
-      if (!token) return
-      
+      if (!session?.user) return
+
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString()
       })
-      
+
       if (statusFilter !== 'all') {
         params.append('status', statusFilter)
       }
-      
-      const response = await fetch(`/api/contact?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
+
+      const response = await fetch(`/api/contact?${params}`)
+
       if (response.ok) {
         const data = await response.json()
         setMessages(data.messages)
@@ -109,7 +102,7 @@ export default function ContactMessagesPage() {
       RESOLVED: 'secondary',
       CLOSED: 'outline'
     }
-    
+
     return <Badge variant={variants[status] || 'outline'}>{status}</Badge>
   }
 
@@ -131,19 +124,13 @@ export default function ContactMessagesPage() {
   }
 
   const handleMarkAsResolved = async (messageId: string) => {
-    if (!user) return
+    if (!session?.user) return
 
     setActionLoading({ messageId, action: 'resolve' })
 
     try {
-      const token = await user.getIdToken?.()
-      if (!token) return
-
       const response = await fetch(`/api/admin/contact-messages/${messageId}/resolve`, {
         method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       })
 
       if (response.ok) {
@@ -161,18 +148,15 @@ export default function ContactMessagesPage() {
   }
 
   const handleClose = async (messageId: string) => {
-    if (!user) return
+    if (!session?.user) return
 
     setActionLoading({ messageId, action: 'close' })
 
     try {
-      const token = await user.getIdToken?.()
-      if (!token) return
-
       const response = await fetch(`/api/admin/contact-messages/${messageId}/close`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         }
       })
 
@@ -242,7 +226,7 @@ export default function ContactMessagesPage() {
               <MessageSquare className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
               <h3 className="text-base sm:text-lg font-semibold mb-2">No messages found</h3>
               <p className="text-sm text-muted-foreground">
-                {statusFilter === 'all' 
+                {statusFilter === 'all'
                   ? 'No contact messages have been received yet.'
                   : `No messages with status "${statusFilter}" found.`
                 }
@@ -268,7 +252,7 @@ export default function ContactMessagesPage() {
                       <Badge variant="outline" className="text-xs w-fit">Registered User</Badge>
                     )}
                   </div>
-                  
+
                   {/* Contact Info - Mobile Optimized */}
                   <div className="text-muted-foreground space-y-2">
                     <div className="grid grid-cols-1 gap-1">
@@ -301,18 +285,18 @@ export default function ContactMessagesPage() {
                     {message.message}
                   </p>
                 </div>
-                
+
                 {message.user && (
                   <div className="text-xs text-muted-foreground mb-3 sm:mb-4 p-2 bg-blue-50 rounded text-center sm:text-left">
                     <strong>User:</strong> {message.user.name} ({message.user.email})
                   </div>
                 )}
-                
+
                 {/* Action Buttons - Mobile First */}
                 <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full h-9 text-xs sm:text-sm"
                     onClick={() => handleReply(message)}
                     disabled={message.status === 'CLOSED'}
@@ -320,13 +304,13 @@ export default function ContactMessagesPage() {
                     <Reply className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     Reply
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full h-9 text-xs sm:text-sm"
                     onClick={() => handleMarkAsResolved(message.id)}
-                    disabled={message.status === 'RESOLVED' || message.status === 'CLOSED' || 
-                             (actionLoading.messageId === message.id && actionLoading.action === 'resolve')}
+                    disabled={message.status === 'RESOLVED' || message.status === 'CLOSED' ||
+                      (actionLoading.messageId === message.id && actionLoading.action === 'resolve')}
                   >
                     {actionLoading.messageId === message.id && actionLoading.action === 'resolve' ? (
                       <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
@@ -335,13 +319,13 @@ export default function ContactMessagesPage() {
                     )}
                     Resolve
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full h-9 text-xs sm:text-sm"
                     onClick={() => handleClose(message.id)}
-                    disabled={message.status === 'CLOSED' || 
-                             (actionLoading.messageId === message.id && actionLoading.action === 'close')}
+                    disabled={message.status === 'CLOSED' ||
+                      (actionLoading.messageId === message.id && actionLoading.action === 'close')}
                   >
                     {actionLoading.messageId === message.id && actionLoading.action === 'close' ? (
                       <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
@@ -370,7 +354,7 @@ export default function ContactMessagesPage() {
             >
               Prev
             </Button>
-            
+
             <div className="flex items-center gap-1 overflow-x-auto max-w-[150px] sm:max-w-none">
               {Array.from({ length: Math.min(pagination.pages, 3) }, (_, i) => {
                 let page;
@@ -383,7 +367,7 @@ export default function ContactMessagesPage() {
                 } else {
                   page = pagination.page - 1 + i;
                 }
-                
+
                 return (
                   <Button
                     key={page}
@@ -397,7 +381,7 @@ export default function ContactMessagesPage() {
                 );
               })}
             </div>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -408,7 +392,7 @@ export default function ContactMessagesPage() {
               Next
             </Button>
           </div>
-          
+
           <div className="text-xs text-muted-foreground text-center">
             Page {pagination.page} of {pagination.pages}
           </div>

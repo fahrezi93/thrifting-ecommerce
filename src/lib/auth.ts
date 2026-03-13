@@ -1,82 +1,105 @@
-import { NextRequest } from 'next/server'
-import { prisma } from './prisma'
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
+import { NextAuthOptions, getServerSession } from "next-auth"
+import GoogleProvider from "next-auth/providers/google"
+import CredentialsProvider from "next-auth/providers/credentials"
+import { prisma } from "./prisma"
+import type { NextRequest } from "next/server"
+import bcrypt from "bcryptjs"
 
-import { adminAuth } from './firebase-admin'
+export { getServerSession }
 
-export interface AuthenticatedUser {
-  id: string
-  email: string
-  name: string | null
-  role: string
-  firebaseUid: string
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email dan password wajib diisi');
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email }
+        });
+
+        if (!user) {
+          throw new Error('Tidak ada akun yang terdaftar menggunakan email ini');
+        }
+
+        if (!user.password) {
+          throw new Error('Email ini didaftarkan via metode lain (Google). Silakan masuk menggunakan Sign in with Google.');
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          throw new Error('Kata sandi salah');
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        };
+      }
+    }),
+  ],
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  },
+  session: {
+    strategy: "jwt",
+  },
+  callbacks: {
+    async session({ session, token, user }) {
+      if (session.user) {
+        session.user.id = token.sub as string;
+        // Optionally pass role from db if needed
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.sub! }
+        });
+        if (dbUser) {
+          (session.user as any).role = dbUser.role;
+        }
+      }
+      return session
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token
+    }
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 }
 
-export async function getServerSession(request: NextRequest): Promise<AuthenticatedUser | null> {
-  try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      console.log('No valid authorization header found')
-      return null
-    }
-
-    const token = authHeader.split('Bearer ')[1]
-    if (!token || token.trim() === '') {
-      console.log('Empty or invalid token')
-      return null
-    }
-
-    console.log('Attempting to verify token:', token.substring(0, 20) + '...')
-    
-    // Validate token format - Firebase ID tokens are JWTs with 3 parts separated by dots
-    const tokenParts = token.split('.')
-    if (tokenParts.length !== 3) {
-      console.log('Invalid token format - not a valid JWT')
-      return null
-    }
-    
-    if (!adminAuth) {
-      // SECURITY: Firebase Admin SDK is required for secure authentication
-      console.error('Firebase Admin SDK not initialized - authentication failed')
-      console.error('Please ensure FIREBASE_ADMIN_SDK_JSON environment variable is set')
-      return null
-    }
-    
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    
-    // Get user from database using Firebase UID (stored as id)
-    const user = await prisma.user.findUnique({
-      where: { id: decodedToken.uid }
-    })
-
-    if (!user) {
-      return null
-    }
-
-    return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      firebaseUid: user.id // id is the Firebase UID
-    }
-  } catch (error) {
-    console.error('Error verifying Firebase token:', error)
-    return null
-  }
-}
-
-export async function requireAuth(request: NextRequest): Promise<AuthenticatedUser> {
-  const user = await getServerSession(request)
-  if (!user) {
+// Polyfill for old Firebase auth checks
+export async function requireAuth(request?: NextRequest) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user) {
     throw new Error('Unauthorized')
   }
-  return user
+  return session.user as typeof session.user & { id: string; role: string }
 }
 
-export async function requireAdmin(request: NextRequest): Promise<AuthenticatedUser> {
+export async function requireAdmin(request?: NextRequest) {
   const user = await requireAuth(request)
   if (user.role !== 'ADMIN') {
-    throw new Error('Admin access required')
+    throw new Error('Forbidden')
   }
   return user
 }

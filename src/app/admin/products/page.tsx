@@ -15,8 +15,7 @@ import { Star, Plus, Pencil, Trash2, Upload, X, Sparkles, Search, Package, Edit 
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmModal, AlertModal } from '@/components/ui/modal'
 import { apiClient } from '@/lib/api-client'
-import { useAuth } from '@/contexts/AuthContext'
-import { uploadImageToSupabase } from '@/lib/supabase-storage'
+import { useSession } from 'next-auth/react'
 
 interface Product {
   id: string
@@ -40,14 +39,14 @@ const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const conditions = ['Excellent', 'Good', 'Fair']
 
 export default function AdminProductsPage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
   const [products, setProducts] = useState<Product[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [uploadingImages, setUploadingImages] = useState(false)
   const [generatingDescription, setGeneratingDescription] = useState(false)
-  const [deleteConfirm, setDeleteConfirm] = useState<{isOpen: boolean, productId: string, productName: string}>({isOpen: false, productId: '', productName: ''})
-  const [alertModal, setAlertModal] = useState<{isOpen: boolean, title: string, description: string, variant?: 'default' | 'success' | 'error' | 'warning'}>({isOpen: false, title: '', description: ''})
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, productId: string, productName: string }>({ isOpen: false, productId: '', productName: '' })
+  const [alertModal, setAlertModal] = useState<{ isOpen: boolean, title: string, description: string, variant?: 'default' | 'success' | 'error' | 'warning' }>({ isOpen: false, title: '', description: '' })
   const { addToast } = useToast()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -87,7 +86,7 @@ export default function AdminProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (formData.imageUrls.length === 0) {
       setAlertModal({
         isOpen: true,
@@ -97,23 +96,23 @@ export default function AdminProductsPage() {
       })
       return
     }
-    
+
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       const productData = {
         ...formData,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         imageUrls: formData.imageUrls,
       }
-      
+
       if (editingProduct) {
         await apiClient.put(`/api/admin/products/${editingProduct.id}`, productData)
       } else {
         await apiClient.post('/api/admin/products', productData)
       }
-      
+
       await fetchProducts()
       setIsDialogOpen(false)
       resetForm()
@@ -163,8 +162,8 @@ export default function AdminProductsPage() {
   const handleDelete = async () => {
     const { productId } = deleteConfirm
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       await apiClient.delete(`/api/admin/products/${productId}`)
       await fetchProducts()
       addToast({
@@ -217,9 +216,9 @@ export default function AdminProductsPage() {
     }
 
     setGeneratingDescription(true)
-    
+
     try {
-      if (!user || !user.getIdToken) {
+      if (!session?.user) {
         addToast({
           title: 'Authentication Required',
           description: 'Please login to use AI features.',
@@ -228,12 +227,10 @@ export default function AdminProductsPage() {
         return
       }
 
-      const token = await user.getIdToken?.()
       const response = await fetch('/api/admin/generate-description', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           productName: formData.name,
@@ -285,9 +282,9 @@ export default function AdminProductsPage() {
     }
 
     setUploadingImages(true)
-    
+
     try {
-      if (!user) {
+      if (!session?.user) {
         addToast({
           title: 'Authentication Required',
           description: 'Authentication required. Please login again.',
@@ -298,46 +295,42 @@ export default function AdminProductsPage() {
       }
 
       const uploadedUrls: string[] = []
-      const failedUploads: string[] = []
 
+      const formDataUpload = new FormData()
       for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        
-        try {
-          // Upload file ke Supabase Storage
-          const result = await uploadImageToSupabase(file)
-          
-          if (result.success && result.url) {
-            uploadedUrls.push(result.url)
-          } else {
-            failedUploads.push(file.name)
-            console.error('Supabase Storage upload error:', result.error)
-            addToast({
-              title: 'Upload Failed',
-              description: `Failed to upload ${file.name}: ${result.error}`,
-              variant: 'destructive'
-            })
-          }
-        } catch (error) {
-          failedUploads.push(file.name)
-          console.error('Upload error:', error)
+        formDataUpload.append('file', files[i])
+      }
+      formDataUpload.append('folder', 'thrifting_ecommerce/products')
+
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formDataUpload
+        })
+
+        if (!response.ok) {
+          throw new Error('Upload failed')
+        }
+
+        const data = await response.json()
+
+        if (data.urls && data.urls.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            imageUrls: [...prev.imageUrls, ...data.urls]
+          }))
           addToast({
-            title: 'Upload Failed',
-            description: `Failed to upload ${file.name}`,
-            variant: 'destructive'
+            title: 'Success!',
+            description: `${data.urls.length} images uploaded successfully!`,
+            variant: 'success'
           })
         }
-      }
-
-      if (uploadedUrls.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          imageUrls: [...prev.imageUrls, ...uploadedUrls]
-        }))
+      } catch (error) {
+        console.error('Upload error:', error)
         addToast({
-          title: 'Success!',
-          description: `${uploadedUrls.length} images uploaded successfully!`,
-          variant: 'success'
+          title: 'Upload Failed',
+          description: `Failed to upload images`,
+          variant: 'destructive'
         })
       }
     } catch (error) {
@@ -413,7 +406,7 @@ export default function AdminProductsPage() {
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -454,7 +447,7 @@ export default function AdminProductsPage() {
             Manage your product inventory
           </p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -468,7 +461,7 @@ export default function AdminProductsPage() {
                 {editingProduct ? 'Edit Product' : 'Add New Product'}
               </DialogTitle>
               <DialogDescription>
-                {editingProduct 
+                {editingProduct
                   ? 'Update product information'
                   : 'Add a new product to your inventory'
                 }
@@ -497,7 +490,7 @@ export default function AdminProductsPage() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="description">Description</Label>
@@ -622,7 +615,7 @@ export default function AdminProductsPage() {
 
                 <div className="space-y-2">
                   <Label>Product Images (Max 4)</Label>
-                  
+
                   {/* File Upload */}
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                     <input
@@ -636,17 +629,16 @@ export default function AdminProductsPage() {
                     />
                     <label
                       htmlFor="image-upload"
-                      className={`cursor-pointer flex flex-col items-center justify-center py-4 ${
-                        uploadingImages || formData.imageUrls.length >= 4 
-                          ? 'opacity-50 cursor-not-allowed' 
-                          : 'hover:bg-gray-50'
-                      }`}
+                      className={`cursor-pointer flex flex-col items-center justify-center py-4 ${uploadingImages || formData.imageUrls.length >= 4
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'hover:bg-gray-50'
+                        }`}
                     >
                       <Plus className="h-8 w-8 text-gray-400 mb-2" />
                       <span className="text-sm text-gray-600">
-                        {uploadingImages 
-                          ? 'Uploading...' 
-                          : formData.imageUrls.length >= 4 
+                        {uploadingImages
+                          ? 'Uploading...'
+                          : formData.imageUrls.length >= 4
                             ? 'Maximum 4 images reached'
                             : 'Click to upload images or drag and drop'
                         }
@@ -763,7 +755,7 @@ export default function AdminProductsPage() {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-primary">
@@ -781,12 +773,12 @@ export default function AdminProductsPage() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Size: {product.size}</span>
                     <span>Stock: {product.stock}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span className="bg-muted px-2 py-1 rounded text-xs">
                       {product.condition}
@@ -805,7 +797,7 @@ export default function AdminProductsPage() {
       {/* Custom Modals */}
       <ConfirmModal
         isOpen={deleteConfirm.isOpen}
-        onClose={() => setDeleteConfirm({isOpen: false, productId: '', productName: ''})}
+        onClose={() => setDeleteConfirm({ isOpen: false, productId: '', productName: '' })}
         onConfirm={handleDelete}
         title="Delete Product"
         description={`Are you sure you want to delete "${deleteConfirm.productName}"? This action cannot be undone.`}
@@ -816,7 +808,7 @@ export default function AdminProductsPage() {
 
       <AlertModal
         isOpen={alertModal.isOpen}
-        onClose={() => setAlertModal({isOpen: false, title: '', description: ''})}
+        onClose={() => setAlertModal({ isOpen: false, title: '', description: '' })}
         title={alertModal.title}
         description={alertModal.description}
         variant={alertModal.variant}

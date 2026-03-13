@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import Pusher from 'pusher-js';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSession, signOut } from 'next-auth/react'
 import { apiClient } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
@@ -22,7 +22,8 @@ interface Notification {
 }
 
 export function NotificationBell() {
-  const { user } = useAuth();
+  const { data: session } = useSession()
+  const user = session?.user;
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);

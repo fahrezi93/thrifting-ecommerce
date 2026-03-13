@@ -1,20 +1,9 @@
-import { auth } from './firebase'
-
 class ApiClient {
   private async getAuthHeaders(includeContentType: boolean = true): Promise<HeadersInit> {
     const headers: HeadersInit = {}
-    
+
     if (includeContentType) {
       headers['Content-Type'] = 'application/json'
-    }
-
-    if (auth?.currentUser) {
-      try {
-        const token = await auth.currentUser.getIdToken()
-        headers['Authorization'] = `Bearer ${token}`
-      } catch (error) {
-        console.error('Failed to get auth token:', error)
-      }
     }
 
     return headers
@@ -38,7 +27,7 @@ class ApiClient {
     // Check if data is FormData (for file uploads)
     const isFormData = data instanceof FormData
     const headers = await this.getAuthHeaders(!isFormData)
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers,

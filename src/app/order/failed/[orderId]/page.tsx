@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { XCircle, RefreshCw, Home, ArrowLeft } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 
 interface OrderDetails {
@@ -17,7 +17,8 @@ interface OrderDetails {
 
 export default function OrderFailedPage() {
   const { orderId } = useParams()
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [order, setOrder] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [retrying, setRetrying] = useState(false)
@@ -27,8 +28,8 @@ export default function OrderFailedPage() {
       if (!user || !orderId) return
 
       try {
-        if (!user || !user.getIdToken) return
-        const token = await user.getIdToken()
+        if (!user) return
+        const token = '' /* token removed */
         const response = await fetch(`/api/orders/${orderId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -54,8 +55,8 @@ export default function OrderFailedPage() {
 
     setRetrying(true)
     try {
-      if (!user || !user.getIdToken) return
-      const token = await user.getIdToken()
+      if (!user) return
+      const token = '' /* token removed */
       const response = await fetch('/api/tokenizer', {
         method: 'POST',
         headers: {

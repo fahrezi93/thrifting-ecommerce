@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
@@ -63,54 +63,28 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, loading } = useAuth()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    if (loading) return
-    if (!user) {
+    if (status === 'loading') return
+    if (!session?.user) {
       router.push('/auth/signin')
       return
     }
-    
-    // Check admin role
-    checkAdminRole()
-  }, [user, loading, router])
 
-  const checkAdminRole = async () => {
-    try {
-      if (!user) return
-      
-      const token = await user.getIdToken?.()
-      if (!token) return
-      const response = await fetch('/api/auth/check-role', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-      
-      if (!response.ok) {
-        router.push('/')
-        return
-      }
-      
-      const { role } = await response.json()
-      if (role !== 'ADMIN') {
-        router.push('/')
-        return
-      }
-    } catch (error) {
-      console.error('Error checking admin role:', error)
+    // Check admin role directly from NextAuth session
+    if (session.user.role !== 'ADMIN') {
       router.push('/')
     }
-  }
+  }, [session, status, router])
 
-  if (loading) {
+  if (status === 'loading') {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
-  if (!user) {
+  if (!session?.user || session.user.role !== 'ADMIN') {
     return null
   }
 
@@ -136,13 +110,13 @@ export default function AdminLayout({
                 <h2 className="text-lg font-semibold">Admin Panel</h2>
                 <p className="text-sm text-muted-foreground">Manage your store</p>
               </div>
-              
+
               {/* Mobile: Horizontal scroll navigation */}
               <nav className="flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
                 {sidebarItems.map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href
-                  
+
                   return (
                     <Link
                       key={item.href}

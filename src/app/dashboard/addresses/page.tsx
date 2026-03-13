@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Trash2, Edit, Plus, MapPin } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmModal } from '@/components/ui/modal'
 import { apiClient } from '@/lib/api-client'
@@ -26,7 +26,8 @@ interface Address {
 }
 
 export default function AddressesPage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [addresses, setAddresses] = useState<Address[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)

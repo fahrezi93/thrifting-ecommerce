@@ -1,0 +1,83 @@
+﻿src/app/api/admin/check-auth/route.ts(6,41): error TS2345: Argument of type '[NextRequest]' is not assignable to parameter of type 'GetServerSessionParams<GetServerSessionOptions>'.
+  Type '[NextRequest]' is not assignable to type '[GetServerSessionOptions]'.
+    Type 'NextRequest' is not assignable to type 'GetServerSessionOptions'.
+      Types of property 'cookies' are incompatible.
+        Type 'RequestCookies' has no properties in common with type 'Partial<CookiesOptions>'.
+src/app/api/admin/check-auth/route.ts(11,18): error TS2339: Property 'id' does not exist on type 'Session'.
+src/app/api/admin/check-auth/route.ts(12,21): error TS2339: Property 'email' does not exist on type 'Session'.
+src/app/api/admin/check-auth/route.ts(13,20): error TS2339: Property 'role' does not exist on type 'Session'.
+src/app/api/admin/check-auth/route.ts(14,31): error TS2339: Property 'role' does not exist on type 'Session'.
+src/app/api/admin/check-auth/route.ts(16,22): error TS2339: Property 'role' does not exist on type 'Session'.
+src/app/api/admin/check-auth/route.ts(18,22): error TS2339: Property 'role' does not exist on type 'Session'.
+src/app/api/admin/check-auth/route.ts(19,26): error TS2339: Property 'role' does not exist on type 'Session'.
+src/app/api/admin/check-auth/route.ts(20,26): error TS2339: Property 'role' does not exist on type 'Session'.
+src/app/api/admin/contact-messages/unread-count/route.ts(7,41): error TS2345: Argument of type '[NextRequest]' is not assignable to parameter of type 'GetServerSessionParams<GetServerSessionOptions>'.
+  Type '[NextRequest]' is not assignable to type '[GetServerSessionOptions]'.
+    Type 'NextRequest' is not assignable to type 'GetServerSessionOptions'.
+      Types of property 'cookies' are incompatible.
+        Type 'RequestCookies' has no properties in common with type 'Partial<CookiesOptions>'.
+src/app/api/admin/contact-messages/unread-count/route.ts(9,23): error TS2339: Property 'role' does not exist on type 'Session'.
+src/app/api/admin/generate-description/route.ts(90,41): error TS2345: Argument of type '[NextRequest]' is not assignable to parameter of type 'GetServerSessionParams<GetServerSessionOptions>'.
+  Type '[NextRequest]' is not assignable to type '[GetServerSessionOptions]'.
+    Type 'NextRequest' is not assignable to type 'GetServerSessionOptions'.
+      Types of property 'cookies' are incompatible.
+        Type 'RequestCookies' has no properties in common with type 'Partial<CookiesOptions>'.
+src/app/api/admin/generate-description/route.ts(92,23): error TS2339: Property 'role' does not exist on type 'Session'.
+src/app/api/contact/route.ts(23,45): error TS2345: Argument of type '[NextRequest]' is not assignable to parameter of type 'GetServerSessionParams<GetServerSessionOptions>'.
+  Type '[NextRequest]' is not assignable to type '[GetServerSessionOptions]'.
+    Type 'NextRequest' is not assignable to type 'GetServerSessionOptions'.
+      Types of property 'cookies' are incompatible.
+        Type 'RequestCookies' has no properties in common with type 'Partial<CookiesOptions>'.
+src/app/api/contact/route.ts(25,30): error TS2339: Property 'id' does not exist on type 'Session'.
+src/app/api/contact/route.ts(107,41): error TS2345: Argument of type '[NextRequest]' is not assignable to parameter of type 'GetServerSessionParams<GetServerSessionOptions>'.
+  Type '[NextRequest]' is not assignable to type '[GetServerSessionOptions]'.
+    Type 'NextRequest' is not assignable to type 'GetServerSessionOptions'.
+      Types of property 'cookies' are incompatible.
+        Type 'RequestCookies' has no properties in common with type 'Partial<CookiesOptions>'.
+src/app/api/contact/route.ts(109,23): error TS2339: Property 'role' does not exist on type 'Session'.
+src/app/api/user/profile/route.ts(7,41): error TS2345: Argument of type '[NextRequest]' is not assignable to parameter of type 'GetServerSessionParams<GetServerSessionOptions>'.
+  Type '[NextRequest]' is not assignable to type '[GetServerSessionOptions]'.
+    Type 'NextRequest' is not assignable to type 'GetServerSessionOptions'.
+      Types of property 'cookies' are incompatible.
+        Type 'RequestCookies' has no properties in common with type 'Partial<CookiesOptions>'.
+src/app/api/user/profile/route.ts(14,25): error TS2339: Property 'id' does not exist on type 'Session'.
+src/app/api/user/profile/route.ts(39,41): error TS2345: Argument of type '[NextRequest]' is not assignable to parameter of type 'GetServerSessionParams<GetServerSessionOptions>'.
+  Type '[NextRequest]' is not assignable to type '[GetServerSessionOptions]'.
+    Type 'NextRequest' is not assignable to type 'GetServerSessionOptions'.
+      Types of property 'cookies' are incompatible.
+        Type 'RequestCookies' has no properties in common with type 'Partial<CookiesOptions>'.
+src/app/api/user/profile/route.ts(48,25): error TS2339: Property 'id' does not exist on type 'Session'.
+src/app/checkout/page.tsx(92,21): error TS2873: This kind of expression is always falsy.
+src/app/checkout/page.tsx(138,21): error TS2873: This kind of expression is always falsy.
+src/app/dashboard/page.tsx(67,12): error TS2873: This kind of expression is always falsy.
+src/app/dashboard/page.tsx(136,12): error TS2873: This kind of expression is always falsy.
+src/app/dashboard/settings/page.tsx(57,27): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/app/dashboard/settings/page.tsx(104,27): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/app/dashboard/settings/page.tsx(158,27): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/app/dashboard/settings/page.tsx(195,27): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/app/dashboard/settings/page.tsx(307,24): error TS2339: Property 'emailVerified' does not exist on type '{ id: string; role?: string | undefined; } & { name?: string | null | undefined; email?: string | null | undefined; image?: string | null | undefined; }'.
+src/app/order/failed/[orderId]/page.tsx(31,23): error TS2873: This kind of expression is always falsy.
+src/app/order/failed/[orderId]/page.tsx(58,21): error TS2873: This kind of expression is always falsy.
+src/app/order/pending/[orderId]/page.tsx(31,23): error TS2873: This kind of expression is always falsy.
+src/app/order/pending/[orderId]/page.tsx(67,21): error TS2873: This kind of expression is always falsy.
+src/app/order/success/[orderId]/page.tsx(48,23): error TS2873: This kind of expression is always falsy.
+src/app/payment/custom/page.tsx(224,21): error TS2873: This kind of expression is always falsy.
+src/app/payment/custom/page.tsx(288,21): error TS2873: This kind of expression is always falsy.
+src/app/payment/instructions/page.tsx(82,21): error TS2873: This kind of expression is always falsy.
+src/app/payment/instructions/page.tsx(109,21): error TS2873: This kind of expression is always falsy.
+src/app/payment/page.tsx(196,48): error TS2873: This kind of expression is always falsy.
+src/app/products/[id]/page.tsx(173,21): error TS2873: This kind of expression is always falsy.
+src/app/profile/page.tsx(70,27): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/app/profile/page.tsx(100,27): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/app/profile/page.tsx(151,27): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/app/wishlist/page.tsx(59,27): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/app/wishlist/page.tsx(97,27): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.

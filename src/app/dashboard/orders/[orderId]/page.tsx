@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { apiClient } from '@/lib/api-client'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { toast } from 'sonner'
 
 interface OrderItem {
@@ -57,7 +57,8 @@ const statusConfig = {
 export default function OrderDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

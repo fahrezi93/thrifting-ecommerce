@@ -3,7 +3,6 @@ import './globals.css'
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Providers } from '@/components/providers'
-import { AuthProvider } from '@/contexts/AuthContext'
 import { StoreProvider } from '@/contexts/StoreContext'
 import { StoreStatusWrapper } from '@/middleware/store-status'
 import { Navbar } from '@/components/layout/navbar'
@@ -62,39 +61,37 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <StoreProvider>
+        <StoreProvider>
+          <Providers>
             <StoreStatusWrapper>
-              <Providers>
-                <ToastProvider>
-                  <div className="min-h-screen flex flex-col">
-                    <Navbar />
-                    <main className="flex-1">
-                      {children}
-                    </main>
-                    <Footer />
-                  </div>
-                  <ToastViewport />
-                  <PWAInstallPrompt />
-                  <WebPushNotificationPermission />
-                  <Toaster 
-                    position="top-right"
-                    expand={true}
-                    richColors={true}
-                    closeButton={true}
-                    toastOptions={{
-                      style: {
-                        maxWidth: 'calc(100vw - 32px)',
-                        width: '100%',
-                      },
-                      className: 'toast-mobile-fix',
-                    }}
-                  />
-                </ToastProvider>
-              </Providers>
+              <ToastProvider>
+                <div className="min-h-screen flex flex-col">
+                  <Navbar />
+                  <main className="flex-1">
+                    {children}
+                  </main>
+                  <Footer />
+                </div>
+                <ToastViewport />
+                <PWAInstallPrompt />
+                <WebPushNotificationPermission />
+                <Toaster
+                  position="top-right"
+                  expand={true}
+                  richColors={true}
+                  closeButton={true}
+                  toastOptions={{
+                    style: {
+                      maxWidth: 'calc(100vw - 32px)',
+                      width: '100%',
+                    },
+                    className: 'toast-mobile-fix',
+                  }}
+                />
+              </ToastProvider>
             </StoreStatusWrapper>
-          </StoreProvider>
-        </AuthProvider>
+          </Providers>
+        </StoreProvider>
       </body>
     </html>
   )

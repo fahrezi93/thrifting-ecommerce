@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Eye, Package, Truck, CheckCircle, XCircle, Trash2, Search, Loader2 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 import { apiClient } from '@/lib/api-client'
 import { toast } from 'sonner'
 
@@ -33,7 +33,7 @@ interface Order {
 }
 
 export default function AdminOrdersPage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
@@ -42,15 +42,15 @@ export default function AdminOrdersPage() {
   const [deletingOrders, setDeletingOrders] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    if (user) {
+    if (session?.user) {
       fetchOrders()
     }
-  }, [user])
+  }, [session])
 
   const fetchOrders = async () => {
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       const data = await apiClient.get('/api/admin/orders')
       setOrders(data)
     } catch (error) {
@@ -63,11 +63,11 @@ export default function AdminOrdersPage() {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       // Add to updating set
       setUpdatingOrders(prev => new Set(prev).add(orderId))
-      
+
       await apiClient.put(`/api/admin/orders/${orderId}`, { status: newStatus })
       toast.success('Order status updated successfully')
       fetchOrders() // Refresh orders
@@ -86,11 +86,11 @@ export default function AdminOrdersPage() {
 
   const deleteOrder = async (orderId: string) => {
     try {
-      if (!user) return
-      
+      if (!session?.user) return
+
       // Add to deleting set
       setDeletingOrders(prev => new Set(prev).add(orderId))
-      
+
       await apiClient.delete(`/api/admin/orders/${orderId}`)
       toast.success('Order deleted successfully')
       fetchOrders() // Refresh orders
@@ -135,7 +135,7 @@ export default function AdminOrdersPage() {
       CANCELLED: { label: 'Cancelled', variant: 'destructive' as const },
       FAILED: { label: 'Failed', variant: 'destructive' as const },
     }
-    
+
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING
     return <Badge variant={config.variant}>{config.label}</Badge>
   }
@@ -150,7 +150,7 @@ export default function AdminOrdersPage() {
 
     // Filter by search query
     if (query) {
-      filtered = filtered.filter(order => 
+      filtered = filtered.filter(order =>
         order.orderNumber.toLowerCase().includes(query.toLowerCase()) ||
         order.user.name.toLowerCase().includes(query.toLowerCase()) ||
         order.user.email.toLowerCase().includes(query.toLowerCase())

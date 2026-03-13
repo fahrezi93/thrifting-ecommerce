@@ -5,9 +5,15 @@ import { Github, Instagram, Mail, Phone, MapPin, Clock, CreditCard } from 'lucid
 import { useStore } from '@/contexts/StoreContext'
 import { motion } from 'framer-motion'
 import { ThemeToggleButton } from '@/components/ui/theme-toggle'
+import { usePathname } from 'next/navigation'
 
 export function Footer() {
   const { settings } = useStore()
+  const pathname = usePathname()
+
+  if (pathname?.startsWith('/auth')) {
+    return null
+  }
 
   return (
     <footer className="bg-muted/50 border-t" role="contentinfo">

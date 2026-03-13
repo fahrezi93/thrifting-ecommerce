@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 // Helper function to delay execution
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -87,7 +88,8 @@ async function callGeminiWithRetry(apiKey: string, prompt: string, maxRetries = 
 export async function POST(request: NextRequest) {
   try {
     // Check authentication and admin role
-    const user = await getServerSession(request)
+    const session = await getServerSession(authOptions)
+    const user = session?.user
     
     if (!user || user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

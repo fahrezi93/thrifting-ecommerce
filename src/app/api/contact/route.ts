@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getServerSession } from '@/lib/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { pusher } from '@/lib/pusher'
 
 // POST - Submit contact message
@@ -20,7 +21,8 @@ export async function POST(request: NextRequest) {
     let finalUserId = userId
     if (!finalUserId) {
       try {
-        const user = await getServerSession(request)
+        const session = await getServerSession(authOptions)
+        const user = session?.user
         if (user) {
           finalUserId = user.id
         }
@@ -104,7 +106,8 @@ export async function POST(request: NextRequest) {
 // GET - Get all contact messages (admin only)
 export async function GET(request: NextRequest) {
   try {
-    const user = await getServerSession(request)
+    const session = await getServerSession(authOptions)
+    const user = session?.user
     
     if (!user || user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

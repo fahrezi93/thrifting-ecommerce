@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Bell, BellOff, X, CheckCircle } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { useDisplayMode } from '@/hooks/use-display-mode'
 
 export function SimpleNotificationPermission() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const { isInstalled } = useDisplayMode()
   const [dismissed, setDismissed] = useState(false)
   const [loading, setLoading] = useState(false)

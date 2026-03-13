@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,7 +38,9 @@ interface Order {
 }
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth()
+  const { data: session, status } = useSession()
+  const user = session?.user
+  const loading = status === 'loading'
   const router = useRouter()
   const { addToast } = useToast()
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -65,8 +67,8 @@ export default function ProfilePage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken?.() // Force refresh token
-      if (!token) return
+      const token = null // Force refresh token
+      
       
       const response = await fetch('/api/user/profile', {
         headers: {
@@ -95,8 +97,8 @@ export default function ProfilePage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken?.()
-      if (!token) return
+      const token = null
+      
       
       const response = await fetch('/api/user/orders', {
         headers: {
@@ -146,8 +148,8 @@ export default function ProfilePage() {
     try {
       if (!user) return
       
-      const token = await user.getIdToken?.()
-      if (!token) return
+      const token = null
+      
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {

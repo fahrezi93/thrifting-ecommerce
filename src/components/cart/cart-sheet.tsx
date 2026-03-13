@@ -7,10 +7,11 @@ import { useCart } from '@/store/cart'
 import { Minus, Plus, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSession, signOut } from 'next-auth/react'
 
 export function CartSheet() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const user = session?.user
   const { items, isOpen, toggleCart, updateQuantity, removeItem, getTotalPrice } = useCart()
   
 
