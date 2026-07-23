@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateDokuHeaders } from '@/lib/doku';
 import { requireAuth } from '@/lib/auth';
